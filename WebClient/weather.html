@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8" />
+        <title></title>
+        <style>
+            html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            .mainIFrame {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .mainIFrameHide {
+                display: none;
+            }
+            .buttons {
+                height: 100%;
+                display: inline-flex;
+            }
+            .tabButton {
+                width: 45mm;
+                height: 12mm;
+                background-color: blue;
+                font-family: sans-serif;
+                font-size: 8mm;
+                text-align: center;
+                vertical-align:middle;
+                align-content:center;
+                color: white;
+                margin: 0;
+                margin-bottom: 1mm;
+                cursor: pointer;
+                display:table;
+            }
+            .tabButtonActive {
+                background-color: dodgerblue;
+                cursor: default;
+             }
+            .tabButtonContent {
+                text-align: center;
+                vertical-align: middle;
+                align-content: center;
+                display: table-cell;
+            }
+            .otherButton {
+                width: 5mm;
+                height: 5mm;
+            }
+            .baywxFrame {
+                width: 690px;
+                height: 2000px;
+                border: none;
+                background-color: white;
+            }
+            .baywxDiv {
+                margin: 0;
+                border: none;
+                background-image: url('bg-shadow.png');
+                background-repeat: repeat-y;
+                background-position: top center;
+                background-color: #c8c8c8;
+                align-content: center;
+                overflow: auto;
+            }
+        </style>
+        <script>
+            var fullscreen = false;
+
+            function openFullScreen() {
+                var elem = document.documentElement;
+
+                /* View in fullscreen */
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) { /* Firefox */
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                    elem.msRequestFullscreen();
+                }
+                fullscreen = true;
+            }
+
+            /* Close fullscreen */
+            function closeFullscreen() {
+                var elem = document.documentElement;
+
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { /* Firefox */
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE/Edge */
+                    document.msExitFullscreen();
+                }
+                fullscreen = false;
+            }
+            function toggleFullscreen() {
+                if (fullscreen)
+                    closeFullscreen();
+                else
+                    openFullScreen();
+            }
+            function showIframe(tag) {
+                var elem = document.getElementById(tag);
+                elem.style.display = "block";
+            }
+            function hideIframe(tag) {
+                var elem = document.getElementById(tag);
+                elem.style.display = "none";
+            }
+            function hideAllDivs(elem) {
+                var i = 0;
+                for (i = 0; i < elem.children.length; i++) {
+                    var child = elem.children[i];
+                    if (child.nodeName === "DIV" && child.className === "tabButton tabButtonActive") {
+                        child.className = "tabButton";
+                        hideIframe(child.dataset.iframe);
+                    }
+                }
+            }
+            function showDiv(elem) {
+                elem.className = "tabButton tabButtonActive";
+                showIframe(elem.dataset.iframe);
+            }
+            function activatePage(elem) {
+                //debugger;
+                if (elem.className === "tabButton")
+                {
+                    // Process inactive screens
+                    hideAllDivs(elem.parentElement);
+                    showDiv(elem);
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div style="display:flex; height:100%;">
+            <div class="buttons">
+                <div style="height:100%;">
+                    <div class="tabButton tabButtonActive" onclick="activatePage(this);" data-iframe="today"><div class="tabButtonContent">Today</div></div>
+                    <div class="tabButton" onclick="activatePage(this)" data-iframe="radar"><div class="tabButtonContent">Radar</div></div>
+                    <div class="tabButton" onclick="activatePage(this)" data-iframe="temp"><div class="tabButtonContent">Temperature</div></div>
+                    <div class="tabButton" onclick="activatePage(this)" data-iframe="wind"><div class="tabButtonContent">Wind</div></div>
+                    <div class="tabButton" onclick="activatePage(this)" data-iframe="rain"><div class="tabButtonContent">Rain</div></div>
+                </div>
+            </div>
+            <div style="width:1.5mm;height:100%"></div>
+            <div class="mainIFrame" id="today">
+                <iframe src="http://www.bom.gov.au/places/vic/melbourne/" style="width:100%;height:100%;"></iframe>
+            </div>
+            <div class="mainIFrame mainIFrameHide" id="radar">
+                <iframe src="http://www.bom.gov.au/products/IDR023.loop.shtml#skip" style="width:100%;height:100%;"></iframe>
+            </div>
+
+            <div class="mainIFrame mainIFrameHide baywxDiv" id="temp" align="center" >
+                <iframe class="baywxFrame" src="http://www.baywx.com.au/melbtemp2.html"></iframe>
+            </div>
+            <div class="mainIFrame mainIFrameHide baywxDiv" id="wind" align="center" >
+                <iframe class="baywxFrame" src="http://www.baywx.com.au/fbeacon.html" ></iframe>
+            </div>
+            <div class="mainIFrame mainIFrameHide baywxDiv" id="rain" align="center" >
+                <iframe class="baywxFrame" src="http://www.baywx.com.au/melbrain.html" ></iframe>
+            </div>
+        </div>
+    </body>
+</html>

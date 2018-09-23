@@ -1,0 +1,24 @@
+<h1>Live Data</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+<p *ngIf="!power"><em>Loading...</em></p>
+
+<table class='table' *ngIf="power">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>production (W)</th>
+      <th>consumption (W)</th>
+      <th>net (W)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ power.timestamp }}</td>
+      <td>{{ power.wattsProduced }}</td>
+      <td>{{ power.wattsConsumed }}</td>
+      <td>{{ power.wattsNet }}</td>
+    </tr>
+  </tbody>
+</table>

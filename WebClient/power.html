@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .mainIFrame {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .mainIFrameHide {
+            display: none;
+        }
+
+        .buttons {
+            height: 100%;
+            display: inline-flex;
+        }
+
+        .tabButton {
+            width: 45mm;
+            height: 12mm;
+            background-color: blue;
+            font-family: sans-serif;
+            font-size: 8mm;
+            text-align: center;
+            vertical-align: middle;
+            align-content: center;
+            color: white;
+            margin: 0;
+            margin-bottom: 1mm;
+            cursor: pointer;
+            display: table;
+        }
+
+        .tabButtonActive {
+            background-color: dodgerblue;
+            cursor: default;
+        }
+
+        .tabButtonContent {
+            text-align: center;
+            vertical-align: middle;
+            align-content: center;
+            display: table-cell;
+        }
+
+        .otherButton {
+            width: 5mm;
+            height: 5mm;
+        }
+    </style>
+    <script>
+        var fullscreen = false;
+
+        function openFullScreen() {
+            var elem = document.documentElement;
+
+            /* View in fullscreen */
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { /* Firefox */
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                elem.msRequestFullscreen();
+            }
+            fullscreen = true;
+        }
+
+        /* Close fullscreen */
+        function closeFullscreen() {
+            var elem = document.documentElement;
+
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) { /* Firefox */
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { /* IE/Edge */
+                document.msExitFullscreen();
+            }
+            fullscreen = false;
+        }
+        function toggleFullscreen() {
+            if (fullscreen)
+                closeFullscreen();
+            else
+                openFullScreen();
+        }
+        function showIframe(tag) {
+            var elem = document.getElementById(tag);
+            elem.style.display = "block";
+        }
+        function hideIframe(tag) {
+            var elem = document.getElementById(tag);
+            elem.style.display = "none";
+        }
+        function hideAllDivs(elem) {
+            var i = 0;
+            for (i = 0; i < elem.children.length; i++) {
+                var child = elem.children[i];
+                if (child.nodeName === "DIV" && child.className === "tabButton tabButtonActive") {
+                    child.className = "tabButton";
+                    hideIframe(child.dataset.iframe);
+                }
+            }
+        }
+        function showDiv(elem) {
+            elem.className = "tabButton tabButtonActive";
+            showIframe(elem.dataset.iframe);
+        }
+        function activatePage(elem) {
+            //debugger;
+            if (elem.className === "tabButton") {
+                // Process inactive screens
+                hideAllDivs(elem.parentElement);
+                showDiv(elem);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div style="display:flex; height:100%;">
+        <div class="buttons">
+            <div style="height:100%;">
+                <div class="tabButton tabButtonActive" onclick="activatePage(this);" data-iframe="pv"><div class="tabButtonContent">Solar</div></div>
+                <div class="tabButton" onclick="activatePage(this)" data-iframe="electricity"><div class="tabButtonContent">Grid</div></div>
+            </div>
+        </div>
+        <div style="width:1.5mm;height:100%"></div>
+
+        <div class="mainIFrame" id="pv">
+            <iframe src="https://enlighten.enphaseenergy.com/pv/systems/1460367/overview" style="width:100%;height:100%;"></iframe>
+        </div>
+        <div class="mainIFrame mainIFrameHide" id="electricity">
+            <iframe src="https://energyeasy.ue.com.au/electricityView/index" style="width:100%;height:100%;"></iframe>
+        </div>
+
+
+    </div>
+</body>
+</html>
+
+
+

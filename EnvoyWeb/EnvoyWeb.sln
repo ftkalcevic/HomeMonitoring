@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvoyWeb", "EnvoyWeb\EnvoyWeb.csproj", "{81EA9CF8-B9C1-48F3-A37A-D1B8740E09AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{81EA9CF8-B9C1-48F3-A37A-D1B8740E09AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81EA9CF8-B9C1-48F3-A37A-D1B8740E09AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81EA9CF8-B9C1-48F3-A37A-D1B8740E09AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81EA9CF8-B9C1-48F3-A37A-D1B8740E09AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BEBA92C7-2F48-40E2-A11A-0BF8C7AA0C1F}
+	EndGlobalSection
+EndGlobal

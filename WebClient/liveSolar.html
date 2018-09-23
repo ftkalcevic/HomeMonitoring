@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .mainIFrame {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .mainIFrameHide {
+            display: none;
+        }
+
+        .buttons {
+            height: 100%;
+            display: inline-flex;
+        }
+
+        .tabButton {
+            width: 45mm;
+            height: 12mm;
+            background-color: blue;
+            font-family: sans-serif;
+            font-size: 8mm;
+            text-align: center;
+            vertical-align: middle;
+            align-content: center;
+            color: white;
+            margin: 0;
+            margin-bottom: 1mm;
+            cursor: pointer;
+            display: table;
+        }
+
+        .tabButtonActive {
+            background-color: dodgerblue;
+            cursor: default;
+        }
+
+        .tabButtonContent {
+            text-align: center;
+            vertical-align: middle;
+            align-content: center;
+            display: table-cell;
+        }
+
+        .otherButton {
+            width: 5mm;
+            height: 5mm;
+        }
+    </style>
+    <script>
+        var envoyAddr = "10.0.0.201";
+        var url = "http://" + envoyAddr + "/production.json?details=1&callback=handler";
+
+        function handler(e) {
+            debugger;
+        }
+
+        function requestJSONP(url) {
+            // create script with passed in URL
+            var script = document.createElement('script');
+            script.src = url;
+
+            // after the script is loaded (and executed), remove it
+            script.onload = function () {
+                this.remove();
+            };
+
+            // insert script tag into the DOM (append to<head>    )
+            var head = document.getElementsByTagName('head')[0];
+            head.appendChild(script);
+        }
+
+        function readStats() {
+            debugger;
+            requestJSONP(url);
+        }
+    </script>
+</head>
+<body onload="readStats();">
+</body>
+</html>
+

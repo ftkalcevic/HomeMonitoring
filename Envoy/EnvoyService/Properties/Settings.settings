@@ -1,0 +1,21 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="EnvoyService.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="EnvoyUsername" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">envoy</Value>
+    </Setting>
+    <Setting Name="EnvoyPassword" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">056704</Value>
+    </Setting>
+    <Setting Name="EnvoyHostname" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">10.0.0.201</Value>
+    </Setting>
+    <Setting Name="PollPeriod" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">300</Value>
+    </Setting>
+    <Setting Name="ConnectString" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Persist Security Info=False;Integrated Security=SSPI; database = Electricity; server = Server\SqlExpress</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

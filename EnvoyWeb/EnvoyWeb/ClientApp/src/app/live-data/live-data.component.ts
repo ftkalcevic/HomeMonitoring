@@ -1,5 +1,4 @@
-import { Component, Inject, ElementRef, ViewChild } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-live-data',
@@ -7,29 +6,18 @@ import { HttpClient } from '@angular/common/http';
 })
 export class LiveDataComponent {
   @ViewChild('indicatorCanvas') canvasRef: ElementRef;
-  public power: LivePower;
-  private baseUrl: string;
-  private http: HttpClient;
   private maxPower: number = 3500;
+  private maxProduction: number = 270 * 12;
+  public loaded: boolean = false;
 
-  constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
-    this.baseUrl = baseUrl;
-    this.http = http;
-    setInterval(() => this.ReadData(), 1000);
-  }
+  public redrawSpeedo(power: LivePower) {
+    this.loaded = true;
 
-  public ReadData() {
-    this.http.get<LivePower>(this.baseUrl + 'api/Envoy/LiveData').subscribe(result => {
-      this.power = result;
-      if (Math.abs(result.wattsConsumed) > this.maxPower)
-        this.maxPower = Math.abs(result.wattsConsumed);
-      if (Math.abs(result.wattsProduced) > this.maxPower)
-        this.maxPower = Math.abs(result.wattsProduced);
-      this.redrawSpeedo();
-    }, error => console.error(error));
-  }
+    if (Math.abs(power.wattsConsumed) > this.maxPower)
+      this.maxPower = Math.abs(power.wattsConsumed);
+    if (Math.abs(power.wattsProduced) > this.maxPower)
+      this.maxPower = Math.abs(power.wattsProduced);
 
-  private redrawSpeedo() {
     let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
 
     // Clear any previous content.
@@ -39,8 +27,9 @@ export class LiveDataComponent {
     ctx.save();
     ctx.clearRect(0, 0, width, height);
 
+    let size: number = width/2 > height ? height : width/2;
     ctx.translate(width / 2, height);
-    ctx.scale((width / 2) / 1000, -height / 1000);
+    ctx.scale((size ) / 1000, -size / 1000);
 
     // Grid
     let i: number;
@@ -76,7 +65,7 @@ export class LiveDataComponent {
 
     let x: number, y: number, a:number;
     // Production
-    a = Math.PI/2 - Math.PI / 2 * this.power.wattsProduced / this.maxPower;
+    a = Math.PI/2 - Math.PI / 2 * power.wattsProduced / this.maxPower;
     ctx.strokeStyle = "rgba(41, 155, 251, 0.3)";
     ctx.fillStyle = "rgba(41, 155, 251, 0.3)";
     ctx.beginPath();
@@ -86,7 +75,7 @@ export class LiveDataComponent {
     ctx.fill();
 
     // Consumption
-    a = Math.PI / 2 + Math.PI / 2 * this.power.wattsConsumed / this.maxPower;
+    a = Math.PI / 2 + Math.PI / 2 * power.wattsConsumed / this.maxPower;
     ctx.strokeStyle = "rgba(244,115,32,0.3)";
     ctx.fillStyle = "rgba(244,115,32,0.3)";
     ctx.beginPath();
@@ -96,11 +85,11 @@ export class LiveDataComponent {
     ctx.fill();
 
     // Net
-    a = Math.PI/2 + Math.PI / 2 * this.power.wattsNet / this.maxPower;
+    a = Math.PI/2 + Math.PI / 2 * power.wattsNet / this.maxPower;
     x = 940 * Math.cos(a);
     y = 940 * Math.sin(a);
     let anticlockwise: boolean;
-    if (this.power.wattsNet < 0) {  // production
+    if (power.wattsNet < 0) {  // production
       ctx.strokeStyle = "rgba(41, 155, 251, 0.8)";
       ctx.fillStyle = "rgba(41, 155, 251, 0.8)";
       anticlockwise = true;
@@ -122,38 +111,41 @@ export class LiveDataComponent {
     ctx.lineTo(x, y);
     ctx.stroke();
 
+    // Max production
+    a = Math.PI / 2 - Math.PI / 2 * this.maxProduction / this.maxPower;
+    x = 940 * Math.cos(a);
+    y = 940 * Math.sin(a);
+    ctx.strokeStyle = "red";
+    ctx.setLineDash([15, 20]);
+    ctx.beginPath();
+    ctx.lineWidth = 5;
+    ctx.moveTo(0, 0);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
     // details
-    x = width / 2 - 80; y = height - 90;
-    //x = width - 5 - 160; y = 5;
+    if (false) {
+      x = width / 2 - 80; y = height - 90;
+      //x = width - 5 - 160; y = 5;
 
-    ctx.restore();
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 4;
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.fillRect(x, y, 160, 88);
+      ctx.strokeRect(x, y, 160, 88);
 
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 4;
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.fillRect(x, y, 160, 88);
-    ctx.strokeRect(x, y, 160, 88);
+      ctx.font = "20px san serif";
+      ctx.fillStyle = "black";
+      ctx.textAlign = "left";
+      ctx.fillText("Produced:", x + 10, y + 25);
+      ctx.fillText("Consumed:", x + 10, y + 50);
+      ctx.fillText("Net:", x + 10, y + 75);
 
-    ctx.font = "20px san serif";
-    ctx.fillStyle = "black";
-    ctx.textAlign = "left";
-    ctx.fillText("Produced:", x+10, y + 25);
-    ctx.fillText("Consumed:", x+10, y+50);
-    ctx.fillText("Net:", x+10, y+75);
-
-    ctx.textAlign = "right";
-    ctx.fillText(this.power.wattsProduced.toFixed(0), x + 140, y+25);
-    ctx.fillText(this.power.wattsConsumed.toFixed(0), x + 140, y+50);
-    ctx.fillText(this.power.wattsNet.toFixed(0), x + 140, y+75);
-
+      ctx.textAlign = "right";
+      ctx.fillText(power.wattsProduced.toFixed(0), x + 140, y + 25);
+      ctx.fillText(power.wattsConsumed.toFixed(0), x + 140, y + 50);
+      ctx.fillText((power.wattsNet < 0 ? "+" : "-") + Math.abs(power.wattsNet).toFixed(0), x + 140, y + 75);
+    }
     ctx.restore();
   }
 }
-
-interface LivePower {
-  timestamp: Date;
-  wattsProduced: number;
-  wattsConsumed: number;
-  wattsNet: number;
-};
-

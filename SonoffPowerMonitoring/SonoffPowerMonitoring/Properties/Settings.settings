@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="SonoffPowerMonitoring.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="BrokerHost" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">server</Value>
+    </Setting>
+    <Setting Name="BrokerPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1883</Value>
+    </Setting>
+    <Setting Name="ConnectString" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Persist Security Info=False;Integrated Security=SSPI; database = Electricity; server = Server\SqlExpress</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

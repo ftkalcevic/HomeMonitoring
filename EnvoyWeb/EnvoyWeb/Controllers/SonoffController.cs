@@ -17,9 +17,9 @@ namespace EnvoyWeb.Controllers
 
         // GET: api/Sonoff/GetDevices
         [HttpGet("[action]")]
-        public IEnumerable<SonoffDevice> GetDevices()
+        public IEnumerable<ISonoffDevice> GetDevices()
         {
-            List<SonoffDevice> devices = new List<SonoffDevice>();
+            List<ISonoffDevice> devices = new List<ISonoffDevice>();
 
             using (var con = new SqlConnection(connectString))
             {
@@ -35,7 +35,7 @@ namespace EnvoyWeb.Controllers
                             string description = rdr.GetString(2);
                             string hostname = rdr.GetString(3);
 
-                            devices.Add(new SonoffDevice()
+                            devices.Add(new ISonoffDevice()
                             {
                                 id = id,
                                 name = name,
@@ -79,13 +79,13 @@ namespace EnvoyWeb.Controllers
     }
 
     
-    public class SonoffDevice
+    public class ISonoffDevice
     {
         public int id;
         public string name;
         public string description;
         public string hostname;
-        public SonoffDevice()
+        public ISonoffDevice()
         {
             id = -1;
             name = "";

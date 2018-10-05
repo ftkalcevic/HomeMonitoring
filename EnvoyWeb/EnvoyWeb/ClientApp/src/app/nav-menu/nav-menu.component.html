@@ -1,0 +1,47 @@
+<div class='main-nav'>
+  <nav class='navbar navbar-expand-sm navbar-dark bg-dark d-flex flex-column'> 
+    <div class="navbar-header p-0">
+      <button type='button' class='navbar-toggler' data-toggle='collapse' data-target='#navbarNav' [attr.aria-expanded]='isExpanded' (click)='toggle()'>
+        <span class='navbar-toggler-icon'></span>
+      </button>
+    </div>
+    <div class='clearfix p-2'></div>
+    <div id="navbarNav" class='navbar-collapse collapse p-0' [ngClass]='{ "in": isExpanded }'>
+      <ul class='nav navbar-nav flex-column'>
+        <li class="nav-item" [routerLinkActive]='["link-active"]' [routerLinkActiveOptions]='{ exact: true }'>
+          <a [routerLink]='["/live-data"]' class="nav-link" (click)='collapse()'>
+            <span class='fas fa-home'></span> Solar Live
+          </a>
+        </li>
+        <li class="nav-item" [routerLinkActive]='["link-active"]'>
+          <a [routerLink]='["/historic-data"]' class="nav-link" (click)='collapse()'>
+            <span class='fas fa-sort-amount-up'></span> Solar History
+          </a>
+        </li>
+        <li class="nav-item" [routerLinkActive]='["link-active"]'>
+          <a [routerLink]='["/panel-data"]' class="nav-link" (click)='collapse()'>
+            <span class='fas fa-database'></span> Solar Panels
+          </a>
+        </li>
+        <li class="nav-item" [routerLinkActive]='["link-active"]'>
+          <a [routerLink]='["/live-power"]' class="nav-link" (click)='collapse()'>
+            <span class='fas fa-database'></span> Live Power
+          </a>
+        </li>
+
+        <li class="nav-item" [routerLinkActive]='["link-active"]'>
+          <a [routerLink]='["/enlighten"]' class="nav-link" (click)='collapse()'>
+            <span class='fas fa-database'></span> Enlighten
+          </a>
+        </li>
+
+        <li class="nav-item" [routerLinkActive]='["link-active"]'>
+          <a [routerLink]='["/energyeasy"]' class="nav-link" (click)='collapse()'>
+            <span class='fas fa-database'></span> Easy Energy
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </nav>
+</div>

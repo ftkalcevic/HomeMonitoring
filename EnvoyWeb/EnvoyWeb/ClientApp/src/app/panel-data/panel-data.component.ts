@@ -19,7 +19,6 @@ export class PanelDataComponent {
   @ViewChild('panelCanvas') canvasRef: ElementRef;
   @ViewChild('imgHouse') houseImgRef: ElementRef;
   private maxProduction: number = 270;
-  public loaded: boolean = false;
   public panelInfo = {
     "system_id": 1460367,
     "rotation": 0,
@@ -194,7 +193,7 @@ export class PanelDataComponent {
   }
 
   public ReadData() {
-    this.http.get<PanelPower[]>(this.baseUrl + 'api/Envoy/CurrentPanelData')
+    this.http.get<IPanelPower[]>(this.baseUrl + 'api/Envoy/CurrentPanelData')
       .subscribe(
       result => {
         this.redrawPanels(result);
@@ -207,11 +206,10 @@ export class PanelDataComponent {
       );
   }
 
-  public redrawPanels(power: PanelPower[]) {
+  public redrawPanels(power: IPanelPower[]) {
     
     if (this.panelGeometry == null)
       this.InitialisePanelGeometry();
-    this.loaded = true; 
 
     if (power != null) {
       for (let i: number = 0; i < power.length; i++) {
@@ -372,13 +370,13 @@ export class PanelDataComponent {
     }
   }
   onMouseEnter() {
-    console.log("onMouseEnter");
+    //console.log("onMouseEnter");
   }
   onMouseLeave() {
-    console.log("onMouseLeave");
+    //console.log("onMouseLeave");
   }
   onMouseOver() {
-    console.log("onMouseOver");
+    //console.log("onMouseOver");
   }
   onMouseMove(e: MouseEvent) {
     var panel = this.findHitPanel(e.offsetX, e.offsetY);
@@ -397,26 +395,29 @@ export class PanelDataComponent {
     // ray-casting algorithm based on
     // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 
-    var x = p.x, y = p.y;
+    const x = p.x, y = p.y;
 
-    var inside = false;
-    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      var xi = poly[i].x, yi = poly[i].y;
-      var xj = poly[j].x, yj = poly[j].y;
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i].x, yi = poly[i].y;
+      const xj = poly[j].x, yj = poly[j].y;
 
-      var intersect = ((yi > y) != (yj > y))
+      const intersect = ((yi > y) !== (yj > y))
         && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
+      if (intersect) {
+        inside = !inside;
+      }
     }
 
     return inside;
-  };
+  }
 
   private findHitPanel(x: number, y: number): any {
 
-    for (var p in this.panelGeometry) {
-      if (this.PointInPoly({ x: x, y: y }, this.panelGeometry[p].points))
+    for (const p in this.panelGeometry) {
+      if (this.PointInPoly({ x: x, y: y }, this.panelGeometry[p].points)) {
         return p;
+      }
     }
     return null;
   }

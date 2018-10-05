@@ -1,27 +1,8 @@
 import { Component, Inject, ElementRef, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-//import { load } from '@angular/core/src/render3/instructions';
-//import { read } from 'fs';
+import { LiveDataService, ISonoffSensorData, ISonoffSample } from '../live-data-service/live-data-service';
 
 
-export interface ENERGY {
-  Total: number;
-  Yesterday: number;
-  Today: number;
-  Power: number;
-  Factor: number;
-  Voltage: number;
-  Current: number;
-}
-
-export interface StatusSNS {
-  Time: Date;
-  ENERGY: ENERGY;
-}
-
-export interface SonoffSensorData {
-  StatusSNS: StatusSNS;
-}
 
 
 class LivePowerData {
@@ -31,7 +12,9 @@ class LivePowerData {
   power: number;
   centerX: number;
   centerY: number;
-  public constructor(init?: Partial<LivePowerData>) {    Object.assign(this, init);  }
+  public constructor(init?: Partial<LivePowerData>) {
+    Object.assign(this, init);
+  }
 };
 
 class HistoricData {
@@ -44,10 +27,8 @@ class HistoricData {
   selector: 'app-live-power',
   templateUrl: './live-power.component.html'
 })
+
 export class LivePowerComponent {
-  public loaded: boolean = false;
-  private baseUrl: string;
-  private http: HttpClient;
   @ViewChild('livePowerCanvas') canvasRef: ElementRef;
   private data: LivePowerData[] = [];
   private colourList: string[] = ["244, 115, 32",
@@ -63,61 +44,31 @@ export class LivePowerComponent {
   public POINTS: number=500;
 
 
-  constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
-    this.baseUrl = baseUrl;
-    this.http = http;
-    setTimeout(() => this.ReadDevices(), 100);
+  constructor( private liveDataService: LiveDataService ) {
+    this.ReadDevices();
+    this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
+    this.liveDataService.sonoffData.subscribe(result => { this.newSonoffSample(result);})
   }
 
   public ReadDevices() {
-    this.http.get<SonoffDevice[]>(this.baseUrl + 'api/Sonoff/GetDevices')
-      .subscribe(
-        result => {
-          this.ProcessDevices(result);
-        },
-        error => {
-          console.error(error);
-          setTimeout(() => this.ReadDevices(), 5000);
-        }
-      );
-  }
-
-  public ProcessDevices(devices: SonoffDevice[]) {
-    this.loaded = true;
-
-    for (let d of devices) {
+    for (let d of this.liveDataService.sonoffDevices) {
       this.data[this.data.length] = new LivePowerData( { name: d.description, total: false, id: d.id, power: 0 } );
-      this.requestLivePower(d);
     }
     this.data[this.data.length] = new LivePowerData( { name: "Total", total: true, id: -1, power: 0 } );
   }
 
-  private requestLivePower(d: SonoffDevice) {
-    this.http.get<SonoffSensorData>('http://' + d.hostname + '/cm?cmnd=status 8')
-      .subscribe(
-        result => {
-          this.ProcessLivePower(d, result);
-          setTimeout(() => this.requestLivePower(d), 1.2 * 1000);
-        },
-        error => {
-          console.error(error);
-          setTimeout(() => this.requestLivePower(d), 2.5 * 1000);
-        }
-      )
-  }
-
-  public ProcessLivePower(device: SonoffDevice, result: SonoffSensorData) {
+  public newSonoffSample(s: ISonoffSample) {
 
     for (let d of this.data)
-      if (d.id == device.id) {
-        d.power = result.StatusSNS.ENERGY.Power;
+      if (d.id == s.device.id) {
+        d.power = s.data.StatusSNS.ENERGY.Power;
         break;
       }
-    this.sampleUpdate(result.StatusSNS.Time);
+    this.sampleUpdate(s.data.StatusSNS.Time);
     this.redraw();
   }
 
-  public newSample(result: LivePower) {
+  public newSample(result: ILivePower) {
     if (this.data.length > 0) {
       this.data[this.data.length-1].power = result.wattsConsumed;
       this.redraw();
@@ -208,7 +159,6 @@ export class LivePowerComponent {
     let scale: number = height / maxPower;
 
     // live data
-    //debugger;
     sumPower = 0;
     for (let i: number = 0; i < this.data.length; i++) {
       let d = this.data[i];
@@ -227,7 +177,6 @@ export class LivePowerComponent {
       }
     }
     // historic data
-    //debugger;
     let s: number = this.getLast();
     for (let si: number = 0; si < this.POINTS; si++) {
       let hd = this.historicData[s];

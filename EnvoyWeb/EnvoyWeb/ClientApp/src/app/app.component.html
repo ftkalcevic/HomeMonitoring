@@ -1,18 +1,10 @@
-<app-live-power #livePower></app-live-power>
-<app-panel-data #panels></app-panel-data>
-<table style="width:800px;">
-  <tr>
-    <td>{{power.timestamp|date:'mediumTime'}}</td>
-    <td>Production: {{power.wattsProduced.toFixed(0)}}</td>
-    <td>Consumption: {{power.wattsConsumed.toFixed(0)}}</td>
-    <td>Net: {{power.wattsNet<0?"+"+(-power.wattsNet.toFixed(0)):-power.wattsNet.toFixed(0)}}</td>
-  </tr>
-  <tr>
-    <td>Max Production: {{this.maxProduction.toFixed(0)}}</td>
-    <td>Max Consumption: {{this.maxConsumption.toFixed(0)}}</td>
-    <td>Max Net: {{-this.minNet.toFixed(0)}}</td>
-    <td>Min Net: {{this.maxNet.toFixed(0)}}</td>
-  </tr>
-</table>
-<app-live-data #speedo></app-live-data>
-<app-historic-data #history></app-historic-data>
+<div class='container-fluid'>
+  <div class='row'>
+    <div class='col-sm-2'>
+      <app-nav-menu></app-nav-menu>
+    </div>
+    <div #bodyContent class='col-sm-10 body-content' style="padding:0;">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

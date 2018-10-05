@@ -1,4 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
+import { LiveDataService } from '../live-data-service/live-data-service';
 
 @Component({
   selector: 'app-live-data',
@@ -8,11 +9,13 @@ export class LiveDataComponent {
   @ViewChild('indicatorCanvas') canvasRef: ElementRef;
   private maxPower: number = 3500;
   private maxProduction: number = 270 * 12;
-  public loaded: boolean = false;
 
-  public redrawSpeedo(power: LivePower) {
-    this.loaded = true;
+  constructor(private liveDataService: LiveDataService) {
+    this.liveDataService.envoyData.subscribe(result => { this.redrawSpeedo(result); })
+    console.info("Live data service length="+this.liveDataService.envoyLive.data.length);
+  }
 
+  public redrawSpeedo(power: ILivePower) {
     if (Math.abs(power.wattsConsumed) > this.maxPower)
       this.maxPower = Math.abs(power.wattsConsumed);
     if (Math.abs(power.wattsProduced) > this.maxPower)

@@ -30,9 +30,9 @@ namespace EnvoyWeb.Controllers
 
         // GET: api/Envoy/LiveData
         [HttpGet("[action]")]
-        public LivePower LiveData()
+        public ILivePower LiveData()
         {
-            LivePower power = new LivePower();
+            ILivePower power = new ILivePower();
 
             try
             {
@@ -65,9 +65,9 @@ namespace EnvoyWeb.Controllers
 
         // GET: api/Envoy/CurrentPanelData
         [HttpGet("[action]")]
-        public IEnumerable<PanelData> CurrentPanelData()
+        public IEnumerable<IPanelData> CurrentPanelData()
         {
-            List<PanelData> panels = new List<PanelData>();
+            List<IPanelData> panels = new List<IPanelData>();
 
             using (var con = new SqlConnection(connectString))
             {
@@ -89,7 +89,7 @@ namespace EnvoyWeb.Controllers
                             int watts= rdr.GetInt32(3);
                             int percent = rdr.GetInt32(4);
 
-                            panels.Add(new PanelData()
+                            panels.Add(new IPanelData()
                             {
                                 inverterId = inverterId,
                                 serialNumber = serialNumber,
@@ -108,13 +108,13 @@ namespace EnvoyWeb.Controllers
         }
     }
 
-    public class LivePower
+    public class ILivePower
     {
         public DateTime timestamp;
         public double wattsProduced;
         public double wattsConsumed;
         public double wattsNet;
-        public LivePower()
+        public ILivePower()
         {
             timestamp = DateTime.MinValue;
             wattsProduced = 0;
@@ -122,14 +122,14 @@ namespace EnvoyWeb.Controllers
             wattsNet = 0;
         }
     };
-    public class PanelData
+    public class IPanelData
     {
         public DateTime timestamp;
         public int watts;
         public int percentage;
         public string serialNumber;
         public int inverterId;
-        public PanelData()
+        public IPanelData()
         {
             timestamp = DateTime.MinValue;
             watts = 0;

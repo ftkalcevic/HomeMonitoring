@@ -1,4 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
+import { LiveDataService } from '../live-data-service/live-data-service';
 
 @Component({
   selector: 'app-historic-data',
@@ -7,15 +8,17 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 export class HistoricDataComponent {
   @ViewChild('historyCanvas') canvasRef: ElementRef;
   private maxPower: number = 3500;
-  public loaded: boolean = false;
-  public samples: LivePower[];
+  public samples: ILivePower[];
   public first: number = 0;
   public last: number = 0;
   public POINTS: number;
   private maxProduction: number = 270 * 12;
 
+  constructor(private liveDataService: LiveDataService) {
+    this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
+  }
 
-  private AddSample(power: LivePower) {
+  private AddSample(power: ILivePower) {
     this.samples[this.last] = power;
     this.last++;
     if (this.last >= this.POINTS)
@@ -27,8 +30,7 @@ export class HistoricDataComponent {
     }
   }
 
-  public newSample(power: LivePower) {
-    this.loaded = true;
+  public newSample(power: ILivePower) {
     if (this.samples == null) {
       this.POINTS = this.canvasRef.nativeElement.width;
       this.samples = new Array(this.POINTS);

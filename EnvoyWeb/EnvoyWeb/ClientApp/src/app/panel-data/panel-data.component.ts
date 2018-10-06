@@ -1,4 +1,4 @@
-import { Component, Inject, ElementRef, ViewChild } from '@angular/core';
+import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatrixLT } from '../../assets/src_matrix_lt.js';
 import { DatePipe } from '@angular/common';
@@ -190,6 +190,11 @@ export class PanelDataComponent {
     this.baseUrl = baseUrl;
     this.http = http;
     setTimeout(() => this.ReadData(), 1000);
+  }
+
+  ngAfterViewInit() {
+    this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
+    this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
   }
 
   public ReadData() {

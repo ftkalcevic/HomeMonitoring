@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { LiveDataService } from '../live-data-service/live-data-service';
 
 @Component({
@@ -16,6 +16,11 @@ export class HistoricDataComponent {
 
   constructor(private liveDataService: LiveDataService) {
     this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
+  }
+
+  ngAfterViewInit() {
+    this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
+    this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
   }
 
   private AddSample(power: ILivePower) {

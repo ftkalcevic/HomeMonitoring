@@ -1,5 +1,4 @@
-import { Component, Inject, ElementRef, ViewChild } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { LiveDataService, ISonoffSensorData, ISonoffSample } from '../live-data-service/live-data-service';
 
 
@@ -48,6 +47,11 @@ export class LivePowerComponent {
     this.ReadDevices();
     this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
     this.liveDataService.sonoffData.subscribe(result => { this.newSonoffSample(result);})
+  }
+
+  ngAfterViewInit() {
+    this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
+    this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
   }
 
   public ReadDevices() {

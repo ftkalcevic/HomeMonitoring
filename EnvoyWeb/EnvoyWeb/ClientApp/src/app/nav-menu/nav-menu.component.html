@@ -1,5 +1,84 @@
+<!--
+  
+
+<nav class="navbar navbar-default sidebar" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-sidebar-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="collapse navbar-collapse" id="bs-sidebar-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#">Home<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-home"></span></a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Power
+            <span class="caret"></span>
+            <span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-user"></span>
+          </a>
+          <ul class="dropdown-menu forAnimate" role="menu">
+            <li>
+              <a [routerLink]='["/live-data"]' class="nav-link" (click)='collapse()'>
+                <span class='fas fa-home'></span> Solar Live
+              </a>
+            </li>
+            <li class="nav-item" [routerLinkActive]='["link-active"]'>
+              <a [routerLink]='["/historic-data"]' class="nav-link" (click)='collapse()'>
+                <span class='fas fa-sort-amount-up'></span> Solar History
+              </a>
+            </li>
+            <li class="nav-item" [routerLinkActive]='["link-active"]'>
+              <a [routerLink]='["/panel-data"]' class="nav-link" (click)='collapse()'>
+                <span class='fas fa-database'></span> Solar Panels
+              </a>
+            </li>
+            <li class="nav-item" [routerLinkActive]='["link-active"]'>
+              <a [routerLink]='["/live-power"]' class="nav-link" (click)='collapse()'>
+                <span class='fas fa-database'></span> Live Power
+              </a>
+            </li>
+
+            <li class="nav-item" [routerLinkActive]='["link-active"]'>
+              <a [routerLink]='["/enlighten"]' class="nav-link" (click)='collapse()'>
+                <span class='fas fa-database'></span> Enlighten
+              </a>
+            </li>
+
+            <li class="nav-item" [routerLinkActive]='["link-active"]'>
+              <a [routerLink]='["/energyeasy"]' class="nav-link" (click)='collapse()'>
+                <span class='fas fa-database'></span> Easy Energy
+              </a>
+            </li>
+
+
+
+
+
+
+            <li><a href="#">Modificar</a></li>
+            <li><a href="#">Reportar</a></li>
+            <li class="divider"></li>
+            <li><a href="#">Separated link</a></li>
+            <li class="divider"></li>
+            <li><a href="#">Informes</a></li>
+          </ul>
+        </li>
+        <li><a href="#">Libros<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-th-list"></span></a></li>
+        <li><a href="#">Tags<span style="font-size:16px;" class="pull-right hidden-xs showopacity glyphicon glyphicon-tags"></span></a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+
+-->
+
 <div class='main-nav'>
-  <nav class='navbar navbar-expand-sm navbar-dark bg-dark d-flex flex-column'> 
+  <nav class='navbar navbar-expand-sm navbar-dark bg-dark d-flex flex-column'>
     <div class="navbar-header p-0">
       <button type='button' class='navbar-toggler' data-toggle='collapse' data-target='#navbarNav' [attr.aria-expanded]='isExpanded' (click)='toggle()'>
         <span class='navbar-toggler-icon'></span>
@@ -8,6 +87,7 @@
     <div class='clearfix p-2'></div>
     <div id="navbarNav" class='navbar-collapse collapse p-0' [ngClass]='{ "in": isExpanded }'>
       <ul class='nav navbar-nav flex-column'>
+        <a>Solar</a>
         <li class="nav-item" [routerLinkActive]='["link-active"]' [routerLinkActiveOptions]='{ exact: true }'>
           <a [routerLink]='["/live-data"]' class="nav-link" (click)='collapse()'>
             <span class='fas fa-home'></span> Solar Live
@@ -45,3 +125,4 @@
     </div>
   </nav>
 </div>
+

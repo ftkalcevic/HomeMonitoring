@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { LiveDataService } from '../live-data-service/live-data-service';
 
 @Component({
@@ -15,6 +15,11 @@ export class LiveDataComponent {
     console.info("Live data service length="+this.liveDataService.envoyLive.data.length);
   }
 
+  ngAfterViewInit() {
+    this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
+    this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
+  }
+
   public redrawSpeedo(power: ILivePower) {
     if (Math.abs(power.wattsConsumed) > this.maxPower)
       this.maxPower = Math.abs(power.wattsConsumed);
@@ -27,12 +32,12 @@ export class LiveDataComponent {
     let width: number = this.canvasRef.nativeElement.width;
     let height: number = this.canvasRef.nativeElement.height;
 
-    ctx.save();
+    ctx.save(); 
     ctx.clearRect(0, 0, width, height);
 
     let size: number = width/2 > height ? height : width/2;
     ctx.translate(width / 2, height);
-    ctx.scale((size ) / 1000, -size / 1000);
+    ctx.scale(size / 1000, -size / 1000); 
 
     // Grid
     let i: number;

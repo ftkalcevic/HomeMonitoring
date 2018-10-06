@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { LiveDataService } from '../live-data-service/live-data-service';
+import { LiveDataService, LivePower } from '../live-data-service/live-data-service';
 
 @Component({
   selector: 'app-live-data',
@@ -12,15 +12,18 @@ export class LiveDataComponent {
 
   constructor(private liveDataService: LiveDataService) {
     this.liveDataService.envoyData.subscribe(result => { this.redrawSpeedo(result); })
-    console.info("Live data service length="+this.liveDataService.envoyLive.data.length);
   }
 
   ngAfterViewInit() {
     this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
+
+    if (this.liveDataService.envoyLive.data.length > 0) {
+      this.redrawSpeedo(this.liveDataService.envoyLive.data.item(this.liveDataService.envoyLive.data.length));
+    }
   }
 
-  public redrawSpeedo(power: ILivePower) {
+  public redrawSpeedo(power: LivePower) {
     if (Math.abs(power.wattsConsumed) > this.maxPower)
       this.maxPower = Math.abs(power.wattsConsumed);
     if (Math.abs(power.wattsProduced) > this.maxPower)

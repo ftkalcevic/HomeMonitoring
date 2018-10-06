@@ -21,9 +21,9 @@ export interface ISonoffSensorData {
 }
 
 
-class CircularBuffer<T> {
+export class CircularBuffer<T> {
   private data: T[];
-  private size: number;
+  public size: number;
   private first: number;
   private last: number;
 
@@ -64,21 +64,21 @@ class CircularBuffer<T> {
 }
 
 class RealtimeEnvoyData {
-  data: CircularBuffer<ILivePower>;
+  data: CircularBuffer<LivePower>;
   maxProduction: number;
   maxConsumption: number;
   maxNet: number;
   minNet: number;
 
   constructor(maxSamples: number) {
-    this.data = new CircularBuffer<ILivePower>(maxSamples);
+    this.data = new CircularBuffer<LivePower>(maxSamples);
     this.maxProduction = 0;
     this.maxConsumption = 0;
     this.maxNet = 0;
     this.minNet = 0;
   }
 
-  addSample(result: ILivePower):void {
+  addSample(result: LivePower): void {
 
     if (result.wattsProduced > this.maxProduction) this.maxProduction = result.wattsProduced;
     if (result.wattsConsumed > this.maxConsumption) this.maxConsumption = result.wattsConsumed;
@@ -87,8 +87,15 @@ class RealtimeEnvoyData {
 
     this.data.append(result);
   }
-
 };
+
+export class LivePower implements ILivePower {
+  receivedTime: number;
+  timestamp: Date;
+  wattsProduced: number;
+  wattsConsumed: number;
+  wattsNet: number;
+} 
 
 class SonoffDevice implements ISonoffDevice {
   id: number;    name: string;
@@ -103,6 +110,7 @@ class SonoffDevice implements ISonoffDevice {
 export interface ISonoffSample {
   device: SonoffDevice;
   data: ISonoffSensorData;
+  receivedTime: number;
 }
 
 @Injectable({
@@ -113,14 +121,15 @@ export class LiveDataService {
   private http: HttpClient;
   public envoyLive: RealtimeEnvoyData;
   public sonoffDevices: SonoffDevice[];
-
-  @Output() envoyData: EventEmitter<ILivePower> = new EventEmitter<ILivePower>(true);
+  public sonoffLive: CircularBuffer<ISonoffSample>;
+  @Output() envoyData: EventEmitter<LivePower> = new EventEmitter<LivePower>(true);
   @Output() sonoffData: EventEmitter<ISonoffSample> = new EventEmitter<ISonoffSample>(true);
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
     this.baseUrl = baseUrl;
     this.http = http;
     this.envoyLive = new RealtimeEnvoyData(600);
+
     this.sonoffDevices = [];
     setTimeout(() => this.ReadEnvoyData(), 100);
     setTimeout(() => this.ReadSonoffDevices(), 100);
@@ -131,9 +140,10 @@ export class LiveDataService {
       // clean up data
       if (result.wattsConsumed < 0) result.wattsConsumed = 0;
       if (result.wattsProduced < 0) result.wattsProduced = 0;
+      const receivedTime: number = Date.now();
 
-      this.envoyLive.addSample(result);
-      this.envoyData.emit(result);
+      this.envoyLive.addSample({ receivedTime: receivedTime, timestamp: result.timestamp, wattsConsumed: result.wattsConsumed, wattsNet: result.wattsNet, wattsProduced: result.wattsProduced });
+      this.envoyData.emit({ receivedTime: receivedTime, timestamp: result.timestamp, wattsConsumed: result.wattsConsumed, wattsNet: result.wattsNet, wattsProduced: result.wattsProduced });
     }
   }
 
@@ -170,6 +180,7 @@ export class LiveDataService {
       this.sonoffDevices[this.sonoffDevices.length] = new SonoffDevice({ name: d.name, description: d.description, id: d.id, hostname: d.hostname });
       this.requestLivePower(d);
     }
+    this.sonoffLive = new CircularBuffer<ISonoffSample>(600*this.sonoffDevices.length);
   }
 
   private requestLivePower(d: SonoffDevice) {
@@ -190,8 +201,9 @@ export class LiveDataService {
 
     for (let d of this.sonoffDevices)
       if (d.id == device.id) {
-        //d.power = result.StatusSNS.ENERGY.Power;
-        this.sonoffData.emit({ device: device, data: result });
+        const receivedTime: number = Date.now();
+        this.sonoffLive.append({ device: device, data: result, receivedTime: receivedTime });
+        this.sonoffData.emit({ device: device, data: result, receivedTime: receivedTime });
         break;
       }
   }

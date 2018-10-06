@@ -125,15 +125,15 @@ section {
 
 */
 .main-nav {
-  //position: fixed;
-  //left: 0;
-  //right: 0;
-  //z-index: 1;
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 1;
 
   li {
     a {
       cursor: pointer;
-      padding: 1px 1px;
+      padding: 0px 0px;
       border-radius: 4px;
     }
 
@@ -153,12 +153,15 @@ section {
 @media (min-width: 768px) {
   .main-nav {
     //width: calc(~"25% - 30px");
-    min-width: 80px;
+    min-width: 120px;
+    padding: 0px;
 
     .navbar {
-      border-radius: 0 5px 5px 0;
+      border-radius: 5px 5px 5px 5px;
       border-width: 0px;
       height: 100%;
+      padding-left: 0px;
+      padding-right: 0px;
 
       a {
         width: 100%;
@@ -177,7 +180,7 @@ section {
         margin: 6px;
 
         a {
-          padding: 10px 16px;
+          padding: 4px 4px;
           border-radius: 4px;
         }
       }

@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { LiveDataService } from '../live-data-service/live-data-service';
+import { LiveDataService, CircularBuffer, LivePower } from '../live-data-service/live-data-service';
 
 @Component({
   selector: 'app-historic-data',
@@ -8,10 +8,6 @@ import { LiveDataService } from '../live-data-service/live-data-service';
 export class HistoricDataComponent {
   @ViewChild('historyCanvas') canvasRef: ElementRef;
   private maxPower: number = 3500;
-  public samples: ILivePower[];
-  public first: number = 0;
-  public last: number = 0;
-  public POINTS: number;
   private maxProduction: number = 270 * 12;
 
   constructor(private liveDataService: LiveDataService) {
@@ -21,32 +17,10 @@ export class HistoricDataComponent {
   ngAfterViewInit() {
     this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
+    this.newSample(null);
   }
 
-  private AddSample(power: ILivePower) {
-    this.samples[this.last] = power;
-    this.last++;
-    if (this.last >= this.POINTS)
-      this.last = 0;
-    if (this.first == this.last) {
-      this.first++;
-      if (this.first >= this.POINTS)
-        this.first = 0;
-    }
-  }
-
-  public newSample(power: ILivePower) {
-    if (this.samples == null) {
-      this.POINTS = this.canvasRef.nativeElement.width;
-      this.samples = new Array(this.POINTS);
-    }
-
-    if (Math.abs(power.wattsConsumed) > this.maxPower)
-      this.maxPower = Math.abs(power.wattsConsumed);
-    if (Math.abs(power.wattsProduced) > this.maxPower)
-      this.maxPower = Math.abs(power.wattsProduced);
-
-    this.AddSample(power);
+  public newSample(power: LivePower) {
 
     let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
 
@@ -77,21 +51,19 @@ export class HistoricDataComponent {
     }
     ctx.stroke();
 
+    const POINTS: number = this.liveDataService.envoyLive.data.size;
+    const data: CircularBuffer<LivePower> = this.liveDataService.envoyLive.data;
+
     // production
     ctx.fillStyle = "rgba(41, 155, 251, 0.3)";
     ctx.beginPath();
-    ctx.moveTo(5, 0);
-    i = this.first;
-    let x: number, y: number, j: number;
-    for (j=0; ;j++) {
-      if (i == this.last)
-        break;
-      x = 5 + j/this.POINTS * (1000-10);
-      y = this.samples[i].wattsProduced;
+    ctx.moveTo(995, 0);
+
+    let x: number, y: number;
+    for (let i = this.liveDataService.envoyLive.data.length - 1; i > 0; i--) {
+      x = 5 + (i + POINTS-this.liveDataService.envoyLive.data.length)/POINTS * (1000-10);
+      y = data.item(i).wattsProduced;
       ctx.lineTo(x, y);
-      i++;
-      if (i == this.POINTS)
-        i = 0;
     }
     ctx.lineTo(x, 0);
     ctx.fill();
@@ -99,35 +71,23 @@ export class HistoricDataComponent {
     // production net
     ctx.fillStyle = "rgba(41, 155, 251, 0.8)";
     ctx.beginPath();
-    ctx.moveTo(5, 0);
-    i = this.first;
-    for (j = 0; ; j++) {
-      if (i == this.last)
-        break;
-      x = 5 + j / this.POINTS * (1000 - 10);
-      y = Math.abs(this.samples[i].wattsNet < 0 ? this.samples[i].wattsNet : 0);
+    ctx.moveTo(995, 0);
+    for (let i = this.liveDataService.envoyLive.data.length - 1; i > 0; i--) {
+      x = 5 + (i + POINTS-this.liveDataService.envoyLive.data.length)/POINTS * (1000-10);
+      y = Math.abs(data.item(i).wattsNet < 0 ? data.item(i).wattsNet : 0);
       ctx.lineTo(x, y);
-      i++;
-      if (i == this.POINTS)
-        i = 0;
     }
     ctx.lineTo(x, 0);
     ctx.fill();
-
+    
     // consumption
     ctx.fillStyle = "rgba(244,115,32,0.3)";
     ctx.beginPath();
-    ctx.moveTo(5, 0);
-    i = this.first;
-    for (j = 0; ; j++) {
-      if (i == this.last)
-        break;
-      x = 5 + j / this.POINTS * (1000 - 10);
-      y = -this.samples[i].wattsConsumed;
+    ctx.moveTo(995, 0);
+    for (let i = this.liveDataService.envoyLive.data.length - 1; i > 0; i--) {
+      x = 5 + (i + POINTS-this.liveDataService.envoyLive.data.length)/POINTS * (1000-10);
+      y = -data.item(i).wattsConsumed;
       ctx.lineTo(x, y);
-      i++;
-      if (i == this.POINTS)
-        i = 0;
     }
     ctx.lineTo(x, 0);
     ctx.fill();
@@ -135,21 +95,14 @@ export class HistoricDataComponent {
     // consumption net
     ctx.fillStyle = "rgba(244,115,32,0.8)";
     ctx.beginPath();
-    ctx.moveTo(5, 0);
-    i = this.first;
-    for (j = 0; ; j++) {
-      if (i == this.last)
-        break;
-      x = 5 + j / this.POINTS * (1000 - 10);
-      y = -Math.abs(this.samples[i].wattsNet > 0 ? this.samples[i].wattsNet : 0);
+    ctx.moveTo(995, 0);
+    for (let i = this.liveDataService.envoyLive.data.length - 1; i > 0; i--) {
+      x = 5 + (i + POINTS - this.liveDataService.envoyLive.data.length) / POINTS * (1000 - 10);
+      y = -Math.abs(data.item(i).wattsNet > 0 ? data.item(i).wattsNet : 0);
       ctx.lineTo(x, y);
-      i++;
-      if (i == this.POINTS)
-        i = 0;
     }
     ctx.lineTo(x, 0);
     ctx.fill();
-
 
     ctx.strokeStyle = "red";
     ctx.setLineDash([15, 20]);

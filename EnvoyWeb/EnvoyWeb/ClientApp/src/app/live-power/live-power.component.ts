@@ -1,8 +1,5 @@
 import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
-import { LiveDataService, ISonoffSensorData, ISonoffSample } from '../live-data-service/live-data-service';
-
-
-
+import { LiveDataService, ISonoffSensorData, ISonoffSample, CircularBuffer, LivePower } from '../live-data-service/live-data-service';
 
 class LivePowerData {
   name: string;
@@ -37,13 +34,14 @@ export class LivePowerComponent {
                                   "117, 255, 51",
                                   "51, 255, 87",
                                   "51, 255, 189"];
-  private historicData: HistoricData[] = [];
+  private historicData: CircularBuffer<HistoricData>;
   public first: number = 0;
   public last: number = 0;
   public POINTS: number=500;
 
 
   constructor( private liveDataService: LiveDataService ) {
+    this.historicData = new CircularBuffer<HistoricData>(this.POINTS);
     this.ReadDevices();
     this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
     this.liveDataService.sonoffData.subscribe(result => { this.newSonoffSample(result);})
@@ -58,10 +56,34 @@ export class LivePowerComponent {
     for (let d of this.liveDataService.sonoffDevices) {
       this.data[this.data.length] = new LivePowerData( { name: d.description, total: false, id: d.id, power: 0 } );
     }
-    this.data[this.data.length] = new LivePowerData( { name: "Total", total: true, id: -1, power: 0 } );
+    this.data[this.data.length] = new LivePowerData({ name: "Total", total: true, id: -1, power: 0 });
+
+    this.liveDataService.envoyLive;
+    this.liveDataService.sonoffData;
+
+    // Read existing data
+    let e: number = 0, s: number = 0;
+    while (e < this.liveDataService.envoyLive.data.length ||
+           s < this.liveDataService.sonoffLive.length) {
+      if (e < this.liveDataService.envoyLive.data.length && s < this.liveDataService.sonoffLive.length) {
+        if (this.liveDataService.envoyLive.data.item(e).receivedTime <= this.liveDataService.sonoffLive.item(s).receivedTime) {
+          this.newSample(this.liveDataService.envoyLive.data.item(e),true);
+          e++;
+        } else {
+          this.newSonoffSample(this.liveDataService.sonoffLive.item(s),true);
+          s++;
+        }
+      } else if (e < this.liveDataService.envoyLive.data.length) {
+        this.newSample(this.liveDataService.envoyLive.data[e],true);
+        e++;
+      } else {
+        this.newSonoffSample(this.liveDataService.sonoffLive.item(s),true);
+        s++;
+      }
+    }
   }
 
-  public newSonoffSample(s: ISonoffSample) {
+  public newSonoffSample(s: ISonoffSample, dontRedraw?: boolean) {
 
     for (let d of this.data)
       if (d.id == s.device.id) {
@@ -69,30 +91,31 @@ export class LivePowerComponent {
         break;
       }
     this.sampleUpdate(s.data.StatusSNS.Time);
-    this.redraw();
+    if ( dontRedraw === undefined) this.redraw();
   }
 
-  public newSample(result: ILivePower) {
+  public newSample(result: LivePower, dontRedraw?: boolean) {
+
     if (this.data.length > 0) {
       this.data[this.data.length-1].power = result.wattsConsumed;
-      this.redraw();
+      if (dontRedraw === undefined) this.redraw();
     }
     this.sampleUpdate(result.timestamp);
   }
 
   private sampleUpdate(t: Date) {
-    let lastSample = this.getLast();
-    if (this.first == this.last) {
+    let lastSample:number = this.historicData.length-1;
+    if (this.historicData.length === 0 ) {
       // no data
-    } else if (this.historicData[lastSample].time == t) {
+    } else if (this.historicData.item(lastSample).time == t) {
       // same time. just update values.
       for (let d of this.data)
-        for (let s of this.historicData[lastSample].data)
+        for (let s of this.historicData.item(lastSample).data)
           if (d.id == s.id) {
             s.power = d.power;
             break;
           }
-      this.historicData[lastSample].max = this.CalcHistoricMax(this.historicData[lastSample].data);
+      this.historicData.item(lastSample).max = this.CalcHistoricMax(this.historicData.item(lastSample).data);
       return;
     }
     // add new
@@ -107,33 +130,13 @@ export class LivePowerComponent {
       h.data[i].total = this.data[i].total;
     }
     h.max = this.CalcHistoricMax(h.data);
-    this.AddHistoric(h);
+    this.historicData.append(h);
   }
 
   private CalcHistoricMax(data: LivePowerData[]): number {
     let sum: number = data.slice(0, this.data.length - 1).reduce((ty, d) => ty + d.power, 0);
     return Math.max(sum, data[this.data.length-1].power);
   }
-
-  private getLast(): number {
-    if (this.last > 0)
-      return this.last-1;
-    else
-      return this.POINTS - 1;
-  }
-
-  private AddHistoric(h: HistoricData) {
-    this.historicData[this.last] = h;
-    this.last++;
-    if (this.last >= this.POINTS)
-      this.last = 0;
-    if (this.first == this.last) {
-      this.first++;
-      if (this.first >= this.POINTS)
-        this.first = 0;
-    }
-  }
-
 
   public redraw() {
 
@@ -145,7 +148,8 @@ export class LivePowerComponent {
     if (sumPower > maxPower)
       maxPower = sumPower;
 
-    let maxHistoric: number = this.historicData.reduce((m, hd) => Math.max(m,hd.max), 0);
+    let maxHistoric: number = 0;
+    for (let i: number = 0; i < this.historicData.length; i++) maxHistoric = Math.max(maxHistoric, this.historicData.item(i).max);
     if (maxHistoric > maxPower)
       maxPower = maxHistoric;
 
@@ -181,11 +185,11 @@ export class LivePowerComponent {
       }
     }
     // historic data
-    let s: number = this.getLast();
-    for (let si: number = 0; si < this.POINTS; si++) {
-      let hd = this.historicData[s];
-      let x: number = barX - si;
-      let a: string = "," + (0.15+0.7*(this.POINTS - si) / this.POINTS).toFixed(3) + ")";
+    for (let si: number = this.historicData.length - 1; si >= 0; si--) {
+      
+      let hd = this.historicData.item(si);
+      let x: number = si + (this.POINTS - this.historicData.length);
+      let a: string = "," + (0.15 + 0.7 * (si + (this.POINTS - this.historicData.length)) / this.POINTS).toFixed(3) + ")";
       sumPower = 0;
       for (let i: number = 0; i< hd.data.length; i++) {
         let d: LivePowerData = hd.data[i];
@@ -199,11 +203,6 @@ export class LivePowerComponent {
           sumPower += d.power;
         }
       }
-      if (s == this.first) break;
-      if (s == 0)
-        s = this.POINTS - 1;
-      else
-        s--;
     }
 
     ctx.strokeStyle = "black";

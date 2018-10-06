@@ -32,15 +32,29 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="compilerconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="ClientApp\src\data\file.ts" />
     <None Remove="ClientApp\src\data\live-power.ts" />
     <None Remove="ClientApp\src\data\panel-power.ts" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="compilerconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <TypeScriptCompile Include="ClientApp\src\data\sonoff-device.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\panel-power.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\live-power.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ClientApp\src\app\nav-menu\nav-menu.component.less">
+      <Generator></Generator>
+    </None>
   </ItemGroup>
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">

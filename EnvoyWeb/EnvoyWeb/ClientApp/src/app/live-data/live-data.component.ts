@@ -19,7 +19,7 @@ export class LiveDataComponent {
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
 
     if (this.liveDataService.envoyLive.data.length > 0) {
-      this.redrawSpeedo(this.liveDataService.envoyLive.data.item(this.liveDataService.envoyLive.data.length));
+      this.redrawSpeedo(this.liveDataService.envoyLive.data.item(this.liveDataService.envoyLive.data.length-1));
     }
   }
 

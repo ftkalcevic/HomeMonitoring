@@ -1,0 +1,25 @@
+<div flex >
+  <div class="row" style="height:80px;"></div>
+  <div class="device" ng-view style="height: 480px; width: 100%;">
+    <div class="device-block" *ngFor="let d of devices" [routerLink]='["/sonoff-device",d.id]'>
+      <table *ngIf="d.type=='sonoff'">
+        <tr><td class="deviceTitle" colspan="2">{{d.name}}</td></tr>
+        <tr><td class="deviceTimestamp" colspan="2">{{d.timestamp | date: 'E d LLL h:mm:ss'}}{{ d.timestamp | date: 'a' | lowercase}}</td></tr>
+        <tr><td>Voltage</td><td class="deviceReading">{{d.voltage}} V</td></tr>
+        <tr><td>Current</td><td class="deviceReading">{{d.current}} A</td></tr>
+        <tr><td>Power</td><td class="deviceReading">{{d.power}} W</td></tr>
+        <tr><td>Power Factor</td><td class="deviceReading">{{d.factor}}</td></tr>
+        <tr><td>Energy Today</td><td class="deviceReading">{{d.today}} kWh</td></tr>
+        <tr><td>Energy Yesterday</td><td class="deviceReading">{{d.yesterday}} kWh</td></tr>
+        <tr><td>Energy Total</td><td class="deviceReading">{{d.total}} kWh</td></tr>
+      </table>
+      <table *ngIf="d.type=='envoy'">
+        <tr><td class="deviceTitle" colspan="2">{{d.name}}</td></tr>
+        <tr><td class="deviceTimestamp" colspan="2">{{d.timestamp | date: 'E d LLL h:mm:ss'}}{{ d.timestamp | date: 'a' | lowercase}}</td></tr>
+        <tr><td>Consumed</td><td class="deviceReading">{{d.wattsConsumed}} W</td></tr>
+        <tr><td>Produced</td><td class="deviceReading">{{d.wattsProduced}} W</td></tr>
+        <tr><td>Net</td><td class="deviceReading">{{d.wattsNet}} W</td></tr>
+      </table>
+    </div>
+  </div>
+</div>

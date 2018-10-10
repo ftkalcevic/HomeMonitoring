@@ -1,0 +1,16 @@
+<div>
+  <table class='solar-stats-table'>
+      <tr>
+        <th style="width:25%;">Date</th>
+        <th style="width:25%;">Production (W)</th>
+        <th style="width:25%;">Consumption (W)</th>
+        <th style="width:25%;">Net (W)</th>
+      </tr>
+      <tr>
+        <td>{{ timestamp | date: 'E d LLL h:mm:ss'}}{{ timestamp | date: 'a' | lowercase}}</td>
+        <td>{{ wattsProduced.toFixed(0) }}</td>
+        <td>{{ wattsConsumed.toFixed(0) }}</td>
+        <td>{{ wattsNet.toFixed(0) }}</td>
+      </tr>
+  </table>
+</div>

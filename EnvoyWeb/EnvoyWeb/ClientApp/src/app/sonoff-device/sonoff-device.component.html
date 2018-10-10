@@ -1,0 +1,21 @@
+<div style="width:100%; height:480px; display:flex; flex-direction:column;" class="container">
+  <div class="row" style="height:80px;"></div>
+  <div class="row">{{deviceName}}</div>
+  <div class="row">
+    <input type="radio" value="day" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Day
+    <input type="radio" value="week" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Week
+    <input type="radio" value="month" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Month
+    <span></span>
+    <input type="checkbox" name="showPower" [(ngModel)]="showPower" (click)="redrawChart();"> Power
+    <input type="checkbox" name="showEnergy" [(ngModel)]="showEnergy" (click)="redrawChart();"> Energy
+  </div>
+  <div>
+    <input [(ngModel)]="startDate" (dateChange)="redrawChart();" matInput [matDatepicker]="picker1" placeholder="Choose a date (1)">
+    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+    <mat-datepicker #picker1></mat-datepicker>
+  </div>
+
+  <div class="row" style="flex: 10;">
+    <canvas #chartCanvas style="width:100%; height:100%;" class="row;"></canvas>
+  </div>
+</div>

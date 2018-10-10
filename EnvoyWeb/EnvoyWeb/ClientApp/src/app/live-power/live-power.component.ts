@@ -35,8 +35,6 @@ export class LivePowerComponent {
                                   "51, 255, 87",
                                   "51, 255, 189"];
   private historicData: CircularBuffer<HistoricData>;
-  public first: number = 0;
-  public last: number = 0;
   public POINTS: number=500;
 
 
@@ -58,9 +56,6 @@ export class LivePowerComponent {
     }
     this.data[this.data.length] = new LivePowerData({ name: "Total", total: true, id: -1, power: 0 });
 
-    this.liveDataService.envoyLive;
-    this.liveDataService.sonoffData;
-
     // Read existing data
     let e: number = 0, s: number = 0;
     while (e < this.liveDataService.envoyLive.data.length ||
@@ -74,7 +69,7 @@ export class LivePowerComponent {
           s++;
         }
       } else if (e < this.liveDataService.envoyLive.data.length) {
-        this.newSample(this.liveDataService.envoyLive.data[e],true);
+        this.newSample(this.liveDataService.envoyLive.data.item(e),true);
         e++;
       } else {
         this.newSonoffSample(this.liveDataService.sonoffLive.item(s),true);

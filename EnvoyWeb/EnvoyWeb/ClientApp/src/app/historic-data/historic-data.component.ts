@@ -35,12 +35,11 @@ export class HistoricDataComponent {
     ctx.scale(width/1000, -(height/2) / this.maxPower);
 
     // Grid
-    ctx.strokeStyle = "#808080";
+    ctx.strokeStyle = "#C0C0C0";
+    ctx.lineWidth = 2 * this.maxPower / height;
     ctx.beginPath();
     ctx.moveTo(5, 0);
     ctx.lineTo(1000, 0);
-    ctx.moveTo(5,-this.maxPower);
-    ctx.lineTo(5,this.maxPower);
 
     let i: number;
     for (i = 0; i < this.maxPower; i += 1000) {
@@ -49,6 +48,12 @@ export class HistoricDataComponent {
       ctx.moveTo(5, -i);
       ctx.lineTo(15, -i);
     }
+    ctx.stroke();
+
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(5, -this.maxPower);
+    ctx.lineTo(5, this.maxPower);
     ctx.stroke();
 
     const POINTS: number = this.liveDataService.envoyLive.data.size;

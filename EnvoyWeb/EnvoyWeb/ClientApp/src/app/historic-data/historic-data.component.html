@@ -1,1 +1,9 @@
-<canvas #historyCanvas style="width:100%; height:480px;"></canvas>
+<div style="width:100%; height:480px; display:flex; flex-direction:column;" class="container">
+  <div class="row" style="height:80px;"></div>
+  <div class="row" style="flex: 10;">
+    <canvas #historyCanvas style="width:100%; height:100%;" class="row;"></canvas>
+  </div>
+  <div class="align-bottom" style="flex:1; padding-top: 4px;">
+    <app-live-solar-stats style="height:0%;"></app-live-solar-stats>
+  </div>
+</div>

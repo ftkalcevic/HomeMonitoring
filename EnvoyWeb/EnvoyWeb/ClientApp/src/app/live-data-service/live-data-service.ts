@@ -1,5 +1,6 @@
 import { Injectable, Inject, EventEmitter, Output } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
 
 export interface IEnergy {
   Total: number;
@@ -113,6 +114,17 @@ export interface ISonoffSample {
   receivedTime: number;
 }
 
+export interface ISonoffDailyData {
+  timestamp: Date;
+  today: number;
+  power: number;
+}
+
+export interface ISonoffSummaryData {
+  timestamp: Date;
+  today: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -206,5 +218,17 @@ export class LiveDataService {
         this.sonoffData.emit({ device: device, data: result, receivedTime: receivedTime });
         break;
       }
+  }
+
+  public getDailySamples(deviceId: number, dayFrom: Date): Observable<ISonoffDailyData[]> {
+    return this.http.get<ISonoffDailyData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetData/' + dayFrom.toISOString());
+  }
+
+  public getWeekSamples(deviceId: number, dayFrom: Date): Observable<ISonoffDailyData[]> {
+    return this.http.get<ISonoffDailyData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetWeekData/' + dayFrom.toISOString());
+  }
+
+  public getSummaryData(deviceId: number): Observable<ISonoffSummaryData[]> {
+    return this.http.get<ISonoffSummaryData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetSummaryData');
   }
 }

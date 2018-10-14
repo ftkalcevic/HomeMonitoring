@@ -12,7 +12,14 @@ export class LiveDataComponent {
 
   constructor(private liveDataService: LiveDataService) {
     this.liveDataService.envoyData.subscribe(result => { this.redrawSpeedo(result); })
+    this.liveDataService.getEnphaseSystem().subscribe(result => { this.processEnphaseSystem(result); })
   }
+
+  processEnphaseSystem(systemId: number) {
+
+    this.liveDataService.getEnphaseSummaryData(systemId).subscribe(result => { return; })
+  }
+
 
   ngAfterViewInit() {
     this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;

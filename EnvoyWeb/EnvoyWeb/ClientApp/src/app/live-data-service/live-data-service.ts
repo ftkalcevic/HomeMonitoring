@@ -231,4 +231,12 @@ export class LiveDataService {
   public getSummaryData(deviceId: number): Observable<ISonoffSummaryData[]> {
     return this.http.get<ISonoffSummaryData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetSummaryData');
   }
+
+  public getEnphaseSystem(): Observable<number> {
+    return this.http.get<number>(this.baseUrl + 'api/Envoy/EnphaseSystem');
+  }
+
+  public getEnphaseSummaryData(systemId:number): Observable<ISonoffSummaryData[]> {
+    return this.http.get<ISonoffSummaryData[]>(this.baseUrl + 'api/Envoy/EnphaseSummary/'+systemId);
+  }
 }

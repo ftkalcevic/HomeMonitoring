@@ -4,6 +4,7 @@ import { LiveDataService, ISonoffSensorData, ISonoffSample, CircularBuffer, Live
 class LivePowerData {
   name: string;
   total: boolean;
+  other: boolean;
   id: number;
   power: number;
   centerX: number;
@@ -33,7 +34,9 @@ export class LivePowerComponent {
                                   "219, 255, 51",
                                   "117, 255, 51",
                                   "51, 255, 87",
-                                  "51, 255, 189"];
+                                  "51, 255, 189",
+                                  "0, 225, 255",
+                                  "255, 255, 255"];
   private historicData: CircularBuffer<HistoricData>;
   public POINTS: number=500;
 
@@ -52,9 +55,10 @@ export class LivePowerComponent {
 
   public ReadDevices() {
     for (let d of this.liveDataService.sonoffDevices) {
-      this.data[this.data.length] = new LivePowerData( { name: d.description, total: false, id: d.id, power: 0 } );
+      this.data[this.data.length] = new LivePowerData({ name: d.description, total: false, other: false, id: d.id, power: 0 } );
     }
-    this.data[this.data.length] = new LivePowerData({ name: "Total", total: true, id: -1, power: 0 });
+    this.data[this.data.length] = new LivePowerData({ name: "Other", total: false, other: true, id: -1, power: 0 });
+    this.data[this.data.length] = new LivePowerData({ name: "Total", total: true, other: false, id: -1, power: 0 });
 
     // Read existing data
     let e: number = 0, s: number = 0;
@@ -99,6 +103,7 @@ export class LivePowerComponent {
   }
 
   private sampleUpdate(t: Date) {
+    this.UpdateOther(this.data);
     let lastSample:number = this.historicData.length-1;
     if (this.historicData.length === 0 ) {
       // no data
@@ -111,6 +116,7 @@ export class LivePowerComponent {
             break;
           }
       this.historicData.item(lastSample).max = this.CalcHistoricMax(this.historicData.item(lastSample).data);
+      this.UpdateOther(this.historicData.item(lastSample).data);
       return;
     }
     // add new
@@ -123,13 +129,31 @@ export class LivePowerComponent {
       h.data[i].name = this.data[i].name;
       h.data[i].power = this.data[i].power;
       h.data[i].total = this.data[i].total;
+      h.data[i].other = this.data[i].other;
     }
     h.max = this.CalcHistoricMax(h.data);
+    this.UpdateOther(h.data);
     this.historicData.append(h);
   }
 
+  private UpdateOther(h: LivePowerData[]) {
+    let sumPower: number = 0;
+    let actualPower: number = 0;
+    let otherIndex: number = -1;
+    for (let i: number = 0; i < h.length; i++) {
+      if (h[i].other)
+        otherIndex = i;
+      else if (h[i].total)
+        actualPower = h[i].power;
+      else
+        sumPower += h[i].power;
+    }
+    if ( otherIndex>=0 && actualPower > sumPower)
+      h[otherIndex].power = actualPower - sumPower;
+  }
+
   private CalcHistoricMax(data: LivePowerData[]): number {
-    let sum: number = data.slice(0, this.data.length - 1).reduce((ty, d) => ty + d.power, 0);
+    let sum: number = data.slice(0, this.data.length - 2).reduce((ty, d) => ty + d.power, 0);
     return Math.max(sum, data[this.data.length-1].power);
   }
 
@@ -137,11 +161,7 @@ export class LivePowerComponent {
 
     let maxPower: number = this.data[this.data.length-1].power;
 
-    // check if component power exceeds maxPower.  This can happen because we don't
-    // receive data at the same time
     let sumPower: number = this.data.slice(0,this.data.length-1).reduce((ty, d) => ty + d.power, 0);
-    if (sumPower > maxPower)
-      maxPower = sumPower;
 
     let maxHistoric: number = 0;
     for (let i: number = 0; i < this.historicData.length; i++) maxHistoric = Math.max(maxHistoric, this.historicData.item(i).max);
@@ -154,6 +174,8 @@ export class LivePowerComponent {
 
     let barWidth: number = 80;
     let labelWidth: number = 120;
+    let labelSpacing: number = 10;
+    let labelHeight: number = height / this.data.length - labelSpacing;
     let barX: number = width - barWidth - labelWidth - 10;
     let labelX: number = width - labelWidth;
     this.POINTS = barX;
@@ -161,23 +183,18 @@ export class LivePowerComponent {
 
     let scale: number = height / maxPower;
 
+    let arrowHead: any = [];
+
     // live data
     sumPower = 0;
-    for (let i: number = 0; i < this.data.length; i++) {
+    for (let i: number = 0; i < this.data.length-1; i++) {
       let d = this.data[i];
-      if (d.total) {
-        ctx.fillStyle = "rgb("+this.colourList[i]+")";
-        ctx.fillRect(barX, height - d.power * scale, barWidth, (d.power-sumPower) * scale);
-        d.centerX = barX + barWidth / 2;
-        // d.centerY = height - (d.power - (d.power-sumPower)/2) * scale;   // mid over
-        d.centerY = height - d.power * scale;
-      } else {
-        ctx.fillStyle = "rgb("+this.colourList[i]+")";
-        ctx.fillRect(barX, height - (sumPower + d.power)*scale, barWidth, d.power*scale);
-        d.centerX = barX + barWidth / 2;
-        d.centerY = height - (sumPower + d.power) * scale + d.power / 2 * scale;
-        sumPower += d.power;
+      ctx.fillStyle = "rgb("+this.colourList[i]+")";
+      ctx.fillRect(barX, height - (sumPower + d.power) * scale, barWidth, d.power * scale);
+      if (d.power > 0) {
+        arrowHead[i] = { centerX: barX + barWidth / 2, centerY: height - (sumPower + d.power) * scale + d.power / 2 * scale };
       }
+      sumPower += d.power;
     }
     // historic data
     for (let si: number = this.historicData.length - 1; si >= 0; si--) {
@@ -186,17 +203,17 @@ export class LivePowerComponent {
       let x: number = si + (this.POINTS - this.historicData.length);
       let a: string = "," + (0.15 + 0.7 * (si + (this.POINTS - this.historicData.length)) / this.POINTS).toFixed(3) + ")";
       sumPower = 0;
-      for (let i: number = 0; i< hd.data.length; i++) {
+      for (let i: number = 0; i< hd.data.length-1; i++) {
         let d: LivePowerData = hd.data[i];
 
-        if (d.total) {
-          ctx.fillStyle = "rgba(" + this.colourList[i] + a;
-          ctx.fillRect(x, height - d.power * scale, 1, d.power * scale);
-        } else {
-          ctx.fillStyle = "rgb(" + this.colourList[i] + a;
-          ctx.fillRect(x, height - (sumPower + d.power) * scale, 1, d.power * scale);
-          sumPower += d.power;
+        ctx.fillStyle = "rgb(" + this.colourList[i] + a;
+        ctx.fillRect(x, height - (sumPower + d.power) * scale, 1, d.power * scale);
+
+        if (arrowHead[i] === undefined && d.power > 0 ) {
+          arrowHead[i] = { centerX: x, centerY: height - (sumPower + d.power) * scale + d.power / 2 * scale };
         }
+
+        sumPower += d.power;
       }
     }
 
@@ -206,16 +223,20 @@ export class LivePowerComponent {
       let y: number = i;
 
       ctx.fillStyle = "rgb(" + this.colourList[i] + ")";
-      ctx.fillRect(labelX, height - (y * 35 + 25), labelWidth, 25);
+      ctx.fillRect(labelX, height - y * (labelHeight + labelSpacing) - labelHeight, labelWidth, labelHeight);
+      if ( this.data[i].total )
+        ctx.strokeRect(labelX, height - y * (labelHeight + labelSpacing) - labelHeight, labelWidth, labelHeight);
 
       ctx.fillStyle = "black";
-      ctx.fillText(this.data[i].name, labelX + labelWidth / 2, height - (y * 35 + 16));
-      ctx.fillText(this.data[i].power.toFixed(0) + "W", labelX + labelWidth / 2, height - (y * 35 + 4));
+      ctx.fillText(this.data[i].name, labelX + labelWidth / 2, height - y * (labelHeight + labelSpacing) - labelHeight+9);
+      ctx.fillText(this.data[i].power.toFixed(0) + "W", labelX + labelWidth / 2, height - y * (labelHeight + labelSpacing) - labelHeight + 20);
 
-      ctx.beginPath();
-      ctx.moveTo(this.data[i].centerX, this.data[i].centerY); 
-      ctx.lineTo(labelX, height-(y * 35 + 12));
-      ctx.stroke();
+      if (arrowHead[i] !== undefined) {
+        ctx.beginPath();
+        ctx.moveTo(arrowHead[i].centerX, arrowHead[i].centerY); 
+        ctx.lineTo(labelX, height - y * (labelHeight + labelSpacing) - labelHeight/2);
+        ctx.stroke();
+      }
     }
   }
 }

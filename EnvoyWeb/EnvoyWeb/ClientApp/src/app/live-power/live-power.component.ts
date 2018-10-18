@@ -1,4 +1,5 @@
 import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Router } from "@angular/router";
 import { LiveDataService, ISonoffSensorData, ISonoffSample, CircularBuffer, LivePower } from '../live-data-service/live-data-service';
 
 class LivePowerData {
@@ -7,8 +8,7 @@ class LivePowerData {
   other: boolean;
   id: number;
   power: number;
-  centerX: number;
-  centerY: number;
+  buttonRect: { x1, y1, x2, y2: number };
   public constructor(init?: Partial<LivePowerData>) {
     Object.assign(this, init);
   }
@@ -22,7 +22,11 @@ class HistoricData {
 
 @Component({
   selector: 'app-live-power',
-  templateUrl: './live-power.component.html'
+  templateUrl: './live-power.component.html',
+  host: {
+    '(click)': 'onMouseClick($event)'
+  },
+
 })
 
 export class LivePowerComponent {
@@ -41,7 +45,7 @@ export class LivePowerComponent {
   public POINTS: number=500;
 
 
-  constructor( private liveDataService: LiveDataService ) {
+  constructor(private liveDataService: LiveDataService, private router: Router ) {
     this.historicData = new CircularBuffer<HistoricData>(this.POINTS);
     this.ReadDevices();
     this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
@@ -173,10 +177,11 @@ export class LivePowerComponent {
     let height: number = this.canvasRef.nativeElement.height;
 
     let barWidth: number = 80;
+    let barGap:number = 50;
     let labelWidth: number = 120;
     let labelSpacing: number = 10;
     let labelHeight: number = height / this.data.length - labelSpacing;
-    let barX: number = width - barWidth - labelWidth - 10;
+    let barX: number = width - barWidth - labelWidth - barGap;
     let labelX: number = width - labelWidth;
     this.POINTS = barX;
     ctx.clearRect(0, 0, width, height);
@@ -192,10 +197,11 @@ export class LivePowerComponent {
       ctx.fillStyle = "rgb("+this.colourList[i]+")";
       ctx.fillRect(barX, height - (sumPower + d.power) * scale, barWidth, d.power * scale);
       if (d.power > 0) {
-        arrowHead[i] = { centerX: barX + barWidth / 2, centerY: height - (sumPower + d.power) * scale + d.power / 2 * scale };
+        arrowHead[i] = { X: barX + barWidth, Y1: height - (sumPower + d.power) * scale, Y2: height - (sumPower + d.power) * scale + d.power * scale };
       }
       sumPower += d.power;
     }
+
     // historic data
     for (let si: number = this.historicData.length - 1; si >= 0; si--) {
       
@@ -226,19 +232,45 @@ export class LivePowerComponent {
       ctx.fillRect(labelX, height - y * (labelHeight + labelSpacing) - labelHeight, labelWidth, labelHeight);
       if ( this.data[i].total )
         ctx.strokeRect(labelX, height - y * (labelHeight + labelSpacing) - labelHeight, labelWidth, labelHeight);
+      if (this.data[i].buttonRect === undefined)
+        this.data[i].buttonRect = { x1: labelX, x2: labelX + labelWidth, y1: height - y * (labelHeight + labelSpacing) - labelHeight, y2: height - y * (labelHeight + labelSpacing) };
 
       ctx.fillStyle = "black";
       ctx.fillText(this.data[i].name, labelX + labelWidth / 2, height - y * (labelHeight + labelSpacing) - labelHeight+9);
       ctx.fillText(this.data[i].power.toFixed(0) + "W", labelX + labelWidth / 2, height - y * (labelHeight + labelSpacing) - labelHeight + 20);
 
       if (arrowHead[i] !== undefined) {
-        ctx.beginPath();
-        ctx.moveTo(arrowHead[i].centerX, arrowHead[i].centerY); 
-        ctx.lineTo(labelX, height - y * (labelHeight + labelSpacing) - labelHeight/2);
-        ctx.stroke();
+        if (arrowHead[i].centerX !== undefined) {
+          ctx.beginPath();
+          ctx.moveTo(arrowHead[i].centerX, arrowHead[i].centerY);
+          ctx.lineTo(labelX, height - y * (labelHeight + labelSpacing) - labelHeight / 2);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = "rgba(" + this.colourList[i] + ",0.5)";
+          ctx.beginPath();
+          ctx.moveTo(arrowHead[i].X, arrowHead[i].Y1);
+          ctx.lineTo(arrowHead[i].X, arrowHead[i].Y2);
+          ctx.lineTo(labelX, height - y * (labelHeight + labelSpacing));
+          ctx.lineTo(labelX, height - y * (labelHeight + labelSpacing) - labelHeight);
+          ctx.fill();
+        }
       }
     }
   }
+
+  onMouseClick(e: MouseEvent) {
+    console.info("Mouse click ");
+
+    for (let i: number = 0; i < this.data.length; i++) {
+      let d: LivePowerData = this.data[i];
+      if (d.buttonRect.x1 <= e.offsetX && e.offsetX <= d.buttonRect.x2 &&
+        d.buttonRect.y1 <= e.offsetY && e.offsetY <= d.buttonRect.y2) {
+        if (!d.other && !d.total)
+          this.router.navigate(["/sonoff-device", d.id]);
+      }
+    }
+  }
+
 }
 
 

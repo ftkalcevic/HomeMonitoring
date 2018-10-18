@@ -2,9 +2,10 @@
   <div class="row" style="height:80px;"></div>
   <div class="row">{{deviceName}}</div>
   <div class="row">
-    <input type="radio" value="day" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Day
-    <input type="radio" value="week" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Week
-    <input type="radio" value="month" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Month
+    <input type="radio" value="today" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Today
+    <input type="radio" value="hours" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Hours
+    <input type="radio" value="days" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Days
+    <input type="radio" value="months" name="displayType" [(ngModel)]="displayType" (click)="redrawChart();"> Months
     <span></span>
     <input type="checkbox" name="showPower" [(ngModel)]="showPower" (click)="redrawChart();"> Power
     <input type="checkbox" name="showEnergy" [(ngModel)]="showEnergy" (click)="redrawChart();"> Energy
@@ -15,7 +16,24 @@
     <mat-datepicker #picker1></mat-datepicker>
   </div>
 
-  <div class="row" style="flex: 10;">
+  <div *ngIf="useCanvas" class="row" style="flex: 10;">
     <canvas #chartCanvas style="width:100%; height:100%;" class="row;"></canvas>
   </div>
+  <table *ngIf="!useCanvas && displayType=='hours'" style="flex:10; width:100%;" class="hoursHeatMap">
+    <tr *ngFor="let day of grid" class="row">
+      <td>{{day.date | date: 'd LLL yyyy' }}</td>
+      <td *ngFor="let h of range" [style.background-color]="getColour(day.hours[h]===undefined?undefined:day.hours[h].percent)" [title]="getHoursTitle(day,h)">
+        <p *ngIf="day.hours[h]"></p>
+      </td>
+    </tr>
+  </table>
+  <table *ngIf="!useCanvas && displayType=='days'" style="flex:10; width:100%;" class="hoursHeatMap">
+    <tr *ngFor="let month of grid" class="row">
+      <td>{{month.date | date: 'LLL yyyy' }}</td>
+      <td *ngFor="let h of range" [style.background-color]="getColour(month.days[h]===undefined?undefined:month.days[h].percent)" [title]="getDaysTitle(month,h)">
+        <p *ngIf="month.days[h]"></p>
+      </td>
+    </tr>
+  </table>
+
 </div>

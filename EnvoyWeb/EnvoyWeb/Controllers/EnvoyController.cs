@@ -16,8 +16,16 @@ namespace EnvoyWeb.Controllers
     public class EnvoyController : ControllerBase
     {
         private static HttpClient client;
-        string url = "http://10.0.0.201/production.json?details=0";
-        string connectString = @"Persist Security Info=False;Integrated Security=SSPI; database = Electricity; server = Server\SqlExpress";
+        string connectString;
+        string userId;
+        string apiKey;
+
+        public EnvoyController()
+        {
+            connectString = Startup.Configuration["ApplicationSettings:ConnectString"];
+            userId = Startup.Configuration["ApplicationSettings:envoyUserId"];
+            apiKey = Startup.Configuration["ApplicationSettings:envoyApiKey"];
+        }
 
         private HttpClient GetClient()
         {
@@ -32,6 +40,7 @@ namespace EnvoyWeb.Controllers
         [HttpGet("[action]")]
         public ILivePower LiveData()
         {
+            string url = "http://10.0.0.201/production.json?details=0";
             ILivePower power = new ILivePower();
 
             try
@@ -105,6 +114,70 @@ namespace EnvoyWeb.Controllers
                 con.Close();
             }
             return panels;
+        }
+
+        // GET: api/Envoy/LiveData
+        [HttpGet("[action]")]
+        public int EnphaseSystem()
+        {
+            int systemId = -1;
+
+            string url = $@"https://api.enphaseenergy.com/api/v2/systems?key={apiKey}&user_id={userId}";
+
+            try
+            {
+                HttpClient c = GetClient();
+                var responseMsg = c.GetAsync(url);
+                var response = responseMsg.Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = response.Content;
+                    string json = content.ReadAsStringAsync().Result;
+
+                    dynamic data = JsonConvert.DeserializeObject(json);
+                    systemId = data.systems[0].system_id;
+                }
+            }
+            catch (Exception)
+            {
+                if (client != null)
+                {
+                    client.Dispose();
+                    client = null;
+                }
+            }
+            return systemId;
+        }
+
+        // GET: api/Envoy/LiveData
+        [HttpGet("EnphaseSummary/{systemId}")]
+        public ILivePower EnphaseSummary(int systemId)
+        {
+            ILivePower power = new ILivePower();
+            string url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/summary?key={apiKey}&user_id={userId}";
+
+            try
+            {
+                HttpClient c = GetClient();
+                var responseMsg = c.GetAsync(url);
+                var response = responseMsg.Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = response.Content;
+                    string json = content.ReadAsStringAsync().Result;
+
+                    dynamic data = JsonConvert.DeserializeObject(json);
+                }
+            }
+            catch (Exception)
+            {
+                if (client != null)
+                {
+                    client.Dispose();
+                    client = null;
+                }
+            }
+            return power;
         }
     }
 

@@ -120,6 +120,17 @@ export interface ISonoffDailyData {
   power: number;
 }
 
+export interface ISonoffHoursData
+{
+  year, month, day, hour: number;
+  kWh: number;
+};
+
+export interface ISonoffDaysData {
+  year, month, day: number;
+  kWh: number;
+};
+
 export interface ISonoffSummaryData {
   timestamp: Date;
   today: number;
@@ -220,12 +231,16 @@ export class LiveDataService {
       }
   }
 
-  public getDailySamples(deviceId: number, dayFrom: Date): Observable<ISonoffDailyData[]> {
-    return this.http.get<ISonoffDailyData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetData/' + dayFrom.toISOString());
+  public getTodaySamples(deviceId: number, dayFrom: Date): Observable<ISonoffDailyData[]> {
+    return this.http.get<ISonoffDailyData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetDayData/' + dayFrom.toISOString());
   }
 
-  public getWeekSamples(deviceId: number, dayFrom: Date): Observable<ISonoffDailyData[]> {
-    return this.http.get<ISonoffDailyData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetWeekData/' + dayFrom.toISOString());
+  public getHoursSamples(deviceId: number): Observable<ISonoffHoursData[]> {
+    return this.http.get<ISonoffHoursData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetHoursData');
+  }
+
+  public getDaysSamples(deviceId: number): Observable<ISonoffDaysData[]> {
+    return this.http.get<ISonoffDaysData[]>(this.baseUrl + 'api/Sonoff/' + deviceId + '/GetDaysData');
   }
 
   public getSummaryData(deviceId: number): Observable<ISonoffSummaryData[]> {

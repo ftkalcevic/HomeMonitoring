@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { LiveDataService, CircularBuffer, LivePower, ISonoffDailyData, ISonoffSummaryData } from '../live-data-service/live-data-service';
+import { LiveDataService, CircularBuffer, LivePower, ISonoffDailyData, ISonoffSummaryData, ISonoffHoursData, ISonoffDaysData } from '../live-data-service/live-data-service';
 import {
   MatAutocompleteModule,
   MatButtonModule,
@@ -60,9 +61,11 @@ export class SonoffDeviceComponent {
     format: 'dd-MM-yyyy',
     defaultOpen: true
   }
+  useCanvas: boolean = true;
+  grid: any[];
+  range: number[];
 
-
-  constructor(private liveDataService: LiveDataService, private route: ActivatedRoute) {
+  constructor(private liveDataService: LiveDataService, private route: ActivatedRoute, private datePipe: DatePipe) {
   }
 
   ngOnInit() {
@@ -73,32 +76,29 @@ export class SonoffDeviceComponent {
     catch (e) { }
   }
 
-  ngAfterViewInit() {
-    this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
-    this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
-
-    this.redrawChart();
-  }
-
   redrawChart(): void {
     switch (this.displayType) {
-      case "day":
-        let s: Date = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), this.startDate.getDate());
-        this.liveDataService.getDailySamples(this.deviceId, s).subscribe(
-          result => { this.DrawDayChart(result); },
+      case "today":
+        this.useCanvas = true;
+        let t: Date = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), this.startDate.getDate());
+        this.liveDataService.getTodaySamples(this.deviceId, t).subscribe(
+          result => { this.DrawTodayChart(result); },
           error => { console.error("Failed to read daily data"); }
         );
         break;
-      case "week":
-        let w: Date = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), this.startDate.getDate());
-        while (w.getDay() != 0)
-          w.setDate(w.getDate() - 1);
-        this.liveDataService.getWeekSamples(this.deviceId, w).subscribe(
-          result => { this.DrawWeekChart(result); },
-          error => { console.error("Failed to read Week data"); }
+      case "hours":
+        this.liveDataService.getHoursSamples(this.deviceId).subscribe(
+          result => { this.DrawHoursChart(result); },
+          error => { console.error("Failed to read Hours data"); }
         );
         break;
-      case "month":
+      case "days":
+        this.liveDataService.getDaysSamples(this.deviceId).subscribe(
+          result => { this.DrawDaysChart(result); },
+          error => { console.error("Failed to read Days data"); }
+        );
+        break;
+      case "months":
         this.liveDataService.getSummaryData(this.deviceId).subscribe(
           result => { this.DrawSummaryChart(result); },
           error => { console.error("Failed to read Week data"); }
@@ -108,7 +108,11 @@ export class SonoffDeviceComponent {
   }
 
   // 24hr chart showing instaneous power, or Wh energy
-  public DrawDayChart(data: ISonoffDailyData[]) {
+  public DrawTodayChart(data: ISonoffDailyData[]) {
+
+    this.useCanvas = true;
+    this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
+    this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
 
     let maxPower: number = data.reduce((m, d) => Math.max(m, d.power), 0);
     let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
@@ -184,83 +188,76 @@ export class SonoffDeviceComponent {
     ctx.restore();
   }
 
+  // Hours - one line shows 24 hours squares
+  DrawHoursChart(data: ISonoffHoursData[]) {
+    let maxEnergy: number = data.reduce((m, d) => Math.max(m, d.kWh), 0);
 
-  // 7 day chart showing instaneous power, or Wh energy
-  public DrawWeekChart(data: ISonoffDailyData[]) {
+    let startDate: Date = new Date(data[0].year, data[0].month-1, data[0].day);
+    let endDate: Date = new Date(data[data.length - 1].year, data[data.length - 1].month-1, data[data.length - 1].day);
 
-    let maxPower: number = data.reduce((m, d) => Math.max(m, d.power), 0);
-    let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
+    let grid: any[] = [];
+    let g: number = 0;
+    let dt: Date = new Date(startDate);
+    let d: number = 0;
+    while (dt <= endDate && d < data.length) {
+      let dataDate: Date = new Date(data[d].year, data[d].month-1, data[d].day);
 
-    // Clear any previous content.
-    let width: number = this.canvasRef.nativeElement.width;
-    let height: number = this.canvasRef.nativeElement.height;
+      if (grid[g] === undefined)
+        grid[g] = { date: new Date(dt), hours: [] };
 
-    ctx.save();
-    ctx.clearRect(0, 0, width, height);
-
-    //ctx.scale(width/1000, -(height/2) / this.maxPower);
-
-    // Scale
-    ctx.strokeStyle = "DarkGrey";
-    ctx.beginPath();
-    ctx.moveTo(width, height);
-    ctx.lineTo(1, height);
-    ctx.moveTo(1, 0);
-    ctx.stroke();
-
-    if (this.showPower)// power
-    {
-      let colWidth: number = width / (7*24 * 60); // 1 minute widths
-      for (let i: number = 0; i < data.length; i++) {
-        let d: ISonoffDailyData = data[i];
-        let dt: Date = new Date(d.timestamp);
-        let x: number = 24 * 60 * dt.getDay() + 60 * dt.getHours() + dt.getMinutes();
-        x *= colWidth;
-        let h: number = d.power / maxPower * height;
-        ctx.fillRect(x, height - h, colWidth, h);
+      if (dt.getTime() === dataDate.getTime()) {
+        grid[g].hours[data[d].hour] = { kWh: data[d].kWh,
+                                        percent: ((data[d].kWh / maxEnergy) * 256).toFixed(0) };
+        d++;
+      }
+      else {
+        dt.setDate(dt.getDate() + 1);
+        g++;
       }
     }
-    if (this.showEnergy)// energy
-    {
-      let maxEnergy: number = 0;
-      let energy: number[] = [];
+    this.useCanvas = false;
+    this.grid = grid;
+    this.range = [];
+    for (let i: number = 0; i < 24; i++)
+      this.range[i] = i;
+  }
 
-      // split energy up into 15 minute chunks
-      const period: number = 15;
-      let last = 0;
-      let lastE = 0;
-      let nextE = 0;
-      for (let t: number = 1; t < 7*24 * 60 / period; t++) {
-        for (let i: number = last; i < data.length - 1; i++) {
-          let d: ISonoffDailyData = data[i];
-          let dt: Date = new Date(d.timestamp);
-          let et = 24 * 60 * dt.getDay() +
-            60 * dt.getHours() +
-            dt.getMinutes() +
-            dt.getSeconds() / 60;
 
-          if (et > t * period) {
-            nextE = d.today;
-            break;
-          }
+  //Days - one row shows 1 month of days
+  DrawDaysChart(data: ISonoffDaysData[]) {
 
-          last = i;
-        }
-        energy[t] = nextE - lastE;
-        if (energy[t] > maxEnergy)
-          maxEnergy = energy[t];
-        lastE = nextE;
+    let maxEnergy: number = data.reduce((m, d) => Math.max(m, d.kWh), 0);
+
+    let startDate: Date = new Date(data[0].year, data[0].month - 1, 1);
+    let endDate: Date = new Date(data[data.length - 1].year, data[data.length - 1].month - 1, 1);
+
+    let grid: any[] = [];
+    let g: number = 0;
+    let dt: Date = new Date(startDate);
+    let d: number = 0;
+    while (dt <= endDate && d < data.length) {
+      let dataDate: Date = new Date(data[d].year, data[d].month - 1, 1);
+
+      if (grid[g] === undefined)
+        grid[g] = { date: new Date(dt), days: [] };
+
+      if (dt.getTime() === dataDate.getTime()) {
+        grid[g].days[data[d].day-1] = {
+          kWh: data[d].kWh,
+          percent: ((data[d].kWh / maxEnergy) * 256).toFixed(0)
+        };
+        d++;
       }
-
-      let colWidth: number = period * width / (7*24 * 60);
-      for (let i: number = 0; i < energy.length; i++) {
-        let e: number = energy[i];
-        let x: number = i * colWidth;
-        let h: number = e / maxEnergy * height;
-        ctx.fillRect(x, height - h, colWidth, h);
+      else {
+        dt.setMonth(dt.getMonth() + 1);
+        g++;
       }
     }
-    ctx.restore();
+    this.useCanvas = false;
+    this.grid = grid;
+    this.range = [];
+    for (let i: number = 0; i < 31; i++)
+      this.range[i] = i;
   }
 
   DrawSummaryChart(data: ISonoffSummaryData[]) {
@@ -331,4 +328,31 @@ export class SonoffDeviceComponent {
     ctx.restore();
   }
 
+  getColour(n: number): string {
+    if (n === undefined)
+      return "transparent";
+    return "rgb(" + n + "," + n + "," + n + ")";
+  }
+  getHoursTitle(day: any, h: number): string {
+    if (day !== undefined)
+      if (day.hours[h] !== undefined)
+        return this.datePipe.transform(day.date, "d LLL yyyy") + " " + (h + 1).toString() + ":00" +
+               " " + day.hours[h].kWh.toFixed(3)+" kWh";
+    return ""; 
+  }
+  getDaysTitle(month: any, d: number): string {
+    if (month !== undefined)
+      if (month.days[d] !== undefined)
+        return (d+1).toString() + " " + this.datePipe.transform(month.date, "LLL yyyy") + 
+          " " + month.days[d].kWh.toFixed(3) + " kWh";
+    return "";
+  }
 }
+
+
+/*
+Hours - one line shows 24 hours squares
+Days - one row shows 1 month of days
+Months - one row shows 12 months
+
+*/

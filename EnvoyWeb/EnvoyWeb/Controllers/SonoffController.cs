@@ -13,7 +13,11 @@ namespace EnvoyWeb.Controllers
     [ApiController]
     public class SonoffController : ControllerBase
     {
-        string connectString = @"Persist Security Info=False;Integrated Security=SSPI; database = Electricity; server = Server\SqlExpress";
+        string connectString;
+        public SonoffController()
+        {
+            connectString = Startup.Configuration["ApplicationSettings:ConnectString"];
+        }
 
         // GET: api/Sonoff/GetDevices
         [HttpGet("[action]")]
@@ -52,27 +56,13 @@ namespace EnvoyWeb.Controllers
             return devices;
         }
 
-        // GET: api/Sonoff/1/GetData/1 oct 2017
-        [HttpGet("{deviceId}/GetData/{day}")]
-        public IEnumerable<ISonoffDailyData> GetData(int deviceId, DateTime day)
+        // GET: api/Sonoff/1/GetDayData/1 oct 2017
+        [HttpGet("{deviceId}/GetDayData/{day}")]
+        public IEnumerable<ISonoffDailyData> GetDayData(int deviceId, DateTime day)
         {
             DateTime dayStart = new DateTime(day.Year, day.Month, day.Day);
             DateTime dayEnd = dayStart + new TimeSpan(1,0,0,0,0);
-            return GetDailyData(deviceId, dayStart, dayEnd);
-        }
 
-        // GET: api/Sonoff/1/GetData/1 oct 2017
-        [HttpGet("{deviceId}/GetWeekData/{day}")]
-        public IEnumerable<ISonoffDailyData> GetWeekData(int deviceId, DateTime day)
-        {
-            DateTime dayStart = new DateTime(day.Year, day.Month, day.Day);
-            DateTime dayEnd = dayStart + new TimeSpan(7, 0, 0, 0, 0);
-            return GetDailyData(deviceId, dayStart, dayEnd);
-        }
-
-        // GET: api/Sonoff/1/GetData/1 oct 2017
-        private List<ISonoffDailyData> GetDailyData(int deviceId, DateTime dayFrom, DateTime dayTo)
-        {
             List<ISonoffDailyData> data = new List<ISonoffDailyData>();
 
             using (var con = new SqlConnection(connectString))
@@ -81,8 +71,8 @@ namespace EnvoyWeb.Controllers
                 using (var cmd = new SqlCommand(@"select  timestamp, today, power from SonoffPower where deviceId = @deviceId and timestamp between @dateFrom and @dateTo", con))
                 {
                     cmd.Parameters.Add("deviceId", SqlDbType.Int).Value = deviceId;
-                    cmd.Parameters.Add("dateFrom", SqlDbType.Date).Value = dayFrom;
-                    cmd.Parameters.Add("dateTo", SqlDbType.Date).Value = dayTo;
+                    cmd.Parameters.Add("dateFrom", SqlDbType.Date).Value = dayStart;
+                    cmd.Parameters.Add("dateTo", SqlDbType.Date).Value = dayEnd;
                     using (var rdr = cmd.ExecuteReader())
                     {
                         while (rdr.Read())
@@ -98,6 +88,122 @@ namespace EnvoyWeb.Controllers
                                 power = power
                             });
 
+                        }
+                        rdr.Close();
+                    }
+                }
+                con.Close();
+            }
+            return data;
+        }
+
+        // GET: api/Sonoff/1/GetData
+        [HttpGet("{deviceId}/GetHoursData")]
+        public IEnumerable<ISonoffHoursData> GetHoursData(int deviceId)
+        {
+            List<ISonoffHoursData> data = new List<ISonoffHoursData>();
+
+            using (var con = new SqlConnection(connectString))
+            {
+                con.Open();
+                using (var cmd = new SqlCommand(@"
+select DATEPART(YEAR, timestamp) YYYY,
+DATEPART(MONTH, timestamp) MM,
+DATEPART(DAY, timestamp) DD,
+DATEPART(HOUR, timestamp) HH,
+min(total) minkWh,
+max(total) maxkWh
+ from SonoffPower where deviceId = @deviceId
+GROUP BY
+DATEPART(YEAR, timestamp),
+DATEPART(MONTH, timestamp),
+DATEPART(DAY, timestamp),
+DATEPART(HOUR, timestamp)
+order by yyyy,mm,dd,hh"
+, con))
+                {
+                    cmd.Parameters.Add("deviceId", SqlDbType.Int).Value = deviceId;
+                    using (var rdr = cmd.ExecuteReader())
+                    {
+                        float lastkWh = 0;
+                        while (rdr.Read())
+                        {
+                            int year = rdr.GetInt32(0);
+                            int month = rdr.GetInt32(1);
+                            int day = rdr.GetInt32(2);
+                            int hour = rdr.GetInt32(3);
+                            float minkWh = (float)rdr.GetDouble(4);
+                            float maxkWh = (float)rdr.GetDouble(5);
+
+                            // if the difference between the last is excessive, we may have missed samples
+                            float energy = maxkWh - lastkWh;
+                            if (energy > 2 * (maxkWh-minkWh))
+                                energy = maxkWh - minkWh;
+                            data.Add(new ISonoffHoursData()
+                            {
+                                year = year,
+                                month = month,
+                                day = day,
+                                hour = hour,
+                                kWh = energy
+                            });
+                            lastkWh = maxkWh;
+                        }
+                        rdr.Close();
+                    }
+                }
+                con.Close();
+            }
+            return data;
+        }
+
+
+        // GET: api/Sonoff/1/GetData
+        [HttpGet("{deviceId}/GetDaysData")]
+        public IEnumerable<ISonoffDaysData> GetDaysData(int deviceId)
+        {
+            List<ISonoffDaysData> data = new List<ISonoffDaysData>();
+
+            using (var con = new SqlConnection(connectString))
+            {
+                con.Open();
+                using (var cmd = new SqlCommand(@"
+;with cte as
+(
+  select	*,
+			row_number() over(partition by datediff(d, 0, timestamp) order by timestamp ) as rn 
+  from      SonoffPower
+  where		deviceId = @deviceid
+	    and yesterday > 0 
+), data as 
+(
+	select dateadd(day,-1,convert(date,timestamp)) date, yesterday 
+	from cte  
+	where rn = 1
+)
+select  DATEPART(YEAR, date) YYYY,
+        DATEPART(MONTH, date) MM,
+        DATEPART(DAY, date) DD,
+        yesterday kWh
+ from data", con))
+                {
+                    cmd.Parameters.Add("deviceId", SqlDbType.Int).Value = deviceId;
+                    using (var rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            int year = rdr.GetInt32(0);
+                            int month = rdr.GetInt32(1);
+                            int day = rdr.GetInt32(2);
+                            float kWh = (float)rdr.GetDouble(3);
+
+                            data.Add(new ISonoffDaysData()
+                            {
+                                year = year,
+                                month = month,
+                                day = day,
+                                kWh = kWh
+                            });
                         }
                         rdr.Close();
                     }
@@ -199,6 +305,18 @@ and deviceId = @deviceId
         public DateTime timestamp;
         public float today;
         public float power;
+    };
+
+    public class ISonoffHoursData
+    {
+        public int year, month, day, hour;
+        public float kWh;
+    };
+
+    public class ISonoffDaysData
+    {
+        public int year, month, day;
+        public float kWh;
     };
 
     public class ISonoffSummaryData

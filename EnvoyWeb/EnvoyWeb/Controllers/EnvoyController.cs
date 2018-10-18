@@ -19,12 +19,14 @@ namespace EnvoyWeb.Controllers
         string connectString;
         string userId;
         string apiKey;
+        string hostname;
 
         public EnvoyController()
         {
             connectString = Startup.Configuration["ApplicationSettings:ConnectString"];
             userId = Startup.Configuration["ApplicationSettings:envoyUserId"];
             apiKey = Startup.Configuration["ApplicationSettings:envoyApiKey"];
+            apiKey = Startup.Configuration["ApplicationSettings:envoyHostname"];
         }
 
         private HttpClient GetClient()
@@ -40,7 +42,7 @@ namespace EnvoyWeb.Controllers
         [HttpGet("[action]")]
         public ILivePower LiveData()
         {
-            string url = "http://10.0.0.201/production.json?details=0";
+            string url = $@"http://{envoyHostname}/production.json?details=0";
             ILivePower power = new ILivePower();
 
             try

@@ -14,6 +14,7 @@ import { TitleComponent } from './title/title.component';
 import '../data/live-power.ts';
 import { PanelDataComponent } from './panel-data/panel-data.component';
 import { LivePowerComponent } from './live-power/live-power.component';
+import { LivePower2Component } from './live-power2/live-power2.component';
 import { LivePowerStatsComponent } from './live-power-stats/live-power-stats.component';
 import { EnlightenComponent } from './enlighten/enlighten.component';
 import { EnergyEasyComponent } from './energyeasy/energyeasy.component';
@@ -69,6 +70,7 @@ import {
     HistoricDataComponent,
     PanelDataComponent,
     LivePowerComponent,
+    LivePower2Component,
     LivePowerStatsComponent,
     TitleComponent,
     EnlightenComponent,
@@ -126,6 +128,7 @@ import {
       { path: 'historic-data', component: HistoricDataComponent},
       { path: 'panel-data', component: PanelDataComponent},
       { path: 'live-power', component: LivePowerComponent },
+      { path: 'live-power2', component: LivePower2Component },
       { path: 'live-power-stats', component: LivePowerStatsComponent },
       { path: 'enlighten', component: EnlightenComponent},
       { path: 'energyeasy', component: EnergyEasyComponent},

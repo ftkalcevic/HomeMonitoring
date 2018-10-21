@@ -15,7 +15,7 @@ class LivePowerData {
 };
 
 class HistoricData {
-  time: Date;
+  time: number; // seconds
   max: number;
   data: LivePowerData[];
 };
@@ -93,7 +93,7 @@ export class LivePowerComponent {
         d.power = s.data.StatusSNS.ENERGY.Power;
         break;
       }
-    this.sampleUpdate(s.data.StatusSNS.Time);
+    this.sampleUpdate(s.receivedTime);
     if ( dontRedraw === undefined) this.redraw();
   }
 
@@ -103,10 +103,10 @@ export class LivePowerComponent {
       this.data[this.data.length-1].power = result.wattsConsumed;
       if (dontRedraw === undefined) this.redraw();
     }
-    this.sampleUpdate(result.timestamp);
+    this.sampleUpdate(result.receivedTime);
   }
 
-  private sampleUpdate(t: Date) {
+  private sampleUpdate(t: number) {
     this.UpdateOther(this.data);
     let lastSample:number = this.historicData.length-1;
     if (this.historicData.length === 0 ) {

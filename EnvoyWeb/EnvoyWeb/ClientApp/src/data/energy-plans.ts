@@ -1,5 +1,6 @@
 
-class PriceBreak {
+
+export class PriceBreak {
   Name: string;
   StartTime: string;
   EndTime: string;
@@ -10,7 +11,7 @@ class PriceBreak {
   IsForWeekDayOnly?: boolean;
 }
 
-class EnergyPlan {
+export class EnergyPlan {
   Name: string;
   DailySupplyCharge: number;
   EnergyDiscount: number;
@@ -19,7 +20,7 @@ class EnergyPlan {
   Pricing: PriceBreak[];
 }
 
-class EnergyPlans {
+export class EnergyPlans {
   Plans: EnergyPlan[]=[
     {
       Name: "RACV Plus 45/30 FIT Simply Energy - Time of Use + Controlled Load OP",
@@ -68,24 +69,7 @@ class EnergyPlans {
     }
   ];
 
-
-  findTariff(plan: EnergyPlan, date: Date, time: number, controlledLoad: boolean): PriceBreak {
-    let month:number = date.getMonth();
-    let day: number = date.getDate();
-    let dow: number = date.getDay();
-    let hour: number = Math.floor(time);
-    let minute: number = 60 * (time % 1);
-    for (let p: number = 0; p < plan.Pricing.length; p++) {
-      let pricing: PriceBreak = plan.Pricing[p];
-      if (this.controlledLoadMatch(pricing,controlledLoad) &&
-          this.dateMatch(pricing,month, day) &&
-          this.dowMatch(pricing,dow) &&
-          this.timeMatch(pricing,hour, minute)) {
-        return pricing;
-      }
-    }
-    return null;
-  }
+  constructor() { }
 
   dateMatch(pricing: PriceBreak, month: number, day: number): boolean {
     if (pricing.StartDate != null) {
@@ -131,4 +115,23 @@ class EnergyPlans {
     let planValue: boolean = (pricing.IsForControlledLoad != null) ? pricing.IsForControlledLoad : false;
     return planValue === c;
   }
+
+  findTariff(plan: EnergyPlan, date: Date, time: number, controlledLoad: boolean): PriceBreak {
+    let month: number = date.getMonth();
+    let day: number = date.getDate();
+    let dow: number = date.getDay();
+    let hour: number = Math.floor(time);
+    let minute: number = 60 * (time % 1);
+    for (let p: number = 0; p < plan.Pricing.length; p++) {
+      let pricing: PriceBreak = plan.Pricing[p];
+      if (this.controlledLoadMatch(pricing, controlledLoad) &&
+        this.dateMatch(pricing, month, day) &&
+        this.dowMatch(pricing, dow) &&
+        this.timeMatch(pricing, hour, minute)) {
+        return pricing;
+      }
+    }
+    return null;
+  }
+
 }

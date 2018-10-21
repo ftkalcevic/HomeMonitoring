@@ -1,6 +1,7 @@
 import { Injectable, Inject, EventEmitter, Output } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { EnergyPlans, EnergyPlan } from '../../data/energy-plans';
 
 export interface IEnergy {
   Total: number;
@@ -147,11 +148,14 @@ export class LiveDataService {
   public sonoffLive: CircularBuffer<ISonoffSample>;
   @Output() envoyData: EventEmitter<LivePower> = new EventEmitter<LivePower>(true);
   @Output() sonoffData: EventEmitter<ISonoffSample> = new EventEmitter<ISonoffSample>(true);
+  public energyPlans: EnergyPlans = new EnergyPlans();
+  public energyPlan: EnergyPlan;
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
     this.baseUrl = baseUrl;
     this.http = http;
-    this.envoyLive = new RealtimeEnvoyData(600);
+    this.envoyLive = new RealtimeEnvoyData(2000);
+    this.energyPlan = this.energyPlans.Plans[1];
 
     this.sonoffDevices = [];
     setTimeout(() => this.ReadEnvoyData(), 100);
@@ -163,7 +167,7 @@ export class LiveDataService {
       // clean up data
       if (result.wattsConsumed < 0) result.wattsConsumed = 0;
       if (result.wattsProduced < 0) result.wattsProduced = 0;
-      const receivedTime: number = Date.now();
+      const receivedTime: number = Math.floor(Date.now()/1000);
 
       this.envoyLive.addSample({ receivedTime: receivedTime, timestamp: result.timestamp, wattsConsumed: result.wattsConsumed, wattsNet: result.wattsNet, wattsProduced: result.wattsProduced });
       this.envoyData.emit({ receivedTime: receivedTime, timestamp: result.timestamp, wattsConsumed: result.wattsConsumed, wattsNet: result.wattsNet, wattsProduced: result.wattsProduced });
@@ -224,7 +228,7 @@ export class LiveDataService {
 
     for (let d of this.sonoffDevices)
       if (d.id == device.id) {
-        const receivedTime: number = Date.now();
+        const receivedTime: number = Math.floor(Date.now()/1000);
         this.sonoffLive.append({ device: device, data: result, receivedTime: receivedTime });
         this.sonoffData.emit({ device: device, data: result, receivedTime: receivedTime });
         break;

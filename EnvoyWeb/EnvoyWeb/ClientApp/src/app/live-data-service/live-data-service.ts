@@ -150,12 +150,14 @@ export class LiveDataService {
   @Output() sonoffData: EventEmitter<ISonoffSample> = new EventEmitter<ISonoffSample>(true);
   public energyPlans: EnergyPlans = new EnergyPlans();
   public energyPlan: EnergyPlan;
+  readonly POINTS: number = 2000;
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
     this.baseUrl = baseUrl;
     this.http = http;
-    this.envoyLive = new RealtimeEnvoyData(2000);
+    this.envoyLive = new RealtimeEnvoyData(this.POINTS);
     this.energyPlan = this.energyPlans.Plans[1];
+    this.sonoffLive = new CircularBuffer<ISonoffSample>(1);
 
     this.sonoffDevices = [];
     setTimeout(() => this.ReadEnvoyData(), 100);
@@ -207,7 +209,7 @@ export class LiveDataService {
       this.sonoffDevices[this.sonoffDevices.length] = new SonoffDevice({ name: d.name, description: d.description, id: d.id, hostname: d.hostname });
       this.requestLivePower(d);
     }
-    this.sonoffLive = new CircularBuffer<ISonoffSample>(600*this.sonoffDevices.length);
+    this.sonoffLive = new CircularBuffer<ISonoffSample>(this.POINTS*this.sonoffDevices.length);
   }
 
   private requestLivePower(d: SonoffDevice) {

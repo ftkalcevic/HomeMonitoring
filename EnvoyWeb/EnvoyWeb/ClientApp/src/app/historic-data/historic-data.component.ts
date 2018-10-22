@@ -9,9 +9,10 @@ export class HistoricDataComponent {
   @ViewChild('historyCanvas') canvasRef: ElementRef;
   private maxPower: number = 3500;
   private maxProduction: number = 270 * 12;
+  private subs: any[] = [];
 
   constructor(private liveDataService: LiveDataService) {
-    this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
+    this.subs.push( this.liveDataService.envoyData.subscribe(result => { this.newSample(result); }) );
   }
 
   ngAfterViewInit() {
@@ -19,6 +20,12 @@ export class HistoricDataComponent {
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
     this.newSample(null);
   }
+
+  ngOnDestroy() {
+    for (let s of this.subs)
+      s.unsubscribe();
+  }
+
 
   public newSample(power: LivePower) {
 

@@ -36,6 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="ClientApp\src\data\common.ts" />
     <None Remove="ClientApp\src\data\energy-plans.ts" />
     <None Remove="ClientApp\src\data\file.ts" />
     <None Remove="ClientApp\src\data\live-power.ts" />
@@ -47,6 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="ClientApp\src\data\common.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\energy-plans.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\sonoff-device.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\panel-power.ts" />

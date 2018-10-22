@@ -2,6 +2,8 @@ import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { MatrixLT } from '../../assets/src_matrix_lt.js';
 import { DatePipe } from '@angular/common';
+import { interval } from "rxjs/internal/observable/interval";
+import { startWith, switchMap } from "rxjs/operators";
 
 @Component({
   selector: 'app-panel-data',
@@ -185,11 +187,28 @@ export class PanelDataComponent {
   public panelGeometry;
   public panelHighlighted = null;
   private timestamp: Date;
+  subs: any[] = [];
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private datePipe: DatePipe) {
     this.baseUrl = baseUrl;
     this.http = http;
-    setTimeout(() => this.ReadData(), 1000);
+
+    this.subs.push(
+      interval(5 * 60 * 1000)
+        .pipe(
+          startWith(100),
+        switchMap(()=> this.http.get<IPanelPower[]>(this.baseUrl + 'api/Envoy/CurrentPanelData')
+        )
+        )
+        .subscribe(
+          result => {
+            this.redrawPanels(result);
+          },
+          error => {
+            console.error(error);
+          }
+        )
+    );
   }
 
   ngAfterViewInit() {
@@ -197,22 +216,12 @@ export class PanelDataComponent {
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
   }
 
-  public ReadData() {
-    this.http.get<IPanelPower[]>(this.baseUrl + 'api/Envoy/CurrentPanelData')
-      .subscribe(
-      result => {
-        this.redrawPanels(result);
-        setTimeout(() => this.ReadData(), 5*60*1000);
-        },
-        error => {
-          console.error(error);
-        setTimeout(() => this.ReadData(), 5*60*1000);
-        }
-      );
+  ngOnDestroy() {
+    for (let s of this.subs)
+      s.unsubscribe();
   }
 
   public redrawPanels(power: IPanelPower[]) {
-    
     if (this.panelGeometry == null)
       this.InitialisePanelGeometry();
 

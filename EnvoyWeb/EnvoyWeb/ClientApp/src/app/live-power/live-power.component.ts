@@ -43,18 +43,24 @@ export class LivePowerComponent {
                                   "255, 255, 255"];
   private historicData: CircularBuffer<HistoricData>;
   public POINTS: number=500;
+  subs: any[] = [];
 
 
   constructor(private liveDataService: LiveDataService, private router: Router ) {
     this.historicData = new CircularBuffer<HistoricData>(this.POINTS);
     this.ReadDevices();
-    this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
-    this.liveDataService.sonoffData.subscribe(result => { this.newSonoffSample(result);})
+    this.subs.push(this.liveDataService.envoyData.subscribe(result => { this.newSample(result); }));
+    this.subs.push(this.liveDataService.sonoffData.subscribe(result => { this.newSonoffSample(result); }));
   }
 
   ngAfterViewInit() {
     this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
+  }
+
+  ngOnDestroy() {
+    for (let s of this.subs)
+      s.unsubscribe();
   }
 
   public ReadDevices() {
@@ -259,7 +265,6 @@ export class LivePowerComponent {
   }
 
   onMouseClick(e: MouseEvent) {
-    console.info("Mouse click ");
 
     for (let i: number = 0; i < this.data.length; i++) {
       let d: LivePowerData = this.data[i];

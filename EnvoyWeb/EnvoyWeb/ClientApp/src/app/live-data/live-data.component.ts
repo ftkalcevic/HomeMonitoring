@@ -9,25 +9,28 @@ export class LiveDataComponent {
   @ViewChild('indicatorCanvas') canvasRef: ElementRef;
   private maxPower: number = 3500;
   private maxProduction: number = 270 * 12;
+  subs: any[] = [];
 
   constructor(private liveDataService: LiveDataService) {
-    this.liveDataService.envoyData.subscribe(result => { this.redrawSpeedo(result); })
-    this.liveDataService.getEnphaseSystem().subscribe(result => { this.processEnphaseSystem(result); })
+    this.subs.push(this.liveDataService.envoyData.subscribe(result => { this.redrawSpeedo(result); }));
+    this.subs.push(this.liveDataService.getEnphaseSystem().subscribe(result => { this.processEnphaseSystem(result); }));
   }
 
   processEnphaseSystem(systemId: number) {
-
-    this.liveDataService.getEnphaseSummaryData(systemId).subscribe(result => { return; })
   }
 
+  ngOnDestroy() {
+    for (let s of this.subs)
+      s.unsubscribe();
+  }
 
   ngAfterViewInit() {
     this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
 
-    if (this.liveDataService.envoyLive.data.length > 0) {
-      this.redrawSpeedo(this.liveDataService.envoyLive.data.item(this.liveDataService.envoyLive.data.length-1));
-    }
+    //if (this.liveDataService.envoyLive.data.length > 0) {
+    //  this.redrawSpeedo(this.liveDataService.envoyLive.data.item(this.liveDataService.envoyLive.data.length-1));
+    //}
   }
 
   public redrawSpeedo(power: LivePower) {

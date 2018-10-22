@@ -1,6 +1,14 @@
-<div style="width:100%; height:480px;">
+<div style="width:100%;" class="full-height">
   <!--<div class="row" style="height:80px;"></div>-->
-  <div ng-view style="height: 480px; width: 100%;">
-    <canvas #livePowerCanvas style="width:100%; height:480px"></canvas>
+  <div class="row  top-row">
+    <div class="col-sm-2"></div>
+    <div>
+      <input type="radio" value="detailed" name="displayType" [(ngModel)]="displayType" (change)="redraw();"> Detailed
+      <input type="radio" value="simple" name="displayType" [(ngModel)]="displayType" (change)="redraw();"> Simple
+      <input type="radio" value="consumption" name="displayType" [(ngModel)]="displayType" (change)="redraw();"> Consumption
+    </div>
+  </div>
+  <div ng-view style="width: 100%;" class="partial-height">
+    <canvas #livePowerCanvas style="width:100%;" class="partial-height"></canvas>
   </div>
 </div>

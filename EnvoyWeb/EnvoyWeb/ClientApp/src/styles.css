@@ -1,8 +1,54 @@
 ﻿/* You can add global styles to this file, and also import other style files */
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
-html,
-body {
-  height: 480px;
+@media screen and (min-width: 800px) {
+  html body {
+    height: 480px;
+    background-color: greenyellow;
+    overflow: hidden;
+  }
+  .full-height {
+    height: 480px;
+    margin: 0;
+    padding: 0;
+  }
+  .top-row {
+    height: 80px;
+    margin: 0;
+    padding: 0;
+  }
+  .partial-height {
+    height: 400px;
+    margin: 0;
+    padding: 0;
+  }
+  .solar-stats-table {
+    font-size: 16px;
+  }
+}
+@media screen and (min-width: 1280px) {
+  html body {
+    height: 800px;
+    background-color: yellow;
+    overflow: hidden;
+  }
+  .full-height {
+    height: 800px;
+    margin: 0;
+    padding: 0;
+  }
+  .top-row {
+    height: 80px;
+    margin: 0;
+    padding: 0;
+  }
+  .partial-height {
+    height: 720px;
+    margin: 0;
+    padding: 0;
+  }
+  .solar-stats-table {
+    font-size: 28px;
+  }
 }
 .flex-fill {
   flex: 1;
@@ -30,7 +76,6 @@ body {
   padding: 0;
 }
 .solar-stats-table {
-  font-size: 16px;
   width: 100%;
   text-align: center;
 }
@@ -47,12 +92,14 @@ body {
 .device-block {
   border: solid;
   border-width: 2px;
-  border-radius: 5px;
+  border-radius: 10px;
   margin: 3px;
   flex-grow: 1;
   display: table;
   height: 1%;
   width: 30%;
+  max-width: 30%;
+  text-shadow: 0px 0px 10px white;
 }
 .device-block table {
   margin-left: auto;

@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnInit, SimpleChanges } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { LiveDataService, CircularBuffer, LivePower, ISonoffDailyData, ISonoffSummaryData, ISonoffHoursData, ISonoffDaysData } from '../live-data-service/live-data-service';
@@ -49,9 +49,10 @@ enum DisplayType {
 })
 export class SonoffDeviceComponent {
   @ViewChild('chartCanvas') canvasRef: ElementRef;
+  @ViewChild('tableDiv') tableDivRef: ElementRef;
   deviceId: number;
   deviceName: string = "";
-  displayType: string = "day";
+  public displayType: string = "hours";
   startDate: Date = new Date;
   showPower: boolean = true;
   showEnergy: boolean = false;
@@ -74,8 +75,10 @@ export class SonoffDeviceComponent {
       this.deviceName = this.liveDataService.sonoffDevices.filter(d => d.id == this.deviceId)[0].description;
     }
     catch (e) { }
+    this.redrawChart();
   }
 
+  
   redrawChart(): void {
     switch (this.displayType) {
       case "today":
@@ -220,8 +223,12 @@ export class SonoffDeviceComponent {
     this.range = [];
     for (let i: number = 0; i < 24; i++)
       this.range[i] = i;
-  }
+    setTimeout(() => { this.tableDivRef.nativeElement.scrollTop = this.tableDivRef.nativeElement.scrollHeight; }, 100);
+ }
 
+  changeEvent(){
+    this.redrawChart();
+  }
 
   //Days - one row shows 1 month of days
   DrawDaysChart(data: ISonoffDaysData[]) {
@@ -258,6 +265,7 @@ export class SonoffDeviceComponent {
     this.range = [];
     for (let i: number = 0; i < 31; i++)
       this.range[i] = i;
+    setTimeout(() => { this.tableDivRef.nativeElement.scrollTop = this.tableDivRef.nativeElement.scrollHeight; },100);
   }
 
   DrawSummaryChart(data: ISonoffSummaryData[]) {
@@ -333,6 +341,7 @@ export class SonoffDeviceComponent {
       return "transparent";
     return "rgb(" + n + "," + n + "," + n + ")";
   }
+
   getHoursTitle(day: any, h: number): string {
     if (day !== undefined)
       if (day.hours[h] !== undefined)
@@ -340,6 +349,7 @@ export class SonoffDeviceComponent {
                " " + day.hours[h].kWh.toFixed(3)+" kWh";
     return ""; 
   }
+
   getDaysTitle(month: any, d: number): string {
     if (month !== undefined)
       if (month.days[d] !== undefined)

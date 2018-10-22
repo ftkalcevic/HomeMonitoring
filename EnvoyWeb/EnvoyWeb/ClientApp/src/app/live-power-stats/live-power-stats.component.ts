@@ -1,5 +1,6 @@
 import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { LiveDataService, ISonoffSensorData, ISonoffSample, CircularBuffer, LivePower } from '../live-data-service/live-data-service';
+import * as common from '../../data/common';
 
 
 @Component({
@@ -9,15 +10,23 @@ import { LiveDataService, ISonoffSensorData, ISonoffSample, CircularBuffer, Live
 
 export class LivePowerStatsComponent {
   devices: any[] = [];
+  subs: any[] = [];
 
   constructor( private liveDataService: LiveDataService ) {
     this.ReadDevices();
-    this.liveDataService.envoyData.subscribe(result => { this.newSample(result); })
-    this.liveDataService.sonoffData.subscribe(result => { this.newSonoffSample(result);})
+    this.subs.push(this.liveDataService.envoyData.subscribe(result => { this.newSample(result); }));
+    this.subs.push(this.liveDataService.sonoffData.subscribe(result => { this.newSonoffSample(result); }));
   }
 
   ngAfterViewInit() {
   }
+
+  ngOnDestroy() {
+    for (let s of this.subs)
+      s.unsubscribe();
+  }
+
+
 
   public ReadDevices() {
     this.devices = [];
@@ -37,7 +46,7 @@ export class LivePowerStatsComponent {
     }
     this.devices[this.devices.length] = {
       name: "Enphase Solar",
-      id: -1,
+      id: common.GENERATED_ID,
       type: "envoy",
       wattsConsumed: 0,
       wattsNet: 0,
@@ -77,6 +86,9 @@ export class LivePowerStatsComponent {
       }
   }
 
+  getBackgroundColour(id: number): string {
+    return "rgb("+common.colourList[id]+")";
+  }
 }
 
 

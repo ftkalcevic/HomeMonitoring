@@ -3,7 +3,6 @@
 @media screen and (min-width: 800px) {
   html body {
     height: 480px;
-    background-color: greenyellow;
     overflow: hidden;
   }
   .full-height {
@@ -24,11 +23,30 @@
   .solar-stats-table {
     font-size: 16px;
   }
+  .hoursHeatMap td {
+    width: 24px;
+    height: 24px;
+  }
+  .hoursHeatMap td:first-child {
+    width: 100px;
+    font-size: 10pt;
+    margin-right: 15px;
+    text-align: right;
+  }
+  .daysHeatMap td {
+    width: 19px;
+    height: 19px;
+  }
+  .daysHeatMap td:first-child {
+    width: 70px;
+    font-size: 10pt;
+    margin-right: 15px;
+    text-align: right;
+  }
 }
 @media screen and (min-width: 1280px) {
   html body {
     height: 800px;
-    background-color: yellow;
     overflow: hidden;
   }
   .full-height {
@@ -48,6 +66,26 @@
   }
   .solar-stats-table {
     font-size: 28px;
+  }
+  .hoursHeatMap td {
+    width: 40px;
+    height: 40px;
+  }
+  .hoursHeatMap td:first-child {
+    width: 120px;
+    font-size: 14pt;
+    margin-right: 15px;
+    text-align: right;
+  }
+  .daysHeatMap td {
+    width: 32px;
+    height: 32px;
+  }
+  .daysHeatMap td:first-child {
+    width: 100px;
+    font-size: 16pt;
+    margin-right: 15px;
+    text-align: right;
   }
 }
 .flex-fill {
@@ -108,6 +146,9 @@
 .device-block td {
   padding: 2px;
 }
+.device-highlighted {
+  box-shadow: 0 0 10px 10px rgba(127, 127, 127, 0.5) inset;
+}
 .deviceTitle {
   font-weight: bold;
   text-align: center;
@@ -125,13 +166,4 @@
 }
 table.hoursHeatMap {
   background-color: azure;
-}
-.hoursHeatMap td {
-  width: 22px;
-  height: 22px;
-}
-.hoursHeatMap td:first-child {
-  width: 100px;
-  margin-right: 15px;
-  text-align: right;
 }

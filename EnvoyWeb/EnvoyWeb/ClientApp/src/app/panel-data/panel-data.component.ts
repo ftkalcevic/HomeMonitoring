@@ -4,6 +4,8 @@ import { MatrixLT } from '../../assets/src_matrix_lt.js';
 import { DatePipe } from '@angular/common';
 import { interval } from "rxjs/internal/observable/interval";
 import { startWith, switchMap } from "rxjs/operators";
+import { GradientStep, Gradient } from "../../data/gradient";
+
 
 @Component({
   selector: 'app-panel-data',
@@ -20,7 +22,6 @@ export class PanelDataComponent {
   private http: HttpClient;
   @ViewChild('panelCanvas') canvasRef: ElementRef;
   @ViewChild('imgHouse') houseImgRef: ElementRef;
-  private maxProduction: number = 270;
   public panelInfo = {
     "system_id": 1460367,
     "rotation": 0,
@@ -188,6 +189,9 @@ export class PanelDataComponent {
   public panelHighlighted = null;
   private timestamp: Date;
   subs: any[] = [];
+  gradient: Gradient = new Gradient([{ percent:0,   R:65,  G:75,  B:85},
+                                     { percent:50,  R:0,   G:128, B:241},
+                                     { percent:100, R:150, G:215, B:255}]);
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private datePipe: DatePipe) {
     this.baseUrl = baseUrl;
@@ -299,9 +303,7 @@ export class PanelDataComponent {
     var geom = this.panelGeometry[serialNumber];
     var percentage: number = geom.percentage;
 
-    ctx.fillStyle = "rgb(" + this.interpolate(65, 0, 150, percentage) + "," +
-                            this.interpolate(75, 128, 215, percentage) + "," +
-                            this.interpolate(85, 241, 255, percentage) + ")";
+    ctx.fillStyle = "rgb(" + this.gradient.getColour(percentage) + ")";
     ctx.beginPath();
     ctx.moveTo(geom.points[0].x, geom.points[0].y);
     ctx.lineTo(geom.points[1].x, geom.points[1].y);
@@ -326,13 +328,6 @@ export class PanelDataComponent {
     ctx.stroke();
   }
 
-  private interpolate(p1: number, p2: number, p3: number, percentage: number) {
-    if ( percentage <= 50 )
-      return ((p2 - p1) * percentage / 50 + p1).toFixed(0);
-    else
-      return ((p3 - p2) * (percentage-50) / 50 + p2).toFixed(0);
-  }
- 
   private InitialisePanelGeometry(){
     this.panelGeometry = {};
 

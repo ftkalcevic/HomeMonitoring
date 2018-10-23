@@ -1,5 +1,8 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { LiveDataService, LivePower } from '../live-data-service/live-data-service';
+import { PriceBreak } from '../../data/energy-plans';
+import { Router } from "@angular/router";
+import * as common from '../../data/common';
 
 @Component({
   selector: 'app-live-data',
@@ -7,11 +10,10 @@ import { LiveDataService, LivePower } from '../live-data-service/live-data-servi
 })
 export class LiveDataComponent {
   @ViewChild('indicatorCanvas') canvasRef: ElementRef;
-  private maxPower: number = 3500;
-  private maxProduction: number = 270 * 12;
+  private maxPower: number = common.maxProduction * 1.1;
   subs: any[] = [];
 
-  constructor(private liveDataService: LiveDataService) {
+  constructor(private liveDataService: LiveDataService, private router: Router) {
     this.subs.push(this.liveDataService.envoyData.subscribe(result => { this.redrawSpeedo(result); }));
     this.subs.push(this.liveDataService.getEnphaseSystem().subscribe(result => { this.processEnphaseSystem(result); }));
   }
@@ -38,6 +40,16 @@ export class LiveDataComponent {
       this.maxPower = Math.abs(power.wattsConsumed);
     if (Math.abs(power.wattsProduced) > this.maxPower)
       this.maxPower = Math.abs(power.wattsProduced);
+
+    let now: Date = new Date(power.timestamp);
+    let time: number = now.getHours() + now.getMinutes() / 60;
+    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(this.liveDataService.energyPlan, now, time, false);
+    let rate: number = 0;
+
+    if (power.wattsNet > 0 )
+      rate = -(power.wattsNet) / 1000.0 * price.Rate * (1 - this.liveDataService.energyPlan.EnergyDiscount) * 1.1;
+    else
+      rate = -(power.wattsNet) / 1000.0 * this.liveDataService.energyPlan.FiT;
 
     let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
 
@@ -133,7 +145,7 @@ export class LiveDataComponent {
     ctx.stroke();
 
     // Max production
-    a = Math.PI / 2 - Math.PI / 2 * this.maxProduction / this.maxPower;
+    a = Math.PI / 2 - Math.PI / 2 * common.maxProduction / this.maxPower;
     x = 940 * Math.cos(a);
     y = 940 * Math.sin(a);
     ctx.strokeStyle = "red";
@@ -145,28 +157,55 @@ export class LiveDataComponent {
     ctx.stroke();
 
     // details
-    if (false) {
-      x = width / 2 - 80; y = height - 90;
+    if (true) {
+      const fontHeight: number = 40;
+      const lineSpacing: number = 50;
+      const y0: number = 1000 + (height - size) * 1000 / size;
+
+      a = Math.PI / 2 * power.wattsNet / this.maxPower;
+      //a = 75 / 180 * Math.PI;
+      if (Math.abs(a) > Math.PI * 75 / 180)
+        a = Math.sign(a) * Math.PI * 75 / 180;
+      a = Math.PI / 2 + a;
+
+      x = 540 * Math.cos(a);
+      y = y0 - 540 * Math.sin(a);
+
+      //x = width / 2 - 80; y = height - 90;
       //x = width - 5 - 160; y = 5;
+
+      x -= 150;
+      y -= 100;
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.translate(width / 2, 0);
+      ctx.scale(size / 1000, size / 1000); 
 
       ctx.strokeStyle = "black";
       ctx.lineWidth = 4;
+      ctx.setLineDash([]);
       ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.fillRect(x, y, 160, 88);
-      ctx.strokeRect(x, y, 160, 88);
+      ctx.fillRect(x, y-20, 320, 210);
+      ctx.strokeRect(x, y-20, 320, 210);
 
-      ctx.font = "20px san serif";
+      ctx.font = fontHeight+"px san serif";
       ctx.fillStyle = "black";
       ctx.textAlign = "left";
-      ctx.fillText("Produced:", x + 10, y + 25);
-      ctx.fillText("Consumed:", x + 10, y + 50);
-      ctx.fillText("Net:", x + 10, y + 75);
+      ctx.fillText("Produced:", x + 10, y + 25 + 0 * lineSpacing);
+      ctx.fillText("Consumed:", x + 10, y + 25 + 1 * lineSpacing);
+      ctx.fillText("Net:", x + 10, y + 25 + 2 * lineSpacing);
+      ctx.fillText("Rate:", x + 10, y + 25 + 3 * lineSpacing);
 
       ctx.textAlign = "right";
-      ctx.fillText(power.wattsProduced.toFixed(0), x + 140, y + 25);
-      ctx.fillText(power.wattsConsumed.toFixed(0), x + 140, y + 50);
-      ctx.fillText((power.wattsNet < 0 ? "+" : "-") + Math.abs(power.wattsNet).toFixed(0), x + 140, y + 75);
+      ctx.fillText(power.wattsProduced.toFixed(0) + "W", x + 300, y + 25 + 0*lineSpacing);
+      ctx.fillText(power.wattsConsumed.toFixed(0) + "W", x + 300, y + 25 + 1*lineSpacing);
+      ctx.fillText((-power.wattsNet).toFixed(0)+"W", x + 300, y + 25 + 2*lineSpacing);
+      ctx.fillText((rate < 0 ? "-" : "") + "$" + Math.abs(rate).toFixed(2) + "/h", x + 300, y + 25 + 3 * lineSpacing);
     }
     ctx.restore();
+  }
+
+  onClick() {
+    this.router.navigate(["/live-power2"]);
   }
 }

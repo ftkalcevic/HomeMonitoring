@@ -1,8 +1,8 @@
 <div flex >
   <div class="row" style="height:80px;"></div>
   <div class="device" ng-view style="height: 480px; width: 100%;">
-    <div class="device-block" *ngFor="let d of devices" [routerLink]='["/sonoff-device",d.id]'  [style.background-color]="getBackgroundColour(d.id)">
-      <table *ngIf="d.type=='sonoff'">
+    <div class="device-block" *ngFor="let d of devices" [style.background-color]="getBackgroundColour(d.id)" [ngClass]="{'device-highlighted': d.id==highlighted}">
+      <table *ngIf="d.type=='sonoff'" [routerLink]='["/sonoff-device",d.id]'>
         <tr><td class="deviceTitle" colspan="2">{{d.name}}</td></tr>
         <tr><td class="deviceTimestamp" colspan="2">{{d.timestamp | date: 'E d LLL h:mm:ss'}}{{ d.timestamp | date: 'a' | lowercase}}</td></tr>
         <tr><td>Voltage</td><td class="deviceReading">{{d.voltage}} V</td></tr>
@@ -13,7 +13,7 @@
         <tr><td>Energy Yesterday</td><td class="deviceReading">{{d.yesterday}} kWh</td></tr>
         <tr><td>Energy Total</td><td class="deviceReading">{{d.total}} kWh</td></tr>
       </table>
-      <table *ngIf="d.type=='envoy'">
+      <table *ngIf="d.type=='envoy'" [routerLink]='["/panel-data"]' >
         <tr><td class="deviceTitle" colspan="2">{{d.name}}</td></tr>
         <tr><td class="deviceTimestamp" colspan="2">{{d.timestamp | date: 'E d LLL h:mm:ss'}}{{ d.timestamp | date: 'a' | lowercase}}</td></tr>
         <tr><td>Consumed</td><td class="deviceReading">{{d.wattsConsumed}} W</td></tr>

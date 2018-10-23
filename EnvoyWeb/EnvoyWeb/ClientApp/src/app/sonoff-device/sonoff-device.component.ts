@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewChild, AfterViewInit, OnInit, SimpleChanges 
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { LiveDataService, CircularBuffer, LivePower, ISonoffDailyData, ISonoffSummaryData, ISonoffHoursData, ISonoffDaysData } from '../live-data-service/live-data-service';
+import { GradientStep, Gradient } from "../../data/gradient";
 import {
   MatAutocompleteModule,
   MatButtonModule,
@@ -65,6 +66,9 @@ export class SonoffDeviceComponent {
   useCanvas: boolean = true;
   grid: any[];
   range: number[];
+  gradient: Gradient = new Gradient([{ percent:0,   R:80,  G:75,  B:70},
+                                     { percent:50,  R:235, G:115, B:20},
+                                     { percent:100, R:220, G:65,  B:20}]);
 
   constructor(private liveDataService: LiveDataService, private route: ActivatedRoute, private datePipe: DatePipe) {
   }
@@ -210,7 +214,7 @@ export class SonoffDeviceComponent {
 
       if (dt.getTime() === dataDate.getTime()) {
         grid[g].hours[data[d].hour] = { kWh: data[d].kWh,
-                                        percent: ((data[d].kWh / maxEnergy) * 256).toFixed(0) };
+                                        percent: ((data[d].kWh / maxEnergy) * 100).toFixed(0) };
         d++;
       }
       else {
@@ -218,15 +222,26 @@ export class SonoffDeviceComponent {
         g++;
       }
     }
+    for (let day of grid)
+      for (let h: number = 0; h < 24; h++) {
+        if (day.hours[h] !== undefined) {
+          day.hours[h].title = this.datePipe.transform(day.date, "d LLL yyyy") + " " + (h + 1).toString() + ":00" + " " + day.hours[h].kWh.toFixed(3) + " kWh";
+          const p: number = day.hours[h].percent;
+          day.hours[h].colour = "rgb(" + this.gradient.getColour(p) + ")";
+        }
+      }
+    let range: any[] = [];
+    for (let i: number = 0; i < 24; i++)
+      range[i] = i;
+
     this.useCanvas = false;
     this.grid = grid;
-    this.range = [];
-    for (let i: number = 0; i < 24; i++)
-      this.range[i] = i;
+    this.range = range;
     setTimeout(() => { this.tableDivRef.nativeElement.scrollTop = this.tableDivRef.nativeElement.scrollHeight; }, 100);
  }
 
-  changeEvent(){
+  changeEvent() {
+    console.info("changeEvent");
     this.redrawChart();
   }
 
@@ -251,7 +266,7 @@ export class SonoffDeviceComponent {
       if (dt.getTime() === dataDate.getTime()) {
         grid[g].days[data[d].day-1] = {
           kWh: data[d].kWh,
-          percent: ((data[d].kWh / maxEnergy) * 256).toFixed(0)
+          percent: ((data[d].kWh / maxEnergy) * 100).toFixed(0)
         };
         d++;
       }
@@ -260,11 +275,22 @@ export class SonoffDeviceComponent {
         g++;
       }
     }
+    for (let month of grid)
+      for (let d: number = 0; d < 31; d++) {
+        if (month.days[d] !== undefined) {
+          month.days[d].title = (d + 1).toString() + " " + this.datePipe.transform(month.date, "LLL yyyy") +
+            " " + month.days[d].kWh.toFixed(3) + " kWh";
+          const p: number = month.days[d].percent;
+          month.days[d].colour = "rgb(" + this.gradient.getColour(month.days[d].percent) + ")";
+        }
+      }
+    let range: any[] = [];
+    for (let i: number = 0; i < 31; i++)
+      range[i] = i;
+
     this.useCanvas = false;
     this.grid = grid;
-    this.range = [];
-    for (let i: number = 0; i < 31; i++)
-      this.range[i] = i;
+    this.range = range;
     setTimeout(() => { this.tableDivRef.nativeElement.scrollTop = this.tableDivRef.nativeElement.scrollHeight; },100);
   }
 
@@ -326,7 +352,7 @@ export class SonoffDeviceComponent {
           if(typeof grid[iy][ix] !== 'undefined') {
             let x: number = ix * colWidth;
             let p: number = grid[iy][ix].percent;
-            ctx.fillStyle = "rgb(" + p + "," + p + "," + p + ")";
+            ctx.fillStyle = "rgb(" + this.gradient.getColour(p) + ")";
             ctx.fillRect(x, height - y - colWidth, colWidth - 5, colWidth - 5);
             ctx.strokeRect(x, height - y - colWidth, colWidth - 5, colWidth - 5);
           }
@@ -336,10 +362,13 @@ export class SonoffDeviceComponent {
     ctx.restore();
   }
 
-  getColour(n: number): string {
-    if (n === undefined)
+  getColour(a:any[], n: number): string {
+    if (a === undefined)
       return "transparent";
-    return "rgb(" + n + "," + n + "," + n + ")";
+    if (a[n] === undefined)
+      return "transparent";
+    const p: number = a[n].percent;
+    return "rgb(" + p + "," + p + "," + p + ")";
   }
 
   getHoursTitle(day: any, h: number): string {

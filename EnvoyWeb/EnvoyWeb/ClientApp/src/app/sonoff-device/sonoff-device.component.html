@@ -28,19 +28,21 @@
     <table *ngIf="!useCanvas && displayType=='hours'" style="flex:10; width:100%; height: 100%;" class="hoursHeatMap">
       <tr *ngFor="let day of grid" class="row">
         <td>{{day.date | date: 'd LLL yyyy' }}</td>
-        <td *ngFor="let h of range" [style.background-color]="getColour(day.hours[h]===undefined?undefined:day.hours[h].percent)" [title]="getHoursTitle(day,h)">
-          <p *ngIf="day.hours[h]"></p>
+        <td *ngFor="let h of range"
+            [style.background-color]="day.hours[h]===undefined?'transparent':day.hours[h].colour"
+            [title]="day.hours[h]===undefined?'':day.hours[h].title">
+          <p *ngIf="day.hours[h]!==undefined"></p>
         </td>
       </tr>
     </table>
-    <table *ngIf="!useCanvas && displayType=='days'" style="flex:10; width:100%;" class="hoursHeatMap">
+    <table *ngIf="!useCanvas && displayType=='days'" style="flex:10; width:100%;" class="daysHeatMap">
       <tr *ngFor="let month of grid" class="row">
         <td>{{month.date | date: 'LLL yyyy' }}</td>
         <td *ngFor="let h of range"
-            [style.background-color]="getColour(month.days[h]===undefined?undefined:month.days[h].percent)"
-            [title]="getDaysTitle(month,h)"
+            [style.background-color]="month.days[h]===undefined?'transparent':month.days[h].colour"
+            [title]="month.days[h]===undefined?'':month.days[h].title"
             >
-          <p *ngIf="month.days[h]"></p>{{h}}
+          <p *ngIf="month.days[h]!==undefined"></p>
         </td>
       </tr>
     </table>

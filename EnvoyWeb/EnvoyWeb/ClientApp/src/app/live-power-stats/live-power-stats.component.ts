@@ -1,6 +1,7 @@
 import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { LiveDataService, ISonoffSensorData, ISonoffSample, CircularBuffer, LivePower } from '../live-data-service/live-data-service';
 import * as common from '../../data/common';
+import { ActivatedRoute } from "@angular/router";
 
 
 @Component({
@@ -11,22 +12,23 @@ import * as common from '../../data/common';
 export class LivePowerStatsComponent {
   devices: any[] = [];
   subs: any[] = [];
+  highlighted: number;
 
-  constructor( private liveDataService: LiveDataService ) {
+  constructor(private liveDataService: LiveDataService, private route: ActivatedRoute ) {
     this.ReadDevices();
     this.subs.push(this.liveDataService.envoyData.subscribe(result => { this.newSample(result); }));
     this.subs.push(this.liveDataService.sonoffData.subscribe(result => { this.newSonoffSample(result); }));
+    if (this.route.snapshot.paramMap.has("deviceId")) 
+      this.highlighted = parseInt(this.route.snapshot.paramMap.get("deviceId"));
   }
 
   ngAfterViewInit() {
-  }
+  } 
 
   ngOnDestroy() {
     for (let s of this.subs)
       s.unsubscribe();
   }
-
-
 
   public ReadDevices() {
     this.devices = [];
@@ -78,7 +80,7 @@ export class LivePowerStatsComponent {
   public newSample(result: LivePower ) {
 
     for (let d of this.devices)
-      if (d.id == -1) {
+      if (d.id == common.GENERATED_ID) {
         d.timestamp = result.timestamp;
         d.wattsConsumed = result.wattsConsumed.toFixed(0);
         d.wattsNet = result.wattsNet.toFixed(0);

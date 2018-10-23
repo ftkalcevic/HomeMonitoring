@@ -212,10 +212,10 @@ export class LivePower2Component {
     let width: number = this.canvasRef.nativeElement.width;
     let height: number = this.canvasRef.nativeElement.height;
 
-    let barWidth: number = 80;
-    let barGap:number = 50;
-    let labelWidth: number = 120;
-    let labelSpacing: number = 10;
+    let barWidth: number = width * 80 / 800;
+    let barGap: number = width * 50 / 800;
+    let labelWidth: number = width * 120 / 800;
+    let labelSpacing: number = width * 10 / 800;
     let labelHeight: number = height / this.data.length - labelSpacing;
     let barX: number = width - barWidth - labelWidth - barGap;
     let labelX: number = width - labelWidth;
@@ -255,12 +255,12 @@ export class LivePower2Component {
       let x: number = si + (this.POINTS - this.historicData.length);
       if (x < 0)
         break;
-      let a: string = "," + (0.15 + 0.7 * (si + (this.POINTS - this.historicData.length)) / this.POINTS).toFixed(3) + ")";
+      let a: string = "," + (0.15 + 0.6 * (si + (this.POINTS - this.historicData.length)) / this.POINTS).toFixed(3) + ")";
       sumPower = 0;
       for (let i: number = 0; i< hd.data.length-1; i++) {
         let d: LivePowerData = hd.data[i];
 
-        ctx.fillStyle = "rgb(" + common.colourList[d.id] + a;
+        ctx.fillStyle = "rgba(" + common.colourList[d.id] + a;
         if (d.id === common.GENERATED_ID || d.id == common.NET_ID) {
           if (d.power !== 0) {
             ctx.fillRect(x, (d.power - minPower) * scale, 1, -d.power * scale);
@@ -295,8 +295,8 @@ export class LivePower2Component {
 
       ctx.fillStyle = "rgb(" + common.colourList[this.data[i].id] + ")";
       ctx.fillRect(labelX, y, labelWidth, labelHeight);
-      if ( this.data[i].id == common.CONSUMED_ID )
-        ctx.strokeRect(labelX, y, labelWidth, labelHeight);
+      //if ( this.data[i].id == common.CONSUMED_ID )
+      //  ctx.strokeRect(labelX, y, labelWidth, labelHeight);
       if (this.data[i].buttonRect === undefined)
         this.data[i].buttonRect = { x1: labelX, x2: labelX + labelWidth, y1: y, y2: y + labelHeight };
 
@@ -309,9 +309,9 @@ export class LivePower2Component {
       if (this.data[i].id === common.NET_ID)
         value += "  "+(rate<0?"-":"")+"$" + Math.abs(rate).toFixed(2) + "/h";
       ctx.fillText(value, labelX + labelWidth / 2, y + labelHeight*9/10);
-      if (this.data[i].id === common.CONSUMED_ID) {
-        arrowHead[i] = { centerX: barX + barWidth, centerY: (this.data[i].power - minPower) * scale };
-      }
+      //if (this.data[i].id === common.CONSUMED_ID) {
+      //  arrowHead[i] = { centerX: barX + barWidth, centerY: (this.data[i].power - minPower) * scale };
+      //}
 
       if (arrowHead[i] !== undefined) {
         if (arrowHead[i].centerX !== undefined) {
@@ -387,10 +387,10 @@ export class LivePower2Component {
     let width: number = this.canvasRef.nativeElement.width;
     let height: number = this.canvasRef.nativeElement.height;
 
-    let barWidth: number = 80;
-    let barGap: number = 50;
-    let labelWidth: number = 120;
-    let labelSpacing: number = 10;
+    let barWidth: number = width*80/800;
+    let barGap: number = width*50/800;
+    let labelWidth: number = width *120/800;
+    let labelSpacing: number = width*10/800;
     let labelHeight: number = height / this.data.length - labelSpacing;
     let barX: number = width - barWidth - labelWidth - barGap;
     let labelX: number = width - labelWidth;
@@ -403,13 +403,13 @@ export class LivePower2Component {
     let arrowHead: any = [];
 
     // live data
-    for (let i: number = 0; i < this.data.length - 1; i++) {
+    for (let i: number = 0; i < this.data.length; i++) {
       let d = this.data[i];
 
-      ctx.fillStyle = "rgba(" + common.colourList[d.id] + ",0.85)";
       if (d.id === common.CONSUMED_ID || d.id === common.GENERATED_ID || d.id === common.NET_ID) {
         if (d.power !== 0) {
-          ctx.fillRect(barX, (-minPower + d.power) * scale, barWidth, -d.power * scale);
+          ctx.fillStyle = "rgba(" + common.colourList[d.id] + ",0.85)";
+          this.fillRect( ctx, barX, (-minPower + d.power) * scale, barWidth, -d.power * scale);
           arrowHead[i] = { X: barX + barWidth, Y1: (-minPower) * scale, Y2: (d.power - minPower) * scale };
         }
       }
@@ -422,12 +422,12 @@ export class LivePower2Component {
       let x: number = si + (this.POINTS - this.historicData.length);
       if (x < 0)
         break;
-      let a: string = "," + (0.15 + 0.7 * (si + (this.POINTS - this.historicData.length)) / this.POINTS).toFixed(3) + ")";
+      let a: string = "," + (0.15 + 0.6 * (si + (this.POINTS - this.historicData.length)) / this.POINTS).toFixed(3) + ")";
 
-      for (let i: number = 0; i < hd.data.length - 1; i++) {
+      for (let i: number = 0; i < hd.data.length; i++) {
         let d: LivePowerData = hd.data[i];
 
-        ctx.fillStyle = "rgb(" + common.colourList[d.id] + a;
+        ctx.fillStyle = "rgba(" + common.colourList[d.id] + a;
         if (d.id === common.CONSUMED_ID || d.id === common.GENERATED_ID || d.id === common.NET_ID) {
           if (d.power !== 0) {
             ctx.fillRect(x, (d.power - minPower) * scale, 1, -d.power * scale);
@@ -456,8 +456,8 @@ export class LivePower2Component {
 
         ctx.fillStyle = "rgb(" + common.colourList[this.data[i].id] + ")";
         ctx.fillRect(labelX, y, labelWidth, labelHeight);
-        if (this.data[i].id == common.CONSUMED_ID)
-          ctx.strokeRect(labelX, y, labelWidth, labelHeight);
+        //if (this.data[i].id == common.CONSUMED_ID)
+        //  ctx.strokeRect(labelX, y, labelWidth, labelHeight);
         if (this.data[i].buttonRect === undefined)
           this.data[i].buttonRect = { x1: labelX, x2: labelX + labelWidth, y1: y, y2: y + labelHeight };
 
@@ -470,9 +470,9 @@ export class LivePower2Component {
         if (this.data[i].id === common.NET_ID)
           value += "  " + (rate < 0 ? "-" : "") + "$" + Math.abs(rate).toFixed(2) + "/h";
         ctx.fillText(value, labelX + labelWidth / 2, y + labelHeight * 9 / 10);
-        if (this.data[i].id === common.CONSUMED_ID) {
-          arrowHead[i] = { centerX: barX + barWidth, centerY: (this.data[i].power - minPower) * scale };
-        }
+        //if (this.data[i].id === common.CONSUMED_ID) {
+        //  arrowHead[i] = { centerX: barX + barWidth, centerY: (this.data[i].power - minPower) * scale };
+        //}
 
         if (arrowHead[i] !== undefined) {
           if (arrowHead[i].centerX !== undefined) {
@@ -546,10 +546,10 @@ export class LivePower2Component {
     let width: number = this.canvasRef.nativeElement.width;
     let height: number = this.canvasRef.nativeElement.height;
 
-    let barWidth: number = 80;
-    let barGap: number = 50;
-    let labelWidth: number = 120;
-    let labelSpacing: number = 10;
+    let barWidth: number = width * 80 / 800;
+    let barGap: number = width * 50 / 800;
+    let labelWidth: number = width * 120 / 800;
+    let labelSpacing: number = width * 10 / 800;
     let labelHeight: number = height / this.data.length - labelSpacing;
     let barX: number = width - barWidth - labelWidth - barGap;
     let labelX: number = width - labelWidth;
@@ -585,12 +585,12 @@ export class LivePower2Component {
       let x: number = si + (this.POINTS - this.historicData.length);
       if (x < 0)
         break;
-      let a: string = "," + (0.15 + 0.7 * (si + (this.POINTS - this.historicData.length)) / this.POINTS).toFixed(3) + ")";
+      let a: string = "," + (0.15 + 0.6 * (si + (this.POINTS - this.historicData.length)) / this.POINTS).toFixed(3) + ")";
       sumPower = 0;
       for (let i: number = 0; i < hd.data.length - 1; i++) {
         let d: LivePowerData = hd.data[i];
 
-        ctx.fillStyle = "rgb(" + common.colourList[d.id] + a;
+        ctx.fillStyle = "rgba(" + common.colourList[d.id] + a;
         if (d.id === common.GENERATED_ID || d.id == common.NET_ID) {
         }
         else {
@@ -620,8 +620,8 @@ export class LivePower2Component {
 
         ctx.fillStyle = "rgb(" + common.colourList[this.data[i].id] + ")";
         ctx.fillRect(labelX, y, labelWidth, labelHeight);
-        if (this.data[i].id == common.CONSUMED_ID)
-          ctx.strokeRect(labelX, y, labelWidth, labelHeight);
+        //if (this.data[i].id == common.CONSUMED_ID)
+        //  ctx.strokeRect(labelX, y, labelWidth, labelHeight);
         if (this.data[i].buttonRect === undefined)
           this.data[i].buttonRect = { x1: labelX, x2: labelX + labelWidth, y1: y, y2: y + labelHeight };
 
@@ -634,9 +634,9 @@ export class LivePower2Component {
         if (this.data[i].id === common.NET_ID)
           value += "  " + (rate < 0 ? "-" : "") + "$" + Math.abs(rate).toFixed(2) + "/h";
         ctx.fillText(value, labelX + labelWidth / 2, y + labelHeight * 9 / 10);
-        if (this.data[i].id === common.CONSUMED_ID) {
-          arrowHead[i] = { centerX: barX + barWidth, centerY: (this.data[i].power - minPower) * scale };
-        }
+        //if (this.data[i].id === common.CONSUMED_ID) {
+        //  arrowHead[i] = { centerX: barX + barWidth, centerY: (this.data[i].power - minPower) * scale };
+        //}
 
         if (arrowHead[i] !== undefined) {
           if (arrowHead[i].centerX !== undefined) {
@@ -691,9 +691,17 @@ export class LivePower2Component {
       if (d.buttonRect.x1 <= e.offsetX && e.offsetX <= d.buttonRect.x2 &&
         d.buttonRect.y1 <= e.offsetY && e.offsetY <= d.buttonRect.y2) {
         if (d.id>0)
-          this.router.navigate(["/sonoff-device", d.id]);
+          this.router.navigate(["/live-power-stats", d.id]);
       }
     }
+  }
+
+  private fillRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void {
+    if (height < 0) {
+      y += height;
+      height = -height;
+    }
+    ctx.fillRect(x, y, width, height);
   }
 
 }

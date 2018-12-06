@@ -1,4 +1,5 @@
 import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { LiveDataService } from '../live-data-service/live-data-service';
 import { HttpClient } from '@angular/common/http';
 import { MatrixLT } from '../../assets/src_matrix_lt.js';
 import { DatePipe } from '@angular/common';
@@ -22,169 +23,6 @@ export class PanelDataComponent {
   private http: HttpClient;
   @ViewChild('panelCanvas') canvasRef: ElementRef;
   @ViewChild('imgHouse') houseImgRef: ElementRef;
-  public panelInfo = {
-    "system_id": 1460367,
-    "rotation": 0,
-    "dimensions": {
-      "x_min": -477,
-      "x_max": 731,
-      "y_min": -480,
-      "y_max": 294
-    },
-    "arrays": [
-      {
-        "array_id": 2344175,
-        "label": "North West Array",
-        "x": -158,
-        "y": -40,
-        "azimuth": 327,
-        "modules": [
-          {
-            "module_id": 31414811,
-            "rotation": 0,
-            "x": -200,
-            "y": -100,
-            "inverter": {
-              "inverter_id": 32104668,
-              "serial_num": "121810018710"
-            }
-          },
-          {
-            "module_id": 31414812,
-            "rotation": 0,
-            "x": -100,
-            "y": -100,
-            "inverter": {
-              "inverter_id": 32104663,
-              "serial_num": "121810018431"
-            }
-          },
-          {
-            "module_id": 31414813,
-            "rotation": 0,
-            "x": 0,
-            "y": -100,
-            "inverter": {
-              "inverter_id": 32104666,
-              "serial_num": "121810018247"
-            }
-          },
-          {
-            "module_id": 31414814,
-            "rotation": 0,
-            "x": 100,
-            "y": -100,
-            "inverter": {
-              "inverter_id": 32104665,
-              "serial_num": "121810018433"
-            }
-          },
-          {
-            "module_id": 31414815,
-            "rotation": 0,
-            "x": 200,
-            "y": -100,
-            "inverter": {
-              "inverter_id": 32104664,
-              "serial_num": "121810018427"
-            }
-          },
-          {
-            "module_id": 31414816,
-            "rotation": 0,
-            "x": -57,
-            "y": 100,
-            "inverter": {
-              "inverter_id": 32104658,
-              "serial_num": "121810015542"
-            }
-          },
-          {
-            "module_id": 31414817,
-            "rotation": 0,
-            "x": 43,
-            "y": 100,
-            "inverter": {
-              "inverter_id": 32104669,
-              "serial_num": "121810017904"
-            }
-          }
-        ],
-        "dimensions": {
-          "x_min": -477,
-          "x_max": 161,
-          "y_min": -344,
-          "y_max": 264
-        }
-      },
-      {
-        "array_id": 2344176,
-        "label": "North East Array",
-        "x": 520,
-        "y": -226,
-        "azimuth": 57,
-        "modules": [
-          {
-            "module_id": 31414818,
-            "rotation": 0,
-            "x": -200,
-            "y": 0,
-            "inverter": {
-              "inverter_id": 32104667,
-              "serial_num": "121810015362"
-            }
-          },
-          {
-            "module_id": 31414819,
-            "rotation": 0,
-            "x": -100,
-            "y": 0,
-            "inverter": {
-              "inverter_id": 32104662,
-              "serial_num": "121810018719"
-            }
-          },
-          {
-            "module_id": 31414820,
-            "rotation": 0,
-            "x": 0,
-            "y": 0,
-            "inverter": {
-              "inverter_id": 32104661,
-              "serial_num": "121810018564"
-            }
-          },
-          {
-            "module_id": 31414821,
-            "rotation": 0,
-            "x": 100,
-            "y": 0,
-            "inverter": {
-              "inverter_id": 32104660,
-              "serial_num": "121810018700"
-            }
-          },
-          {
-            "module_id": 31414822,
-            "rotation": 0,
-            "x": 200,
-            "y": 0,
-            "inverter": {
-              "inverter_id": 32104659,
-              "serial_num": "121810018351"
-            }
-          }
-        ],
-        "dimensions": {
-          "x_min": 291,
-          "x_max": 731,
-          "y_min": -420,
-          "y_max": 108
-        }
-      }
-    ],
-    "haiku": "Put upon the roof / I am waiting for the sun / All I see is clouds"
-  };
   public panelGeometry;
   public panelHighlighted = null;
   private timestamp: Date;
@@ -193,7 +31,7 @@ export class PanelDataComponent {
                                      { percent:50,  R:0,   G:128, B:241},
                                      { percent:100, R:150, G:215, B:255}]);
 
-  constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private datePipe: DatePipe) {
+  constructor(private liveDataService: LiveDataService, http: HttpClient, @Inject('BASE_URL') baseUrl: string, private datePipe: DatePipe) {
     this.baseUrl = baseUrl;
     this.http = http;
 
@@ -336,23 +174,23 @@ export class PanelDataComponent {
 
     let m: MatrixLT = new MatrixLT(null);
 
-    let scaleX = width / (this.panelInfo.dimensions.x_max - this.panelInfo.dimensions.x_min);
-    let scaleY = height / (this.panelInfo.dimensions.y_max - this.panelInfo.dimensions.y_min);
+    let scaleX = width / (this.liveDataService.panelInfo.dimensions.x_max - this.liveDataService.panelInfo.dimensions.x_min);
+    let scaleY = height / (this.liveDataService.panelInfo.dimensions.y_max - this.liveDataService.panelInfo.dimensions.y_min);
     scaleX *= .95;
     scaleY *= .95;
     if (scaleX < scaleY)
       scaleY = scaleX;
     else
       scaleX = scaleY;
-    let xoffset: number = width - (this.panelInfo.dimensions.x_max - this.panelInfo.dimensions.x_min) * scaleX;
-    let yoffset: number = height - (this.panelInfo.dimensions.y_max - this.panelInfo.dimensions.y_min) * scaleY;
+    let xoffset: number = width - (this.liveDataService.panelInfo.dimensions.x_max - this.liveDataService.panelInfo.dimensions.x_min) * scaleX;
+    let yoffset: number = height - (this.liveDataService.panelInfo.dimensions.y_max - this.liveDataService.panelInfo.dimensions.y_min) * scaleY;
     m.scale(scaleX, scaleY);
-    m.translate(-this.panelInfo.dimensions.x_min + xoffset, -this.panelInfo.dimensions.y_min + yoffset);
+    m.translate(-this.liveDataService.panelInfo.dimensions.x_min + xoffset, -this.liveDataService.panelInfo.dimensions.y_min + yoffset);
 
     let p: number, a: number;
-    for (a = 0; a < this.panelInfo.arrays.length; a++) {
+    for (a = 0; a < this.liveDataService.panelInfo.arrays.length; a++) {
 
-      let arr = this.panelInfo.arrays[a];
+      let arr = this.liveDataService.panelInfo.arrays[a];
 
       let m2: MatrixLT = m.clone();
       m2.translate(arr.x, arr.y);

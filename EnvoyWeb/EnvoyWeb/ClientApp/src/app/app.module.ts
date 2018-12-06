@@ -18,6 +18,7 @@ import { LivePower2Component } from './live-power2/live-power2.component';
 import { LivePowerStatsComponent } from './live-power-stats/live-power-stats.component';
 import { EnlightenComponent } from './enlighten/enlighten.component';
 import { EnergyEasyComponent } from './energyeasy/energyeasy.component';
+import { SolarHistoryComponent } from './solar-history/solar-history.component';
 
 import { WeatherRadarComponent } from './weather-radar/weather-radar.component';
 import { WeatherRainComponent } from './weather-rain/weather-rain.component';
@@ -80,7 +81,8 @@ import {
     WeatherTempComponent, 
     WeatherTodayComponent,
     WeatherWindComponent,
-    SonoffDeviceComponent
+    SonoffDeviceComponent,
+    SolarHistoryComponent
   ],
   exports: [
     CdkTableModule,
@@ -140,6 +142,7 @@ import {
       { path: 'weather-today', component: WeatherTodayComponent },
       { path: 'weather-wind', component: WeatherWindComponent },
       { path: 'sonoff-device/:deviceId', component: SonoffDeviceComponent },
+      { path: 'solar-history', component: SolarHistoryComponent },
     ])
     ],
   providers: [DatePipe],

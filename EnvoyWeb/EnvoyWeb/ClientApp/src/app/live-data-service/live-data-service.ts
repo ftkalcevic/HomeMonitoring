@@ -151,6 +151,181 @@ export class LiveDataService {
   public energyPlans: EnergyPlans = new EnergyPlans();
   public energyPlan: EnergyPlan;
   readonly POINTS: number = 2000;
+  public panelInfo = {
+    "system_id": 1460367,
+    "rotation": 0,
+    "dimensions": {
+      "x_min": -477,
+      "x_max": 731,
+      "y_min": -480,
+      "y_max": 294
+    },
+    "arrays": [
+      {
+        "array_id": 2344175,
+        "label": "North West Array",
+        "x": -158,
+        "y": -40,
+        "azimuth": 327,
+        "altitude": 25,
+        "power": 330,
+        "panel_size": {
+          "width": 1016,
+          "length": 1686
+        },
+        "modules": [
+          {
+            "module_id": 31414811,
+            "rotation": 0,
+            "x": -200,
+            "y": -100,
+            "inverter": {
+              "inverter_id": 32104668,
+              "serial_num": "121810018710"
+            }
+          },
+          {
+            "module_id": 31414812,
+            "rotation": 0,
+            "x": -100,
+            "y": -100,
+            "inverter": {
+              "inverter_id": 32104663,
+              "serial_num": "121810018431"
+            }
+          },
+          {
+            "module_id": 31414813,
+            "rotation": 0,
+            "x": 0,
+            "y": -100,
+            "inverter": {
+              "inverter_id": 32104666,
+              "serial_num": "121810018247"
+            }
+          },
+          {
+            "module_id": 31414814,
+            "rotation": 0,
+            "x": 100,
+            "y": -100,
+            "inverter": {
+              "inverter_id": 32104665,
+              "serial_num": "121810018433"
+            }
+          },
+          {
+            "module_id": 31414815,
+            "rotation": 0,
+            "x": 200,
+            "y": -100,
+            "inverter": {
+              "inverter_id": 32104664,
+              "serial_num": "121810018427"
+            }
+          },
+          {
+            "module_id": 31414816,
+            "rotation": 0,
+            "x": -57,
+            "y": 100,
+            "inverter": {
+              "inverter_id": 32104658,
+              "serial_num": "121810015542"
+            }
+          },
+          {
+            "module_id": 31414817,
+            "rotation": 0,
+            "x": 43,
+            "y": 100,
+            "inverter": {
+              "inverter_id": 32104669,
+              "serial_num": "121810017904"
+            }
+          }
+        ],
+        "dimensions": {
+          "x_min": -477,
+          "x_max": 161,
+          "y_min": -344,
+          "y_max": 264
+        }
+      },
+      {
+        "array_id": 2344176,
+        "label": "North East Array",
+        "x": 520,
+        "y": -226,
+        "azimuth": 57,
+        "altitude": 25,
+        "power" : 330,
+        "panel_size": {
+          "width": 1016,
+          "length": 1686
+        },
+        "modules": [
+          {
+            "module_id": 31414818,
+            "rotation": 0,
+            "x": -200,
+            "y": 0,
+            "inverter": {
+              "inverter_id": 32104667,
+              "serial_num": "121810015362"
+            }
+          },
+          {
+            "module_id": 31414819,
+            "rotation": 0,
+            "x": -100,
+            "y": 0,
+            "inverter": {
+              "inverter_id": 32104662,
+              "serial_num": "121810018719"
+            }
+          },
+          {
+            "module_id": 31414820,
+            "rotation": 0,
+            "x": 0,
+            "y": 0,
+            "inverter": {
+              "inverter_id": 32104661,
+              "serial_num": "121810018564"
+            }
+          },
+          {
+            "module_id": 31414821,
+            "rotation": 0,
+            "x": 100,
+            "y": 0,
+            "inverter": {
+              "inverter_id": 32104660,
+              "serial_num": "121810018700"
+            }
+          },
+          {
+            "module_id": 31414822,
+            "rotation": 0,
+            "x": 200,
+            "y": 0,
+            "inverter": {
+              "inverter_id": 32104659,
+              "serial_num": "121810018351"
+            }
+          }
+        ],
+        "dimensions": {
+          "x_min": 291,
+          "x_max": 731,
+          "y_min": -420,
+          "y_max": 108
+        }
+      }
+    ],
+    "haiku": "Put upon the roof / I am waiting for the sun / All I see is clouds"
+  };
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string) {
     this.baseUrl = baseUrl;

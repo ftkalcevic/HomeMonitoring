@@ -48,11 +48,11 @@
           <a class="nav-link" id="btn-1" data-toggle="collapse" data-target="#submenu1" aria-expanded="false"><span class="fas fa-bolt"></span>Power</a>
           <ul class="nav collapse" id="submenu1" role="menu" aria-labelledby="btn-1">
 
-<li class="nav-item" [routerLinkActive]='["link-active"]' [routerLinkActiveOptions]='{ exact: true }'>
+<!--<li class="nav-item" [routerLinkActive]='["link-active"]' [routerLinkActiveOptions]='{ exact: true }'>
   <a [routerLink]='["/solar-history"]' class="nav-link" (click)='isExpanded=false;'>
     <span class='fas fa-home'></span> Solar History
   </a>
-</li>
+</li>-->
 
             <li class="nav-item" [routerLinkActive]='["link-active"]' [routerLinkActiveOptions]='{ exact: true }'>
               <a [routerLink]='["/live-data"]' class="nav-link" (click)='isExpanded=false;'>
@@ -60,24 +60,25 @@
               </a>
             </li>
 
-            <li class="nav-item" [routerLinkActive]='["link-active"]'>
+            <!--<li class="nav-item" [routerLinkActive]='["link-active"]'>
               <a [routerLink]='["/historic-data"]' class="nav-link" (click)='isExpanded=false;'>
                 <span class='fas fa-sort-amount-up'></span> Solar History
               </a>
-            </li>
+            </li>-->
+
             <li class="nav-item" [routerLinkActive]='["link-active"]'>
               <a [routerLink]='["/panel-data"]' class="nav-link" (click)='isExpanded=false;'>
                 <span class='fas fa-database'></span> Solar Panels
               </a>
             </li>
-            <li class="nav-item" [routerLinkActive]='["link-active"]'>
+            <!--<li class="nav-item" [routerLinkActive]='["link-active"]'>
               <a [routerLink]='["/live-power"]' class="nav-link" (click)='isExpanded=false;'>
                 <span class='fas fa-database'></span> Live Power
               </a>
-            </li>
+            </li>-->
             <li class="nav-item" [routerLinkActive]='["link-active"]'>
               <a [routerLink]='["/live-power2"]' class="nav-link" (click)='isExpanded=false;'>
-                <span class='fas fa-database'></span> Live Power 2
+                <span class='fas fa-database'></span> Live Power 
               </a>
             </li>
             <li class="nav-item" [routerLinkActive]='["link-active"]'>

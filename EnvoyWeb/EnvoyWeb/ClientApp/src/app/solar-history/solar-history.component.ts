@@ -5,6 +5,7 @@ import { LiveDataService, CircularBuffer, LivePower, ISonoffDailyData, ISonoffSu
 import { GradientStep, Gradient } from "../../data/gradient";
 import * as SunCalc from "suncalc";
 import { mat4, vec3 } from "gl-matrix";
+import * as common from '../../data/common';
 
 @Component({
   selector: 'app-solar-history',
@@ -14,33 +15,57 @@ export class SolarHistoryComponent {
   @ViewChild('chartCanvas') canvasRef: ElementRef;
   longitude: number = 145.000516 - 360;
   latitude: number = -37.886778;
+  subs: any[] = [];
+  date: Date;
+  enphaseData: IEnphaseData [];
 
   constructor(private liveDataService: LiveDataService, private route: ActivatedRoute, private datePipe: DatePipe) {
+    this.subs.push(this.liveDataService.getEnphaseSystem().subscribe(result => { this.processEnphaseSystem(result); }));
+    let now: Date = new Date();
+    //now.setDate(now.getDate() - 1);
+    this.date = new Date(now.getFullYear(), now.getMonth(), now.getDate()-2,0,0,0);
+    this.enphaseData = null;
+  }
+
+  processEnphaseSystem(systemId: number) {
+    this.subs.push(
+      this.liveDataService.getEnphaseDayData(systemId,this.date).subscribe(result=>{this.processDayData(result);})
+    );
+  }
+
+  processDayData(result: IEnphaseData[]){
+    this.enphaseData = result;
+    this.redrawChart();
   }
 
   ngOnInit() {
   }
 
+  ngOnDestroy() {
+    for (let s of this.subs)
+      s.unsubscribe();
+  }
+
   ngAfterViewInit() {
     this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
-    this.redrawChart();
   }
 
   redrawChart(): void {
 
+  
     let data: any = [];
 
-    let now: Date = new Date();
-    //let times: any = SunCalc.getTimes(new Date(), this.latitude, this.longitude);
+    //let now: Date = new Date();
+    let times: any = SunCalc.getTimes(new Date(), this.latitude, this.longitude);
 
-    //let start: number = times.sunrise.getHours() + times.sunrise.getMinutes() / 60;
-    //let end: number = times.sunset.getHours() + times.sunset.getMinutes() / 60;
+    let start: number = times.sunrise.getHours() + times.sunrise.getMinutes() / 60;
+    let end: number = times.sunset.getHours() + times.sunset.getMinutes() / 60;
     for (let i: number = 0; i < 24*4; i++) {
 
       let power: number = 0;
-      const t: number = i/4;
-      const time: Date = new Date(now.getFullYear(),now.getMonth(),now.getDate(),Math.floor(t), (t % 1)*60,0,0);
+      const t: number = start + (end - start) * i/(24*4);
+      const time: Date = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(),Math.floor(t), (t % 1)*60,0,0);
       var sunPos = SunCalc.getPosition(time, this.latitude, this.longitude);
 
       //console.info(time.toString() + " " + (sunPos.altitude / Math.PI * 180).toFixed(2) + " " + (sunPos.azimuth / Math.PI * 180).toFixed(2));
@@ -56,7 +81,7 @@ export class SolarHistoryComponent {
       vec3.rotateZ(vecToSun, vecToSun, [0, 0, 0], -1 * Math.PI * sunAzimuth / 180);
       vec3.rotateX(vecToSun, vecToSun, [0, 0, 0], 1 * Math.PI * sunAltitude / 180);
 
-      for (let a: number = 0; a < this.liveDataService.panelInfo.arrays.length; a++) {
+      for (let a: number = 1; a < this.liveDataService.panelInfo.arrays.length; a++) {
 
         let arr = this.liveDataService.panelInfo.arrays[a];
 
@@ -80,9 +105,10 @@ export class SolarHistoryComponent {
         vec3.rotateZ(vecPanelNormal, vecPanelNormal, [0, 0, 0], -1 * Math.PI * panelAzimuth / 180);
 
         const angle: number = vec3.angle(vecToSun, vecPanelNormal);
+        console.log("t=" + time.toString() + " a=" + (angle * 180 / Math.PI).toString());
         //ps[a] = angle*180/Math.PI;
-        if (angle > Math.PI / 2 || angle < -Math.PI / 2)
-          continue;
+    //    if (angle > Math.PI / 2 || angle < -Math.PI / 2)
+    //      continue;
 
         //let presentedWidth: number = panelWidth * Math.sin(azimuth / 180 * Math.PI);
         //let presentedLength: number = panelLength * Math.sin(altitude / 180 * Math.PI);
@@ -120,8 +146,9 @@ export class SolarHistoryComponent {
         //console.info("" + a + "," + sunAzimuth + "," + sunAltitude);
         //azimuth = sunAzimuth;
         power += expectedPower;
+        power = angle * 400;
         //ps[a] = expectedPower/10;
-        //break;
+        break;
       }
       data.push({ time: t, power: power });
     }
@@ -130,16 +157,33 @@ export class SolarHistoryComponent {
 
     let width: number = this.canvasRef.nativeElement.width;
     let height: number = this.canvasRef.nativeElement.height;
-    ctx.clearRect(0, 0, width, height);
 
-    //ctx.lineWidth = 2;
-    //ctx.strokeStyle = "black"
-    //ctx.beginPath();
-    //ctx.moveTo(200 + 0, data[0].power / 10);
-    //for (let i: number = 1; i < data.length; i++ ) {
-    //  ctx.lineTo(200+i * 5, data[i].power / 10);
-    //}
-    //ctx.stroke();
+    let scaleX: number = 0.9 * (width / (24 * 4));
+    let scaleY: number = 0.9 * (height / (common.maxProduction/4 * 2));
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.translate(0, height / 2);
+
+    let t: number;
+    ctx.strokeStyle = "blue";
+    ctx.fillStyle = "lightblue";
+    for (t = 0; t < 24 * 4; t++) {
+      ctx.fillRect(t * scaleX, 0, 1 * scaleX, -this.enphaseData[t].whProduced * scaleY);
+    }
+    ctx.strokeStyle = "orange";
+    ctx.fillStyle = "orange";
+    for (t = 0; t < 24 * 4; t++) {
+      ctx.fillRect(t * scaleX, 0, 1 * scaleX, this.enphaseData[t].whConsumed * scaleY);
+    }
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "red"
+    ctx.beginPath();
+    ctx.moveTo(scaleX * (data[0].time)*4, -scaleY*data[0].power / 4);
+    for (let i: number = 1; i < data.length; i++ ) {
+      ctx.lineTo(scaleX * (data[i].time)*4, -scaleY*data[i].power / 4);
+    }
+    ctx.stroke();
 
     //ctx.strokeStyle = "red"
     //ctx.beginPath();
@@ -192,6 +236,11 @@ export class SolarHistoryComponent {
     //ctx.lineTo(200 + 48 * 5, 270);
     //ctx.stroke();
 
+    ctx.strokeStyle = "gray"
+    ctx.beginPath();
+    ctx.moveTo(0, -scaleY*400*Math.PI/2/4);
+    ctx.lineTo(1200, -scaleY *400 * Math.PI/2/4);
+    ctx.stroke();
 
     ctx.restore();
   }

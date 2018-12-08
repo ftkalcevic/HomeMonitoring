@@ -78,7 +78,6 @@ export class LivePowerStatsComponent {
   }
 
   public newSample(result: LivePower ) {
-
     for (let d of this.devices)
       if (d.id == common.GENERATED_ID) {
         d.timestamp = result.timestamp;

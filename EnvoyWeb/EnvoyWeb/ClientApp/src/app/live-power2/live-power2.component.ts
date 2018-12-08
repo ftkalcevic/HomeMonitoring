@@ -3,6 +3,11 @@ import { Router } from "@angular/router";
 import { LiveDataService, ISonoffSensorData, ISonoffSample, CircularBuffer, LivePower } from '../live-data-service/live-data-service';
 import { PriceBreak } from '../../data/energy-plans';
 import * as common from '../../data/common';
+import {
+  MatButtonModule,
+  MatButtonToggleModule,
+  MatIconModule,
+} from '@angular/material';
 
 class LivePowerData {
   name: string;
@@ -170,7 +175,10 @@ export class LivePower2Component {
     return min;
   }
 
-  public redraw() {
+  public redraw(displayType?: string) {
+    if (displayType !== undefined) this.displayType = displayType;
+
+//    console.log("redraw - " + this.displayType);
     switch (this.displayType) {
       case "detailed": this.drawDetailed(); break;
       case "simple": this.drawSimple(); break;

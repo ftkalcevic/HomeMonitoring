@@ -1,6 +1,6 @@
 <div flex >
   <div class="row" style="height:80px;"></div>
-  <div class="device" ng-view style="height: 480px; width: 100%;">
+  <div class="device" ng-view style="height: 626px; width: 100%;">
     <div class="device-block" *ngFor="let d of devices" [style.background-color]="getBackgroundColour(d.id)" [ngClass]="{'device-highlighted': d.id==highlighted}">
       <table *ngIf="d.type=='sonoff'" [routerLink]='["/sonoff-device",d.id]'>
         <tr><td class="deviceTitle" colspan="2">{{d.name}}</td></tr>

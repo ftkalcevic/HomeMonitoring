@@ -4,4 +4,5 @@ interface ISonoffDevice {
   name: string ;
   description: string;
   hostname: string;
+  ipAddress: string;
 }

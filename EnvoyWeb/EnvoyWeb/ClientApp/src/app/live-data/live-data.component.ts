@@ -61,7 +61,7 @@ export class LiveDataComponent {
     ctx.clearRect(0, 0, width, height);
 
     let size: number = width/2 > height ? height : width/2;
-    ctx.translate(width / 2, height);
+    ctx.translate(width / 2, height*0.95);
     ctx.scale(size / 1000, -size / 1000); 
 
     // Grid
@@ -185,8 +185,8 @@ export class LiveDataComponent {
       ctx.lineWidth = 4;
       ctx.setLineDash([]);
       ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.fillRect(x, y-20, 320, 210);
-      ctx.strokeRect(x, y-20, 320, 210);
+      ctx.fillRect(x, y-20, 370, 210);
+      ctx.strokeRect(x, y-20, 370, 210);
 
       ctx.font = fontHeight+"px san serif";
       ctx.fillStyle = "black";
@@ -197,11 +197,13 @@ export class LiveDataComponent {
       ctx.fillText("Rate:", x + 10, y + 25 + 3 * lineSpacing);
 
       ctx.textAlign = "right";
-      ctx.fillText(power.wattsProduced.toFixed(0) + "W", x + 300, y + 25 + 0*lineSpacing);
-      ctx.fillText(power.wattsConsumed.toFixed(0) + "W", x + 300, y + 25 + 1*lineSpacing);
-      ctx.fillText((-power.wattsNet).toFixed(0)+"W", x + 300, y + 25 + 2*lineSpacing);
-      ctx.fillText((rate < 0 ? "-" : "") + "$" + Math.abs(rate).toFixed(2) + "/h", x + 300, y + 25 + 3 * lineSpacing);
+      ctx.fillText(power.wattsProduced.toFixed(0) + "W", x + 350, y + 25 + 0*lineSpacing);
+      ctx.fillText(power.wattsConsumed.toFixed(0) + "W", x + 350, y + 25 + 1*lineSpacing);
+      ctx.fillText((-power.wattsNet).toFixed(0)+"W", x + 350, y + 25 + 2*lineSpacing);
+      ctx.fillText((rate < 0 ? "-" : "") + "$" + Math.abs(rate).toFixed(2) + "/h", x + 350, y + 25 + 3 * lineSpacing);
     }
+    //ctx.fillText("width "+screen.width.toString()+"px", 0, 50);
+    //ctx.fillText("height "+screen.height.toString()+"px", 0, 150);
     ctx.restore();
   }
 

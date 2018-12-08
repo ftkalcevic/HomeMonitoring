@@ -28,7 +28,7 @@ namespace EnvoyWeb.Controllers
             using (var con = new SqlConnection(connectString))
             {
                 con.Open();
-                using (var cmd = new SqlCommand(@"select id,name,description,hostname from SonoffDevices", con))
+                using (var cmd = new SqlCommand(@"select id,name,description,hostname,ipaddress from SonoffDevices", con))
                 {
                     using (var rdr = cmd.ExecuteReader())
                     {
@@ -38,13 +38,15 @@ namespace EnvoyWeb.Controllers
                             string name = rdr.GetString(1);
                             string description = rdr.GetString(2);
                             string hostname = rdr.GetString(3);
+                            string ipaddress = rdr.GetString(4);
 
                             devices.Add(new ISonoffDevice()
                             {
                                 id = id,
                                 name = name,
                                 description = description,
-                                hostname = hostname
+                                hostname = hostname,
+                                ipAddress = ipaddress
                             });
 
                         }
@@ -291,12 +293,14 @@ and deviceId = @deviceId
         public string name;
         public string description;
         public string hostname;
+        public string ipAddress;
         public ISonoffDevice()
         {
             id = -1;
             name = "";
             description = "";
             hostname = "";
+            ipAddress = "";
         }
     };
 

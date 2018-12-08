@@ -55,7 +55,7 @@ export class SonoffDeviceComponent {
   deviceName: string = "";
   public displayType: string = "hours";
   startDate: Date = new Date;
-  showPower: boolean = true;
+  showPower: boolean = false;
   showEnergy: boolean = false;
   settings = {
     bigBanner: true,
@@ -83,7 +83,9 @@ export class SonoffDeviceComponent {
   }
 
   
-  redrawChart(): void {
+  redrawChart(displayType?: string): void {
+    console.log("redrawChart " + displayType);
+    if (displayType !== undefined) this.displayType = displayType;
     switch (this.displayType) {
       case "today":
         this.useCanvas = true;
@@ -141,7 +143,7 @@ export class SonoffDeviceComponent {
     ctx.moveTo(1, 0);
     ctx.stroke();
 
-    if ( this.showPower )// power
+    //if ( this.showPower )// power
     {
       let colWidth: number = width / (24 * 60); // 1 minute widths
       for (let i: number = 0; i < data.length; i++) {
@@ -343,7 +345,7 @@ export class SonoffDeviceComponent {
     // Scale
     ctx.strokeStyle = "DarkGrey";
 
-    if (this.showEnergy)// energy
+    //if (this.showEnergy)// energy
     {
       let colWidth: number = width / 7;
       for (let iy: number = 0; iy < grid.length; iy++) {

@@ -118,7 +118,7 @@ namespace EnvoyWeb.Controllers
             return panels;
         }
 
-        // GET: api/Envoy/LiveData
+        // GET: api/Envoy/EnphaseSystem
         [HttpGet("[action]")]
         public int EnphaseSystem()
         {
@@ -151,7 +151,7 @@ namespace EnvoyWeb.Controllers
             return systemId;
         }
 
-        // GET: api/Envoy/LiveData
+        // GET: api/Envoy/EnphaseSummary/#
         [HttpGet("EnphaseSummary/{systemId}")]
         public ILivePower EnphaseSummary(int systemId)
         {
@@ -181,6 +181,106 @@ namespace EnvoyWeb.Controllers
             }
             return power;
         }
+
+        // GET: api/Envoy/EnphaseSummary/#
+        [HttpGet("EnphaseDayData/{systemId}/{date}")]
+        public IEnphaseData [] EnphaseDayData(int systemId, DateTime date)
+        {
+            DateTime dtStart = new DateTime(date.Year, date.Month, date.Day);
+            DateTime dtEnd = dtStart.AddDays(1);
+
+            long start = ((DateTimeOffset)dtStart.ToUniversalTime()).ToUnixTimeSeconds();
+            long end = ((DateTimeOffset)dtEnd.ToUniversalTime()).ToUnixTimeSeconds()-1;
+
+            // Check the database first
+
+            dynamic consumptionData=null, productionData=null;
+            try
+            {
+                // Read envoy consumption
+                //string url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start={start}&end={end}";
+                string url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start={start}";
+
+                HttpClient hc = GetClient();
+                var responseMsg = hc.GetAsync(url);
+                var response = responseMsg.Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = response.Content;
+                    string json = content.ReadAsStringAsync().Result;
+
+                    consumptionData = JsonConvert.DeserializeObject(json);
+                }
+            }
+            catch (Exception)
+            {
+                if (client != null)
+                {
+                    client.Dispose();
+                    client = null;
+                }
+            }
+
+            try
+            {
+                // Read envoy production
+                string url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/stats?key={apiKey}&user_id={userId}&start={start}&end={end}";
+
+                HttpClient hc = GetClient();
+                var responseMsg = hc.GetAsync(url);
+                var response = responseMsg.Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = response.Content;
+                    string json = content.ReadAsStringAsync().Result;
+
+                    productionData = JsonConvert.DeserializeObject(json);
+                }
+            }
+            catch (Exception)
+            {
+                if (client != null)
+                {
+                    client.Dispose();
+                    client = null;
+                }
+            }
+
+            // combine consumption and production data.
+            // consumption data is every 15minutes, production is every 5, so we sum the producton data.
+            // we assume if we get 1 lot of data, we get the lot (wrong - 5 min vs 15 min) and production has no 0 records
+            IEnphaseData[] data = new IEnphaseData[24 * 4];  // 15 min intervals
+            int p = 0, c = 0, d = 0;
+            for ( int t = 0; t < 24*60*60; t += 15*60 )
+            {
+                long period = start + t;
+                long periodEnd = period + 15*60;
+
+                double cons = 0;
+                double prod = 0;
+
+                if ( productionData != null )
+                    while ( p < productionData.intervals.Count &&
+                            productionData.intervals[p].end_at <= periodEnd )
+                    {
+                        prod += (int)productionData.intervals[p].enwh;
+                        p++;
+                    }
+
+                if (consumptionData != null)
+                    while (c < consumptionData.intervals.Count &&
+                        consumptionData.intervals[c].end_at <= periodEnd)
+                    {
+                        cons += (int)consumptionData.intervals[c].enwh;
+                        c++;
+                    }
+
+                data[d] = new IEnphaseData() { whConsumed = cons, whProduced = prod };
+                d++;
+            }
+
+            return data;
+        }
     }
 
     public class ILivePower
@@ -197,6 +297,18 @@ namespace EnvoyWeb.Controllers
             wattsNet = 0;
         }
     };
+
+    public class IEnphaseData
+    {
+        public double whProduced;
+        public double whConsumed;
+        public IEnphaseData()
+        {
+            whProduced = 0;
+            whConsumed = 0;
+        }
+    };
+
     public class IPanelData
     {
         public DateTime timestamp;

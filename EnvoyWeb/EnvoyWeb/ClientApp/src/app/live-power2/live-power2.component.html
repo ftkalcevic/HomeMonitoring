@@ -2,11 +2,22 @@
   <!--<div class="row" style="height:80px;"></div>-->
   <div class="row  top-row">
     <div class="col-sm-2"></div>
-    <div>
-      <input type="radio" value="detailed" name="displayType" [(ngModel)]="displayType" (change)="redraw();"> Detailed
-      <input type="radio" value="simple" name="displayType" [(ngModel)]="displayType" (change)="redraw();"> Simple
-      <input type="radio" value="consumption" name="displayType" [(ngModel)]="displayType" (change)="redraw();"> Consumption
-    </div>
+    <div  class="select-btn-group">
+
+      <mat-button-toggle-group #group="matButtonToggleGroup"  [value]="displayType" >
+
+        <mat-button-toggle value="detailed" (change)="redraw($event.value)">
+          <label class="btn btn-secondary select-btn" style="font-size:25px;">Detailed</label>
+        </mat-button-toggle>
+        <mat-button-toggle value="simple" (change)="redraw($event.value)">
+          <label class="btn btn-secondary select-btn" style="font-size:25px;">Simple</label>
+        </mat-button-toggle>
+        <mat-button-toggle value="consumption" (change)="redraw($event.value)"> 
+          <label class="select-btn btn btn-secondary" style="font-size:25px;">Consumption</label>
+        </mat-button-toggle>
+    
+      </mat-button-toggle-group>
+</div>
   </div>
   <div ng-view style="width: 100%;" class="partial-height">
     <canvas #livePowerCanvas style="width:100%;" class="partial-height"></canvas>

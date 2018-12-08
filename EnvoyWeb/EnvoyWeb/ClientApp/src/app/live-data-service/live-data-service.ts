@@ -103,6 +103,7 @@ class SonoffDevice implements ISonoffDevice {
   id: number;    name: string;
   description: string;
   hostname: string;
+  ipAddress: string;
 
   public constructor(init?: Partial<ISonoffDevice>) {
     Object.assign(this, init);
@@ -381,14 +382,14 @@ export class LiveDataService {
   private ProcessSonoffDevices(devices: SonoffDevice[]) {
     this.sonoffDevices = [];
     for (let d of devices) {
-      this.sonoffDevices[this.sonoffDevices.length] = new SonoffDevice({ name: d.name, description: d.description, id: d.id, hostname: d.hostname });
+      this.sonoffDevices[this.sonoffDevices.length] = new SonoffDevice({ name: d.name, description: d.description, id: d.id, hostname: d.hostname, ipAddress: d.ipAddress });
       this.requestLivePower(d);
     }
     this.sonoffLive = new CircularBuffer<ISonoffSample>(this.POINTS*this.sonoffDevices.length);
   }
 
   private requestLivePower(d: SonoffDevice) {
-    this.http.get<ISonoffSensorData>('http://' + d.hostname + '/cm?cmnd=status 8')
+    this.http.get<ISonoffSensorData>('http://' + d.ipAddress + '/cm?cmnd=status 8')
       .subscribe(
         result => {
           this.ProcessLivePower(d, result);
@@ -434,5 +435,9 @@ export class LiveDataService {
 
   public getEnphaseSummaryData(systemId:number): Observable<ISonoffSummaryData[]> {
     return this.http.get<ISonoffSummaryData[]>(this.baseUrl + 'api/Envoy/EnphaseSummary/'+systemId);
+  }
+
+  public getEnphaseDayData(systemId:number, day:Date): Observable<IEnphaseData[]> {
+    return this.http.get<IEnphaseData[]>(this.baseUrl + 'api/Envoy/EnphaseDayData/'+systemId+'/'+day.toISOString());
   }
 }

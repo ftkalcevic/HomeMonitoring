@@ -332,7 +332,7 @@ export class LiveDataService {
     this.baseUrl = baseUrl;
     this.http = http;
     this.envoyLive = new RealtimeEnvoyData(this.POINTS);
-    this.energyPlan = this.energyPlans.Plans[1];
+    this.energyPlan = this.energyPlans.Plans[3];
     this.sonoffLive = new CircularBuffer<ISonoffSample>(1);
 
     this.sonoffDevices = [];

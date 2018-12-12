@@ -66,7 +66,28 @@ export class EnergyPlans {
         { Name: "Winter Off-Peak", StartTime: "0:00", EndTime: "23:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2188, IsForControlledLoad: false, IsForWeekDayOnly: false },
 
       ]
+    },
+    {
+      Name: "RACV Plus 45/30 FIT Simply Energy - Time of Use",
+      DailySupplyCharge: 0.8773,
+      EnergyDiscount: 0.45,
+      FiT: 0.1130,
+      PFiT: 0.6,
+      Pricing: [
+        { Name: "Summer Peak WeekDay", StartTime: "15:00", EndTime: "20:59", StartDate: "1 Oct", EndDate: "31 Mar", Rate: 0.5208, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Summer Shoulder WeekDay Morning", StartTime: "7:00", EndTime: "14:59", StartDate: "1 Oct", EndDate: "31 Mar", Rate: 0.2788, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Summer Shoulder WeekDay Evening", StartTime: "21:00", EndTime: "21:59", StartDate: "1 Oct", EndDate: "31 Mar", Rate: 0.2788, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Summer Shoulder Weekend", StartTime: "7:00", EndTime: "21:59", StartDate: "1 Oct", EndDate: "31 Mar", Rate: 0.2788, IsForControlledLoad: false, IsForWeekDayOnly: false },
+        { Name: "Summer Off-Peak", StartTime: "0:00", EndTime: "23:59", StartDate: "1 Oct", EndDate: "31 Mar", Rate: 0.2168, IsForControlledLoad: false, IsForWeekDayOnly: false },
+        { Name: "Winter Peak WeekDay", StartTime: "15:00", EndTime: "20:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.3838, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Winter Shoulder WeekDay Morning", StartTime: "7:00", EndTime: "14:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Winter Shoulder WeekDay Evening", StartTime: "21:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Summer Shoulder Weekend", StartTime: "7:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: false },
+        { Name: "Winter Off-Peak", StartTime: "0:00", EndTime: "23:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2188, IsForControlledLoad: false, IsForWeekDayOnly: false },
+
+      ]
     }
+
   ];
 
   constructor() { }

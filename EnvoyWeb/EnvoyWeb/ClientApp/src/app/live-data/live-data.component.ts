@@ -11,6 +11,8 @@ import * as common from '../../data/common';
 export class LiveDataComponent {
   @ViewChild('indicatorCanvas') canvasRef: ElementRef;
   private maxPower: number = common.maxProduction * 1.1;
+  private maxProduction: number = 0;
+  private maxConsumuption: number = 0;
   subs: any[] = [];
 
   constructor(private liveDataService: LiveDataService, private router: Router) {
@@ -40,6 +42,12 @@ export class LiveDataComponent {
       this.maxPower = Math.abs(power.wattsConsumed);
     if (Math.abs(power.wattsProduced) > this.maxPower)
       this.maxPower = Math.abs(power.wattsProduced);
+
+    if (Math.abs(power.wattsConsumed) > this.maxConsumuption)
+      this.maxConsumuption = Math.abs(power.wattsConsumed);
+    if (Math.abs(power.wattsProduced) > this.maxProduction)
+      this.maxProduction = Math.abs(power.wattsProduced);
+
 
     let now: Date = new Date(power.timestamp);
     let time: number = now.getHours() + now.getMinutes() / 60;
@@ -144,7 +152,7 @@ export class LiveDataComponent {
     ctx.lineTo(x, y);
     ctx.stroke();
 
-    // Max production
+    // Max possible production
     a = Math.PI / 2 - Math.PI / 2 * common.maxProduction / this.maxPower;
     x = 940 * Math.cos(a);
     y = 940 * Math.sin(a);
@@ -155,6 +163,32 @@ export class LiveDataComponent {
     ctx.moveTo(0, 0);
     ctx.lineTo(x, y);
     ctx.stroke();
+
+    // Max production
+    a = Math.PI / 2 - Math.PI / 2 * this.maxProduction / this.maxPower;
+    x = 940 * Math.cos(a);
+    y = 940 * Math.sin(a);
+    ctx.strokeStyle = "black";
+    ctx.setLineDash([15, 20]);
+    ctx.beginPath();
+    ctx.lineWidth = 5;
+    ctx.moveTo(0, 0);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    // Max consumption
+    a = Math.PI / 2 + Math.PI / 2 * this.maxConsumuption / this.maxPower;
+    x = 940 * Math.cos(a);
+    y = 940 * Math.sin(a);
+    ctx.strokeStyle = "black";
+    ctx.setLineDash([15, 20]);
+    ctx.beginPath();
+    ctx.lineWidth = 5;
+    ctx.moveTo(0, 0);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+
 
     // details
     if (true) {
@@ -209,5 +243,10 @@ export class LiveDataComponent {
 
   onClick() {
     this.router.navigate(["/live-power2"]);
+  }
+
+  ResetMaximums() {
+    this.maxConsumuption = 0;
+    this.maxProduction = 0;
   }
 }

@@ -16,6 +16,7 @@ export class LiveDataComponent {
   subs: any[] = [];
 
   constructor(private liveDataService: LiveDataService, private router: Router) {
+    this.ResetMaximums();
     this.subs.push(this.liveDataService.envoyData.subscribe(result => { this.redrawSpeedo(result); }));
     this.subs.push(this.liveDataService.getEnphaseSystem().subscribe(result => { this.processEnphaseSystem(result); }));
   }
@@ -248,5 +249,6 @@ export class LiveDataComponent {
   ResetMaximums() {
     this.maxConsumuption = 0;
     this.maxProduction = 0;
+    this.maxPower = common.maxProduction * 1.1;
   }
 }

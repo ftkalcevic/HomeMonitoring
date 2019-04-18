@@ -198,8 +198,11 @@ namespace EnvoyWeb.Controllers
             try
             {
                 // Read envoy consumption
-                //string url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start={start}&end={end}";
-                string url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start={start}";
+                string url;
+                if ( dtEnd > DateTime.Now )
+                    url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}";
+                else
+                    url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}&end_at={end}";
 
                 HttpClient hc = GetClient();
                 var responseMsg = hc.GetAsync(url);
@@ -224,7 +227,11 @@ namespace EnvoyWeb.Controllers
             try
             {
                 // Read envoy production
-                string url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/stats?key={apiKey}&user_id={userId}&start={start}&end={end}";
+                string url;
+                if (dtEnd > DateTime.Now)
+                    url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/stats?key={apiKey}&user_id={userId}&start_at={start}";
+                else
+                    url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/stats?key={apiKey}&user_id={userId}&start_at={start}&end_at={end}";
 
                 HttpClient hc = GetClient();
                 var responseMsg = hc.GetAsync(url);

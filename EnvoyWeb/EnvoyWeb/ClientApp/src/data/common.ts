@@ -18,3 +18,15 @@ export const NET_ID: number = -4;
 export const PANELS: number = 12;
 export const PANEL_MAX_POWER: number = 270;
 export const maxProduction: number = PANEL_MAX_POWER * PANELS;
+
+// https://stackoverflow.com/questions/661562/how-to-format-a-float-in-javascript
+export function prettyFloat(x, nbDec) {
+  if (!nbDec) nbDec = 100;
+  var a = Math.abs(x);
+  var e = Math.floor(a);
+  var d = Math.round((a - e) * nbDec); if (d == nbDec) { d = 0; e++; }
+  var signStr = (x < 0) ? "-" : " ";
+  var decStr = d.toString(); var tmp = 10; while (tmp < nbDec && d * tmp < nbDec) { decStr = "0" + decStr; tmp *= 10; }
+  var eStr = e.toString();
+  return signStr + eStr + "." + decStr;
+}

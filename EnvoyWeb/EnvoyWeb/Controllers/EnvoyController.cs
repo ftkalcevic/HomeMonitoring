@@ -190,100 +190,211 @@ namespace EnvoyWeb.Controllers
             DateTime dtEnd = dtStart.AddDays(1);
 
             long start = ((DateTimeOffset)dtStart.ToUniversalTime()).ToUnixTimeSeconds();
-            long end = ((DateTimeOffset)dtEnd.ToUniversalTime()).ToUnixTimeSeconds()-1;
+            long startOfDay = start;
+            long end = ((DateTimeOffset)dtEnd.ToUniversalTime()).ToUnixTimeSeconds();
+            long now = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeSeconds()-1;
 
             // Check the database first
-
-            dynamic consumptionData=null, productionData=null;
-            try
-            {
-                // Read envoy consumption
-                string url;
-                if ( dtEnd > DateTime.Now )
-                    url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}";
-                else
-                    url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}&end_at={end}";
-
-                HttpClient hc = GetClient();
-                var responseMsg = hc.GetAsync(url);
-                var response = responseMsg.Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = response.Content;
-                    string json = content.ReadAsStringAsync().Result;
-
-                    consumptionData = JsonConvert.DeserializeObject(json);
-                }
-            }
-            catch (Exception)
-            {
-                if (client != null)
-                {
-                    client.Dispose();
-                    client = null;
-                }
-            }
-
-            try
-            {
-                // Read envoy production
-                string url;
-                if (dtEnd > DateTime.Now)
-                    url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/stats?key={apiKey}&user_id={userId}&start_at={start}";
-                else
-                    url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/stats?key={apiKey}&user_id={userId}&start_at={start}&end_at={end}";
-
-                HttpClient hc = GetClient();
-                var responseMsg = hc.GetAsync(url);
-                var response = responseMsg.Result;
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = response.Content;
-                    string json = content.ReadAsStringAsync().Result;
-
-                    productionData = JsonConvert.DeserializeObject(json);
-                }
-            }
-            catch (Exception)
-            {
-                if (client != null)
-                {
-                    client.Dispose();
-                    client = null;
-                }
-            }
-
-            // combine consumption and production data.
-            // consumption data is every 15minutes, production is every 5, so we sum the producton data.
-            // we assume if we get 1 lot of data, we get the lot (wrong - 5 min vs 15 min) and production has no 0 records
+            int dbRecords = 0;
+            long dbMaxTime = 0;
             IEnphaseData[] data = new IEnphaseData[24 * 4];  // 15 min intervals
-            int p = 0, c = 0, d = 0;
-            for ( int t = 0; t < 24*60*60; t += 15*60 )
+            try
             {
-                long period = start + t;
-                long periodEnd = period + 15*60;
-
-                double cons = 0;
-                double prod = 0;
-
-                if ( productionData != null )
-                    while ( p < productionData.intervals.Count &&
-                            productionData.intervals[p].end_at <= periodEnd )
+                using (var con = new SqlConnection(connectString))
+                {
+                    con.Open();
+                    using (var cmd = new SqlCommand(@"select  time, consumed, produced 
+                                                    from	EnphaseData
+                                                    where   time >= @startTime and time < @endTime
+                                                    order by time
+                                                    ", con))
                     {
-                        prod += (int)productionData.intervals[p].enwh;
-                        p++;
-                    }
+                        cmd.Parameters.Add("@startTime", SqlDbType.BigInt).SqlValue = start;
+                        cmd.Parameters.Add("@endTime", SqlDbType.BigInt).SqlValue = end;
 
-                if (consumptionData != null)
-                    while (c < consumptionData.intervals.Count &&
-                        consumptionData.intervals[c].end_at <= periodEnd)
+                        using (var rdr = cmd.ExecuteReader())
+                        {
+                            while (rdr.Read())
+                            {
+                                dbRecords++;
+                                long time = rdr.GetInt64(0);
+                                double consumed = rdr.GetDouble(1);
+                                double produced = rdr.GetDouble(2);
+
+                                data[(time - start) / (15*60)] = new IEnphaseData() { whConsumed = consumed, whProduced = produced };
+
+                                if (time > dbMaxTime)
+                                    dbMaxTime = time;
+                            }
+                            rdr.Close();
+                        }
+                    }
+                    con.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Just log and ignore the error.  We'll get data online.
+            }
+
+
+            // If we don't have all the data, go get it
+            bool dontHaveAllData = (dbRecords == 0 || dbMaxTime < (end-15*60));
+            bool moreDataToGet = (now - dbMaxTime) > 15 * 60;             // data is updated every 15 minutes
+            if (dontHaveAllData && moreDataToGet)
+            {
+                if ( dbRecords > 0 )
+                    start = dbMaxTime + 15*60;      // dbMaxtime is the start of the period
+                dynamic consumptionData = null, productionData = null;
+                try
+                {
+                    // Read envoy consumption
+                    string url;
+                    if (dtEnd > DateTime.Now)
+                        url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}";
+                    else
+                        url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}&end_at={end}";
+
+                    HttpClient hc = GetClient();
+                    var responseMsg = hc.GetAsync(url);
+                    var response = responseMsg.Result;
+                    if (response.IsSuccessStatusCode)
                     {
-                        cons += (int)consumptionData.intervals[c].enwh;
-                        c++;
-                    }
+                        var content = response.Content;
+                        string json = content.ReadAsStringAsync().Result;
 
-                data[d] = new IEnphaseData() { whConsumed = cons, whProduced = prod };
-                d++;
+                        consumptionData = JsonConvert.DeserializeObject(json);
+                    }
+                    else
+                    {
+                        var content = response.Content;
+                        string r = content.ReadAsStringAsync().Result;
+
+                        System.Diagnostics.Debug.WriteLine("consumption_stats failed\n" + response.ToString() + "\n" + r);
+                    }
+                }
+                catch (Exception)
+                {
+                    if (client != null)
+                    {
+                        client.Dispose();
+                        client = null;
+                    }
+                }
+
+                try
+                {
+                    // Read envoy production
+                    string url;
+                    if (dtEnd > DateTime.Now)
+                        url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/stats?key={apiKey}&user_id={userId}&start_at={start}";
+                    else
+                        url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/stats?key={apiKey}&user_id={userId}&start_at={start}&end_at={end}";
+
+                    HttpClient hc = GetClient();
+                    var responseMsg = hc.GetAsync(url);
+                    var response = responseMsg.Result;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = response.Content;
+                        string json = content.ReadAsStringAsync().Result;
+
+                        productionData = JsonConvert.DeserializeObject(json);
+                    }
+                    else
+                    {
+                        var content = response.Content;
+                        string r = content.ReadAsStringAsync().Result;
+
+                        System.Diagnostics.Debug.WriteLine("stats failed\n" + response.ToString() + "\n" + r);
+                    }
+                }
+                catch (Exception)
+                {
+                    if (client != null)
+                    {
+                        client.Dispose();
+                        client = null;
+                    }
+                }
+
+                // Generated data has to be saved back to the database (time,cons,prod)
+                List<DBEnphaseData> dbData = new List<DBEnphaseData>();
+                if (productionData != null && consumptionData != null)
+                {
+                    long maxProdTime = productionData.intervals[productionData.intervals.Count - 1].end_at;
+                    long maxConsTime = consumptionData.intervals[consumptionData.intervals.Count - 1].end_at;
+                    long maxTime = maxConsTime; // because consumption time is every 15 minutes (vs prod 5 min)  Math.Max(maxProdTime, maxConsTime);
+
+                    // combine consumption and production data.
+                    // consumption data is every 15minutes, production is every 5, so we sum the producton data.
+                    // we assume if we get 1 lot of data, we get the lot (wrong - 5 min vs 15 min) and production has no 0 records
+                    int p = 0, c = 0;
+                    int t0 = (int)(start - startOfDay);
+                    for (int t = t0; t < 24 * 60 * 60; t += 15 * 60)
+                    {
+                        long period = startOfDay + t;
+                        int d = t / (15 * 60);
+                        long periodEnd = period + 15 * 60;
+
+                        double cons = 0;
+                        double prod = 0;
+
+                        while (p < productionData.intervals.Count &&
+                                productionData.intervals[p].end_at <= periodEnd)
+                        {
+                            prod += (int)productionData.intervals[p].enwh;
+                            p++;
+                        }
+
+                        while (c < consumptionData.intervals.Count &&
+                            consumptionData.intervals[c].end_at <= periodEnd)
+                        {
+                            cons += (int)consumptionData.intervals[c].enwh;
+                            c++;
+                        }
+
+                        data[d] = new IEnphaseData() { whConsumed = cons, whProduced = prod };
+                        if (period < maxTime)
+                            dbData.Add(new DBEnphaseData() { whConsumed = cons, whProduced = prod, time = period });
+
+                        if (c == consumptionData.intervals.Count && p == productionData.intervals.Count)
+                            break;
+                    }
+                }
+
+                // Write new data to db
+                if (dbData.Count > 0)
+                {
+                    try
+                    {
+                        using (var con = new SqlConnection(connectString))
+                        {
+                            con.Open();
+
+                            using (var cmd = new SqlCommand(@"INSERT INTO  EnphaseData(  time, consumed, produced )
+                                                                VALUES ( @time, @consumed, @produced )", con))
+                            {
+                                cmd.Parameters.Add("@time", SqlDbType.BigInt);
+                                cmd.Parameters.Add("@consumed", SqlDbType.Float);
+                                cmd.Parameters.Add("@produced", SqlDbType.Float);
+
+                                foreach (DBEnphaseData d in dbData)
+                                {
+                                    cmd.Parameters["@time"].SqlValue = d.time;
+                                    cmd.Parameters["@consumed"].SqlValue = d.whConsumed;
+                                    cmd.Parameters["@produced"].SqlValue = d.whProduced;
+                                    cmd.ExecuteNonQuery();
+                                }
+                            }
+                            con.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Just log and ignore the error.  We'll get again next time.
+                    }
+                }
             }
 
             return data;
@@ -304,6 +415,20 @@ namespace EnvoyWeb.Controllers
             wattsNet = 0;
         }
     };
+
+    public class DBEnphaseData
+    {
+        public long time;
+        public double whProduced;
+        public double whConsumed;
+        public DBEnphaseData()
+        {
+            time = 0;
+            whProduced = 0;
+            whConsumed = 0;
+        }
+    };
+
 
     public class IEnphaseData
     {

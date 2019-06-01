@@ -246,41 +246,6 @@ namespace EnvoyWeb.Controllers
                 if ( dbRecords > 0 )
                     start = dbMaxTime + 15*60;      // dbMaxtime is the start of the period
                 dynamic consumptionData = null, productionData = null;
-                try
-                {
-                    // Read envoy consumption
-                    string url;
-                    if (dtEnd > DateTime.Now)
-                        url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}";
-                    else
-                        url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}&end_at={end}";
-
-                    HttpClient hc = GetClient();
-                    var responseMsg = hc.GetAsync(url);
-                    var response = responseMsg.Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var content = response.Content;
-                        string json = content.ReadAsStringAsync().Result;
-
-                        consumptionData = JsonConvert.DeserializeObject(json);
-                    }
-                    else
-                    {
-                        var content = response.Content;
-                        string r = content.ReadAsStringAsync().Result;
-
-                        System.Diagnostics.Debug.WriteLine("consumption_stats failed\n" + response.ToString() + "\n" + r);
-                    }
-                }
-                catch (Exception)
-                {
-                    if (client != null)
-                    {
-                        client.Dispose();
-                        client = null;
-                    }
-                }
 
                 try
                 {
@@ -318,12 +283,49 @@ namespace EnvoyWeb.Controllers
                     }
                 }
 
+
+                try
+                {
+                    // Read envoy consumption
+                    string url;
+                    if (dtEnd > DateTime.Now)
+                        url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}";
+                    else
+                        url = $@"https://api.enphaseenergy.com/api/v2/systems/{systemId}/consumption_stats?key={apiKey}&user_id={userId}&start_at={start}&end_at={end}";
+
+                    HttpClient hc = GetClient();
+                    var responseMsg = hc.GetAsync(url);
+                    var response = responseMsg.Result;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = response.Content;
+                        string json = content.ReadAsStringAsync().Result;
+
+                        consumptionData = JsonConvert.DeserializeObject(json);
+                    }
+                    else
+                    {
+                        var content = response.Content;
+                        string r = content.ReadAsStringAsync().Result;
+
+                        System.Diagnostics.Debug.WriteLine("consumption_stats failed\n" + response.ToString() + "\n" + r);
+                    }
+                }
+                catch (Exception)
+                {
+                    if (client != null)
+                    {
+                        client.Dispose();
+                        client = null;
+                    }
+                }
+
                 // Generated data has to be saved back to the database (time,cons,prod)
                 List<DBEnphaseData> dbData = new List<DBEnphaseData>();
                 if (productionData != null && consumptionData != null)
                 {
-                    long maxProdTime = productionData.intervals[productionData.intervals.Count - 1].end_at;
-                    long maxConsTime = consumptionData.intervals[consumptionData.intervals.Count - 1].end_at;
+                    long maxProdTime = productionData.intervals.Count > 0 ? productionData.intervals[productionData.intervals.Count - 1].end_at : 0;
+                    long maxConsTime = consumptionData.intervals.Count > 0 ? consumptionData.intervals[consumptionData.intervals.Count - 1].end_at : 0; 
                     long maxTime = maxConsTime; // because consumption time is every 15 minutes (vs prod 5 min)  Math.Max(maxProdTime, maxConsTime);
 
                     // combine consumption and production data.

@@ -40,6 +40,8 @@ export class SolarHistoryComponent implements OnInit {
   latitude: number = -37.886778;
   subs: any[] = [];
   date: Date;
+  lastUpdate: Date;
+  fullUpdate: Boolean = false;
   enphaseData: IEnphaseData[];
   systemId: number;
   
@@ -285,6 +287,9 @@ export class SolarHistoryComponent implements OnInit {
     ctx.textAlign = "left";
     ctx.fillStyle = "black";
     ctx.fillText("$" + common.prettyFloat(-dailyCost[lastT],100), lastT * scaleX + 7, -dailyCost[lastT] * scaleDailyY + 5);
+
+    this.fullUpdate = lastT == 24 * 4 - 1;
+    this.lastUpdate = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(), Math.floor(lastT / 4), (lastT % 4) * 15);
 
     // X Axis 
     ctx.strokeStyle = "black"

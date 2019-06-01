@@ -5,16 +5,19 @@
   </div>
 
   <span>
-    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-    <mat-datepicker #picker></mat-datepicker>
+    <mat-datepicker-toggle matSuffix [for]="picker"  style="height: 60px;"></mat-datepicker-toggle>
+    <mat-datepicker touchUi  #picker></mat-datepicker>
     &nbsp;
     <button type="button" (click)="decrementDate();">
       <i class="fa fa-caret-square-o-left" style="font-size:20px;"></i>
     </button>
     <input matInput [matDatepicker]="picker" placeholder="Choose a date" [value]="date" (dateChange)="dateChange($event.value)">
-    <button type="button" (click)="incrementDate();" >
-      <i class="fa fa-caret-square-o-right"style="font-size:20px;"></i>
+    <button type="button" (click)="incrementDate();">
+      <i class="fa fa-caret-square-o-right" style="font-size:20px;"></i>
     </button>
+    <span *ngIf="!fullUpdate">
+      Last Update: {{ lastUpdate | date: 'h:mm:ss'}}{{ lastUpdate | date: 'a' | lowercase}}
+    </span>
   </span>
 
 </div>

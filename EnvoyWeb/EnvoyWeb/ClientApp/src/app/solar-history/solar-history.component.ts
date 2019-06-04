@@ -36,6 +36,7 @@ export const MY_FORMATS = {
 })
 export class SolarHistoryComponent implements OnInit {
   @ViewChild('chartCanvas') canvasRef: ElementRef;
+  @ViewChild('barCanvas') barCanvasRef: ElementRef;
   longitude: number = 145.000516 - 360;
   latitude: number = -37.886778;
   subs: any[] = [];
@@ -44,6 +45,9 @@ export class SolarHistoryComponent implements OnInit {
   fullUpdate: Boolean = false;
   enphaseData: IEnphaseData[];
   systemId: number;
+  private maxPower: number = common.maxProduction * 1.1;
+  private maxProduction: number = 0;
+  private maxConsumuption: number = 0;
   
   constructor(private liveDataService: LiveDataService, private route: ActivatedRoute, private datePipe: DatePipe) {
     this.subs.push(this.liveDataService.getEnphaseSystem().subscribe(result => { this.processEnphaseSystem(result); }));
@@ -57,13 +61,27 @@ export class SolarHistoryComponent implements OnInit {
 
     let t = timer(1, 5*60*1000);
     this.subs.push(t.subscribe(result => { this.requestDayData(); }));
+
+    this.ResetMaximums();
+    this.subs.push(this.liveDataService.envoyData.subscribe(result => { this.redrawBar(result); }));
+  }
+
+  ResetMaximums() {
+    this.maxConsumuption = 0;
+    this.maxProduction = 0;
+    this.maxPower = common.maxProduction * 1.1;
   }
 
   requestDayData() {
-    this.liveDataService.getEnphaseDayData(this.systemId, this.date).subscribe(result => { this.processDayData(result); });
-    //this.subs.push(
-    //  this.liveDataService.getEnphaseDayData(systemId, this.date).subscribe(result => { this.processDayData(result); })
-    //);
+    if (!this.fullUpdate) {
+      // Roll to next day automatically
+      //let now: Date = new Date();
+      //if (this.date.getDate() != now.getDate()) {
+      //  this.date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      //}
+
+      this.liveDataService.getEnphaseDayData(this.systemId, this.date).subscribe(result => { this.processDayData(result); });
+    }
   }
 
   processDayData(result: IEnphaseData[]){
@@ -82,6 +100,9 @@ export class SolarHistoryComponent implements OnInit {
   ngAfterViewInit() {
     this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
     this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
+
+    this.barCanvasRef.nativeElement.width = this.barCanvasRef.nativeElement.offsetWidth;
+    this.barCanvasRef.nativeElement.height = this.barCanvasRef.nativeElement.offsetHeight;
   }
 
   CalculatePredictedSolar(): any {
@@ -281,12 +302,12 @@ export class SolarHistoryComponent implements OnInit {
     ctx.lineWidth = 1;
     ctx.strokeStyle = "black"; 
     ctx.beginPath();
-    ctx.ellipse(lastT * scaleX, -dailyCost[lastT] * scaleDailyY, 3, 3, 0, 0, 2*Math.PI, false);
+    ctx.ellipse(lastT * scaleX, -dailyCost[lastT] * scaleDailyY, 5, 5, 0, 0, 2*Math.PI, false);
     ctx.stroke();
-    ctx.font = "15px san serif";
+    ctx.font = "24px san serif";
     ctx.textAlign = "left";
     ctx.fillStyle = "black";
-    ctx.fillText("$" + common.prettyFloat(-dailyCost[lastT],100), lastT * scaleX + 7, -dailyCost[lastT] * scaleDailyY + 5);
+    ctx.fillText("$" + common.prettyFloat(-dailyCost[lastT],100), lastT * scaleX + 7, -dailyCost[lastT] * scaleDailyY + 10);
 
     this.fullUpdate = lastT == 24 * 4 - 1;
     this.lastUpdate = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(), Math.floor(lastT / 4), (lastT % 4) * 15);
@@ -316,13 +337,153 @@ export class SolarHistoryComponent implements OnInit {
   }
 
   public incrementDate() {
-    this.date = new Date(this.date.getTime() + 24 * 60 * 60 * 1000);
+    let d: Date = new Date(this.date.getTime() + 24 * 60 * 60 * 1000);
+    if (d.getTime() > Date.now())
+      return;
+    this.date = d;
     this.liveDataService.getEnphaseDayData(this.systemId, this.date).subscribe(result => { this.processDayData(result); });
   }
 
   public decrementDate() {
     this.date = new Date( this.date.getTime() - 24*60*60*1000 );
     this.liveDataService.getEnphaseDayData(this.systemId, this.date).subscribe(result => { this.processDayData(result); });
+  }
+
+  public redrawBar(power: LivePower) {
+    if (Math.abs(power.wattsConsumed) > this.maxPower)
+      this.maxPower = Math.abs(power.wattsConsumed);
+    if (Math.abs(power.wattsProduced) > this.maxPower)
+      this.maxPower = Math.abs(power.wattsProduced);
+
+    if (Math.abs(power.wattsConsumed) > this.maxConsumuption)
+      this.maxConsumuption = Math.abs(power.wattsConsumed);
+    if (Math.abs(power.wattsProduced) > this.maxProduction)
+      this.maxProduction = Math.abs(power.wattsProduced);
+
+
+    let now: Date = new Date(power.timestamp);
+    let time: number = now.getHours() + now.getMinutes() / 60;
+    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(this.liveDataService.energyPlan, now, time, false);
+    let rate: number = 0;
+
+    if (power.wattsNet > 0)
+      rate = -(power.wattsNet) / 1000.0 * price.Rate * (1 - this.liveDataService.energyPlan.EnergyDiscount) * 1.1;
+    else
+      rate = -(power.wattsNet) / 1000.0 * this.liveDataService.energyPlan.FiT;
+
+    let ctx: CanvasRenderingContext2D = this.barCanvasRef.nativeElement.getContext('2d');
+
+    // Clear any previous content.
+    let width: number = this.barCanvasRef.nativeElement.width;
+    let height: number = this.barCanvasRef.nativeElement.height;
+
+    if (this.fullUpdate) {
+      ctx.clearRect(0, 0, width, height);
+      return;
+    }
+    ctx.save();
+    ctx.clearRect(0, 0, width, height);
+    ctx.translate(0, height / 2);
+
+
+    ctx.lineWidth = 1;
+
+    let a: number;
+    // Production
+    a = - (height/2) * power.wattsProduced / this.maxPower;
+    ctx.strokeStyle = "rgba(41, 155, 251, 0.3)";
+    ctx.fillStyle = "rgba(41, 155, 251, 0.3)";
+    ctx.beginPath();
+    ctx.fillRect(0, 0, width, a );
+    ctx.fill();
+
+    // Consumption
+    a = (height / 2) * power.wattsConsumed / this.maxPower;
+    ctx.strokeStyle = "rgba(244,115,32,0.3)";
+    ctx.fillStyle = "rgba(244,115,32,0.3)";
+    ctx.beginPath();
+    ctx.fillRect(0, 0, width, a);
+    ctx.fill();
+
+    // Net
+    let net = (height / 2) * power.wattsNet / this.maxPower;
+    if (power.wattsNet < 0) {  // production
+      ctx.strokeStyle = "rgba(41, 155, 251, 0.8)";
+      ctx.fillStyle = "rgba(41, 155, 251, 0.8)";
+      net = -net;
+    } else {
+      ctx.strokeStyle = "rgba(244,115,32,0.8)";
+      ctx.fillStyle = "rgba(244,115,32,0.8)";
+    }
+    ctx.beginPath();
+    ctx.fillRect(0, 0, width, net);
+    ctx.fill();
+
+    ctx.save();
+
+    // Max possible production
+    a = -(height / 2) * common.maxProduction / this.maxPower;
+    ctx.strokeStyle = "red";
+    ctx.setLineDash([15, 20]);
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.moveTo(0, a);
+    ctx.lineTo(width, a);
+    ctx.stroke();
+
+    // Max production
+    a = -(height / 2) * this.maxProduction / this.maxPower;
+    ctx.strokeStyle = "black";
+    ctx.setLineDash([15, 20]);
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.moveTo(0, a);
+    ctx.lineTo(width, a);
+    ctx.stroke();
+
+    // Max consumption
+    a = (height / 2) * this.maxConsumuption / this.maxPower;
+    ctx.strokeStyle = "black";
+    ctx.setLineDash([15, 20]);
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.moveTo(0, a);
+    ctx.lineTo(width, a);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Graph ticks
+    ctx.strokeStyle = "black";
+    for (let i: number = 0; i < this.maxPower; i += 500) {
+      let y: number = (height / 2) * i / this.maxPower;
+      if ((i % 1000) == 0 && i != 0)
+        ctx.lineWidth = 2;
+      else
+        ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.moveTo(0, -y);
+      ctx.lineTo(width, -y);
+      ctx.stroke();
+    }
+
+    // details
+    if (true) {
+      const fontHeight: number = 20;
+      const lineSpacing: number = 50;
+
+      let x:number = width/2;
+      let y: number = net;
+
+      ctx.font = fontHeight + "px san serif";
+      ctx.fillStyle = "black";
+      ctx.textAlign = "center";
+      ctx.fillText((rate < 0 ? "-" : "") + "$" + Math.abs(rate).toFixed(2) + "/h", x, y);
+    }
+
+    ctx.restore();
   }
 
 }

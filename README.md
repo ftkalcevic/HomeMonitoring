@@ -30,7 +30,7 @@ A pop up box shows the numerical values of the production, consumption and net p
 
 And the action shot...
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/BOVs4UErncs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/BOVs4UErncs/0.jpg)](http://www.youtube.com/watch?v=BOVs4UErncs "Live Solar")
 
 ### Solar History
 
@@ -54,9 +54,7 @@ On the right is a realtime power display; this is the same as the Live Solar dis
 
 And the action shot...
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/G5puAl1HsYM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-[![IMAGE ALT TEXT](http://img.youtube.com/vi/G5puAl1HsYM/0.jpg)](http://www.youtube.com/watch?v=G5puAl1HsYM "Video Title")
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/G5puAl1HsYM/0.jpg)](http://www.youtube.com/watch?v=G5puAl1HsYM "Solar History")
 
 
 ### Live Power
@@ -71,7 +69,7 @@ The buttons Detailed/Simple/Consumption show different sets of devices.  Each de
 
 And the action shot...
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/idZ3jM1qPf0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/idZ3jM1qPf0/0.jpg)](http://www.youtube.com/watch?v=idZ3jM1qPf0 "Live Power")
 
 ### Devices
 

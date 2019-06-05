@@ -56,6 +56,9 @@ And the action shot...
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/G5puAl1HsYM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/G5puAl1HsYM/0.jpg)](http://www.youtube.com/watch?v=G5puAl1HsYM "Video Title")
+
+
 ### Live Power
 
 The live power page shows individual producers and consumers of electricity in real time.  This combines the Enphase production and consumption data with 7 Sonoff Pow R2 devices with the tasmota firmware and an MQTT mosquitto broker and client.

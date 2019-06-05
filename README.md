@@ -2,10 +2,10 @@ Home monitoring suite
 
 ## Envoy
   * Service to read Envoy panel level data every 5 minutes
-  * 
+
 ## SonoffPowerMonitoring
   * Sonoff(MQTT) data collection service
-  * 
+
 ## WebClient
   * Static html pages to view some envoy stats.
   * Also calculator to calculate power usage based on VEC data.
@@ -80,6 +80,8 @@ The devices page shows individual producers and consumers of electricity.  This 
 ### Solar Panels
 
 This display shows the solar panel layout and individual consumption of each panel.  This information is taken live from the Enphase micro-inverters every 5 minutes.  The solar output of each panel is shown in colour or by selecting a panel.
+
+The panels aren't aligned very well over the google maps image of my roof in the screen capture.  The screen capture is from chrome simulating a tablet - the tablet looks better.
 
 ![Devices](bin/panels.png)
 

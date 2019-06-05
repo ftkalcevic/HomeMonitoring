@@ -310,7 +310,7 @@ export class SolarHistoryComponent implements OnInit {
     ctx.fillText("$" + common.prettyFloat(-dailyCost[lastT],100), lastT * scaleX + 7, -dailyCost[lastT] * scaleDailyY + 10);
 
     this.fullUpdate = lastT == 24 * 4 - 1;
-    this.lastUpdate = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(), Math.floor(lastT / 4), (lastT % 4) * 15);
+    this.lastUpdate = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(), Math.floor((lastT+1) / 4), ((lastT+1) % 4) * 15);
 
     // X Axis 
     ctx.strokeStyle = "black"
@@ -410,7 +410,6 @@ export class SolarHistoryComponent implements OnInit {
     if (power.wattsNet < 0) {  // production
       ctx.strokeStyle = "rgba(41, 155, 251, 0.8)";
       ctx.fillStyle = "rgba(41, 155, 251, 0.8)";
-      net = -net;
     } else {
       ctx.strokeStyle = "rgba(244,115,32,0.8)";
       ctx.fillStyle = "rgba(244,115,32,0.8)";
@@ -472,15 +471,27 @@ export class SolarHistoryComponent implements OnInit {
     // details
     if (true) {
       const fontHeight: number = 20;
-      const lineSpacing: number = 50;
+      const spacing: number = 3;
 
       let x:number = width/2;
       let y: number = net;
 
       ctx.font = fontHeight + "px san serif";
-      ctx.fillStyle = "black";
       ctx.textAlign = "center";
-      ctx.fillText((rate < 0 ? "-" : "") + "$" + Math.abs(rate).toFixed(2) + "/h", x, y);
+      let text: string = (rate < 0 ? "-" : "") + "$" + Math.abs(rate).toFixed(2) + "/h";
+      let dim: any = ctx.measureText(text);
+
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.fillRect(x - dim.width / 2 - spacing, y - fontHeight * 3 / 4 - spacing, dim.width + 2 * spacing, fontHeight + 2 * spacing);
+      ctx.fillStyle = "black";
+      ctx.strokeStyle = "black";
+
+      //ctx.shadowOffsetX = 4;
+      //ctx.shadowOffsetY = 4;
+      //ctx.shadowBlur = 5;
+      ctx.shadowColor = "rgb(255,255,255)";
+
+      ctx.fillText(text, x, y);
     }
 
     ctx.restore();

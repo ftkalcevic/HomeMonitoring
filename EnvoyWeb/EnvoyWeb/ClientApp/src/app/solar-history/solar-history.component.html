@@ -1,24 +1,34 @@
 <div style="width:100%; display:flex; flex-direction:column;" class="container full-height">
 
-  <div class="row" style="flex: 10;">
-    <canvas #chartCanvas style="width:90%;" class="row partial-height"></canvas>
-    <canvas #barCanvas style="width:10%;" class="row partial-height"></canvas>
+  <div class="row" style="flex: 10; margin: 0; border-width: 0">
+    <canvas #chartCanvas style="width:90%; margin: 0;" class="row partial-height"></canvas>
+    <canvas #barCanvas style="width:10%; margin: 0;" class="row partial-height"></canvas>
   </div>
 
-  <span>
-    <mat-datepicker-toggle matSuffix [for]="picker"  style="height: 60px;"></mat-datepicker-toggle>
-    <mat-datepicker touchUi  #picker></mat-datepicker>
-    &nbsp;
-    <button type="button" (click)="decrementDate();">
-      <i class="fa fa-caret-square-o-left" style="font-size:20px;"></i>
-    </button>
-    <input matInput [matDatepicker]="picker" placeholder="Choose a date" [value]="date" (dateChange)="dateChange($event.value)">
-    <button type="button" (click)="incrementDate();">
-      <i class="fa fa-caret-square-o-right" style="font-size:20px;"></i>
-    </button>
-    <span *ngIf="!fullUpdate">
-      Last Update: {{ lastUpdate | date: 'h:mm:ss'}}{{ lastUpdate | date: 'a' | lowercase}}
-    </span>
-  </span>
+  <div class="row" style="flex: 10; margin: 0; border-width: 0">
+    <div style="width: 90%;">
+      <mat-datepicker-toggle matSuffix [for]="picker" style="height: 60px;"></mat-datepicker-toggle>
+      <mat-datepicker touchUi #picker></mat-datepicker>
+      &nbsp;
+      <button type="button" (click)="decrementDate();">
+        <i class="fa fa-caret-square-o-left" style="font-size:20px;"></i>
+      </button>
+      <input matInput [matDatepicker]="picker" placeholder="Choose a date" [value]="date" (dateChange)="dateChange($event.value)">
+      <button type="button" (click)="incrementDate();">
+        <i class="fa fa-caret-square-o-right" style="font-size:20px;"></i>
+      </button>
+      <span *ngIf="!fullUpdate">
+        Last Update: {{ lastUpdate | date: 'h:mm:ss'}}{{ lastUpdate | date: 'a' | lowercase}}
+      </span>
+    </div>
+    <div style="width:10%">
+      <div style="float:right;">
+        <button type="button" (click)="ResetMaximums();" >
+          Reset Maximums
+        </button>
+      </div>
+    </div>
+  </div>
+
 
 </div>

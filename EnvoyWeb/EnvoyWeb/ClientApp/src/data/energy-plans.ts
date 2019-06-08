@@ -62,7 +62,7 @@ export class EnergyPlans {
         { Name: "Winter Peak WeekDay", StartTime: "15:00", EndTime: "20:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.3838, IsForControlledLoad: false, IsForWeekDayOnly: true },
         { Name: "Winter Shoulder WeekDay Morning", StartTime: "7:00", EndTime: "14:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: true },
         { Name: "Winter Shoulder WeekDay Evening", StartTime: "21:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: true },
-        { Name: "Summer Shoulder Weekend", StartTime: "7:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: false },
+        { Name: "Winter Shoulder Weekend", StartTime: "7:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: false },
         { Name: "Winter Off-Peak", StartTime: "0:00", EndTime: "23:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2188, IsForControlledLoad: false, IsForWeekDayOnly: false },
 
       ]
@@ -82,7 +82,7 @@ export class EnergyPlans {
         { Name: "Winter Peak WeekDay", StartTime: "15:00", EndTime: "20:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.3838, IsForControlledLoad: false, IsForWeekDayOnly: true },
         { Name: "Winter Shoulder WeekDay Morning", StartTime: "7:00", EndTime: "14:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: true },
         { Name: "Winter Shoulder WeekDay Evening", StartTime: "21:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: true },
-        { Name: "Summer Shoulder Weekend", StartTime: "7:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: false },
+        { Name: "Winter Shoulder Weekend", StartTime: "7:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: false },
         { Name: "Winter Off-Peak", StartTime: "0:00", EndTime: "23:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2188, IsForControlledLoad: false, IsForWeekDayOnly: false },
 
       ]

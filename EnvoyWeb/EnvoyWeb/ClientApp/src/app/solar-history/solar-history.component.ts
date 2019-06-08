@@ -241,14 +241,67 @@ export class SolarHistoryComponent implements OnInit {
 
     let scaleX: number = 0.9 * (width / (24 * 4));
     let scaleY: number = 0.9 * (height / (common.maxProduction / 4 * 2));
-    let scaleDailyY: number = 0.9 * (height / 2 / (Math.max(Math.abs(dailyCostMin),Math.abs(dailyCostMax))));
+    let scaleDailyY: number = 0.9 * (height / 2 / (Math.max(Math.abs(dailyCostMin), Math.abs(dailyCostMax))));
 
     ctx.clearRect(0, 0, width, height);
     ctx.translate(0, height / 2);
 
+    // Shade background to match pricing
+    let month: number = this.date.getMonth();
+    let day: number = this.date.getDate();
+    let dow: number = this.date.getDay();
 
+    // find our prices
+    let prices: any = [];
+    let rates: any = {};
+    for (let ip: number = this.liveDataService.energyPlan.Pricing.length - 1; ip >= 0; ip--) {
+      let pr: any = this.liveDataService.energyPlan.Pricing[ip];
+      if ( //this.liveDataService.energyPlans.controlledLoadMatch(pricing, controlledLoad) &&
+        this.liveDataService.energyPlans.dateMatch(pr, month, day) &&
+        this.liveDataService.energyPlans.dowMatch(pr, dow)) {
+        prices.push(pr);
+        if (!(pr.Rate in rates))
+          rates[pr.Rate] = 1;
+      }
+    }
+    let ratesSorted: any = [];
+    for (let key in rates)
+      ratesSorted.push(key);
+    ratesSorted.sort();
+
+    let idx: number = 0;
+    for (let r of ratesSorted)
+      rates[r] = idx++;
+
+    const colours = [ "250, 250, 250",    // off peak
+      "255, 255, 245",   // shoulder
+      "255, 248, 248",  // peak
+      ];
+       
+
+    for (let p of prices) {
+      let startTime: any = p.StartTime.split(':');
+      let endTime: any = p.EndTime.split(':');
+
+      let start: number = startTime[0] * 4 + startTime[1] / 15;
+      let end: number = endTime[0] * 4 + endTime[1] / 15;
+
+      //ctx.strokeStyle = "rgba(41, 155, 251, 0.3)";
+      ctx.fillStyle = "rgb(" + colours[rates[p.Rate]] + ")";
+      ctx.fillRect(start * scaleX, -height/2, end * scaleX - start * scaleX, height);
+    }
 
     let t: number;
+    // white bar background
+    ctx.strokeStyle = "rgb(255, 255, 255)";
+    ctx.fillStyle = "rgb(255, 255, 255)";
+    for (t = 0; t < 24 * 4; t++)
+      if (this.enphaseData[t] != null) {
+        ctx.fillRect(t * scaleX, 0, 1 * scaleX, -this.enphaseData[t].whProduced * scaleY);
+        ctx.fillRect(t * scaleX, 0, 1 * scaleX, this.enphaseData[t].whConsumed * scaleY);
+      }
+
+  
     ctx.strokeStyle = "rgba(41, 155, 251, 0.3)";
     ctx.fillStyle = "rgba(41, 155, 251, 0.3)";
     for (t = 0; t < 24 * 4; t++)

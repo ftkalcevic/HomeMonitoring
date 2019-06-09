@@ -273,9 +273,9 @@ export class SolarHistoryComponent implements OnInit {
     for (let r of ratesSorted)
       rates[r] = idx++;
 
-    const colours = [ "250, 250, 250",    // off peak
-      "255, 255, 245",   // shoulder
-      "255, 248, 248",  // peak
+    const colours = [ "240, 240, 240",    // off peak
+      "255, 255, 240",   // shoulder
+      "255, 240, 240",  // peak
       ];
        
 

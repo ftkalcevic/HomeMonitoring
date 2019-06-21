@@ -59,7 +59,7 @@ export class SolarHistoryComponent implements OnInit {
   processEnphaseSystem(systemId: number) {
     this.systemId = systemId;
 
-    let t = timer(1, 5*60*1000);
+    let t = timer(1, 15*60*1000); // 15 minutes
     this.subs.push(t.subscribe(result => { this.requestDayData(); }));
 
     this.ResetMaximums();

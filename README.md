@@ -39,7 +39,7 @@ This is my new "home page".
 ![Solar History](bin/history.png)
 
 
-The main chart shows the energy production and consumption during the day in 15 minute intervals (the colors are the same as the Live Solar page, matching the Enphase Enlighten app).  There aren't any units on the graph, but these are Wh/4, to remain consistent with the Enphase Enlighten  app.
+The main chart shows the energy production and consumption during the day in 15 minute intervals (the colors are the same as the Live Solar page, matching the Enphase Enlighten app).  There aren't any units on the graph, but these are Wh/4, to remain consistent with the Enphase Enlighten  app.  The background colours represent the different time of day rates - grey is off-peak, yellow is shoulder, and pink is peak.
 
 The red line shows the predicted maximum solar output.  This is determined from the calculated position of the sun, solar panel position and orientation and irradiance.  (See solar-history.component.ts)  This is an estimation; the line looks smooth on June 5 2019 (winter), but there is a step during summer...
 

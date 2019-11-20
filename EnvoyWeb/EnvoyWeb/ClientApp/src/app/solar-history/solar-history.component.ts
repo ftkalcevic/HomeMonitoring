@@ -105,7 +105,7 @@ export class SolarHistoryComponent implements OnInit {
     this.barCanvasRef.nativeElement.height = this.barCanvasRef.nativeElement.offsetHeight;
   }
 
-  CalculatePredictedSolar(): any {
+  CalculatePredictedSolar(powerLimit:number): any {
     // Predict the solar output based on panel orientation, position of the sun, and calculated irradiance.
 
     // todo: if don't have data, or day has changed...
@@ -180,10 +180,14 @@ export class SolarHistoryComponent implements OnInit {
 
           let presentedArea: number = 0.5 * Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) +
             0.5 * Math.abs(x1 * (y4 - y3) + x4 * (y3 - y1) + x3 * (y1 - y4));
-          let expectedPower: number = Math.abs(arr.power * presentedArea / panelArea) * arr.modules.length;
+          let expectedPower: number = Math.abs(arr.power * presentedArea / panelArea);
           expectedPower *= irradiance;
 
-          power += expectedPower;
+          if (powerLimit > 0 && expectedPower > powerLimit) {
+            expectedPower = powerLimit;
+          }
+
+          power += expectedPower * arr.modules.length;
         }
       }
       predictedData.push({ time: t, power: power });
@@ -227,7 +231,8 @@ export class SolarHistoryComponent implements OnInit {
 
   redrawChart(): void {
 
-    let predicetedSolar: any = this.CalculatePredictedSolar();
+    let predictedSolar: any = this.CalculatePredictedSolar(0);
+    let predictedLimitedSolar: any = this.CalculatePredictedSolar(270);
 
     let dailyCost: any = this.CalculateTodaysCost();
     let dailyCostMin: number = dailyCost.reduce(function (a, b) { return Math.min(a, b); });
@@ -329,15 +334,28 @@ export class SolarHistoryComponent implements OnInit {
       ctx.fillRect(t * scaleX, 0, 1 * scaleX, -net * scaleY);
     }
 
+    ctx.save(); // save context to restore line dash style
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "orange";
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(scaleX * (predictedLimitedSolar[0].time) * 4, -scaleY * predictedLimitedSolar[0].power / 4);
+    for (let i: number = 1; i < predictedLimitedSolar.length; i++) {
+      ctx.lineTo(scaleX * (predictedLimitedSolar[i].time) * 4, -scaleY * predictedLimitedSolar[i].power / 4);
+    }
+    ctx.stroke();
+    ctx.restore();
+
     ctx.lineWidth = 2;
     ctx.strokeStyle = "red";
     ctx.beginPath();
-    ctx.moveTo(scaleX * (predicetedSolar[0].time) * 4, -scaleY * predicetedSolar[0].power / 4);
-    for (let i: number = 1; i < predicetedSolar.length; i++) {
-      ctx.lineTo(scaleX * (predicetedSolar[i].time) * 4, -scaleY * predicetedSolar[i].power / 4);
+    ctx.moveTo(scaleX * (predictedSolar[0].time) * 4, -scaleY * predictedSolar[0].power / 4);
+    for (let i: number = 1; i < predictedSolar.length; i++) {
+      ctx.lineTo(scaleX * (predictedSolar[i].time) * 4, -scaleY * predictedSolar[i].power / 4);
     }
     ctx.stroke();
 
+   
     // Cost
     ctx.lineWidth = 2;
     ctx.strokeStyle = "green"; 

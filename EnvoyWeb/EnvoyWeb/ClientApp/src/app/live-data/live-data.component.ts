@@ -1,6 +1,6 @@
 import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { LiveDataService, LivePower } from '../live-data-service/live-data-service';
-import { PriceBreak } from '../../data/energy-plans';
+import { PriceBreak, EnergyPlan } from '../../data/energy-plans';
 import { Router } from "@angular/router";
 import * as common from '../../data/common';
 
@@ -52,13 +52,14 @@ export class LiveDataComponent {
 
     let now: Date = new Date(power.timestamp);
     let time: number = now.getHours() + now.getMinutes() / 60;
-    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(this.liveDataService.energyPlan, now, time, false);
+    let plan: EnergyPlan = this.liveDataService.getEnergyPlan(now);
+    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(plan, now, time, false);
     let rate: number = 0;
 
     if (power.wattsNet > 0 )
-      rate = -(power.wattsNet) / 1000.0 * price.Rate * (1 - this.liveDataService.energyPlan.EnergyDiscount) * 1.1;
+      rate = -(power.wattsNet) / 1000.0 * price.Rate * (1 - plan.EnergyDiscount) * 1.1;
     else
-      rate = -(power.wattsNet) / 1000.0 * this.liveDataService.energyPlan.FiT;
+      rate = -(power.wattsNet) / 1000.0 * plan.FiT;
 
     let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
 

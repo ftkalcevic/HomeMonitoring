@@ -7,7 +7,7 @@ import * as SunCalc from "suncalc";
 import { mat4, vec3 } from "gl-matrix";
 import * as common from '../../data/common';
 import { ExpectedConditions } from 'protractor';
-import { PriceBreak } from '../../data/energy-plans';
+import { PriceBreak, EnergyPlan } from '../../data/energy-plans';
 import { Observable } from 'rxjs';
 import { timer } from 'rxjs';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
@@ -200,7 +200,8 @@ export class SolarHistoryComponent implements OnInit {
     let cost: any = [];
     let t: number;
     let now: Date = new Date(this.date);
-    let sum: number = -this.liveDataService.energyPlan.DailySupplyCharge * 1.1;
+    let plan: EnergyPlan = this.liveDataService.getEnergyPlan(now);
+    let sum: number = -plan.DailySupplyCharge * 1.1;
     for (t = 0; t < 24 * 4; t++) { 
 
       if (this.enphaseData[t] != null) {
@@ -208,13 +209,13 @@ export class SolarHistoryComponent implements OnInit {
         wattsNet = this.enphaseData[t].whConsumed - this.enphaseData[t].whProduced;
 
         let time: number = t / 4;
-        let price: PriceBreak = this.liveDataService.energyPlans.findTariff(this.liveDataService.energyPlan, now, time, false);
+        let price: PriceBreak = this.liveDataService.energyPlans.findTariff(plan, now, time, false);
 
         let rate: number = 0;
         if (wattsNet > 0)
-          rate = -(wattsNet) / 1000.0 * price.Rate * (1 - this.liveDataService.energyPlan.EnergyDiscount) * 1.1;
+          rate = -(wattsNet) / 1000.0 * price.Rate * (1 - plan.EnergyDiscount) * 1.1;
         else
-          rate = -(wattsNet) / 1000.0 * this.liveDataService.energyPlan.FiT;
+          rate = -(wattsNet) / 1000.0 * plan.FiT;
 
         sum += rate;  // working in quarter hours
 
@@ -257,10 +258,12 @@ export class SolarHistoryComponent implements OnInit {
     let dow: number = this.date.getDay();
 
     // find our prices
+    let now: Date = new Date(this.date);
+    let plan: EnergyPlan = this.liveDataService.getEnergyPlan(now);
     let prices: any = [];
     let rates: any = {};
-    for (let ip: number = this.liveDataService.energyPlan.Pricing.length - 1; ip >= 0; ip--) {
-      let pr: any = this.liveDataService.energyPlan.Pricing[ip];
+    for (let ip: number = plan.Pricing.length - 1; ip >= 0; ip--) {
+      let pr: any = plan.Pricing[ip];
       if ( //this.liveDataService.energyPlans.controlledLoadMatch(pricing, controlledLoad) &&
         this.liveDataService.energyPlans.dateMatch(pr, month, day) &&
         this.liveDataService.energyPlans.dowMatch(pr, dow)) {
@@ -433,14 +436,15 @@ export class SolarHistoryComponent implements OnInit {
 
 
     let now: Date = new Date(power.timestamp);
+    let plan: EnergyPlan = this.liveDataService.getEnergyPlan(now);
     let time: number = now.getHours() + now.getMinutes() / 60;
-    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(this.liveDataService.energyPlan, now, time, false);
+    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(plan, now, time, false);
     let rate: number = 0;
 
     if (power.wattsNet > 0)
-      rate = -(power.wattsNet) / 1000.0 * price.Rate * (1 - this.liveDataService.energyPlan.EnergyDiscount) * 1.1;
+      rate = -(power.wattsNet) / 1000.0 * price.Rate * (1 - plan.EnergyDiscount) * 1.1;
     else
-      rate = -(power.wattsNet) / 1000.0 * this.liveDataService.energyPlan.FiT;
+      rate = -(power.wattsNet) / 1000.0 * plan.FiT;
 
     let ctx: CanvasRenderingContext2D = this.barCanvasRef.nativeElement.getContext('2d');
 

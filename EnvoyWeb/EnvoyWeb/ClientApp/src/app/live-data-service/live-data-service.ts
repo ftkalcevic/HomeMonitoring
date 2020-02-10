@@ -1,7 +1,7 @@
 import { Injectable, Inject, EventEmitter, Output } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { EnergyPlans, EnergyPlan } from '../../data/energy-plans';
+import { EnergyPlans, EnergyPlan, MyEnergyPlan } from '../../data/energy-plans';
 
 export interface IEnergy {
   Total: number;
@@ -150,7 +150,13 @@ export class LiveDataService {
   @Output() envoyData: EventEmitter<LivePower> = new EventEmitter<LivePower>(true);
   @Output() sonoffData: EventEmitter<ISonoffSample> = new EventEmitter<ISonoffSample>(true);
   public energyPlans: EnergyPlans = new EnergyPlans();
-  public energyPlan: EnergyPlan;
+  public myEnergyPlans: MyEnergyPlan[] =
+    [
+      { StartDate: new Date('1 Oct 2018'), EndDate: new Date('31 Dec 2019'), PlanId: 2 },
+      { StartDate: new Date('1 Jan 2020'), EndDate: new Date('3 Mar 2020'), PlanId: 3 },
+      { StartDate: new Date('4 Mar 2020'), EndDate: new Date('31 Dec 3020'), PlanId: 4 },
+    ];
+  //private energyPlan: EnergyPlan;
   readonly POINTS: number = 2000;
   public panelInfo = {
     "system_id": 1460367,
@@ -332,12 +338,20 @@ export class LiveDataService {
     this.baseUrl = baseUrl;
     this.http = http;
     this.envoyLive = new RealtimeEnvoyData(this.POINTS);
-    this.energyPlan = this.energyPlans.Plans[3];
+    //this.energyPlan = this.energyPlans.Plans[2];
     this.sonoffLive = new CircularBuffer<ISonoffSample>(1);
 
     this.sonoffDevices = [];
     setTimeout(() => this.ReadEnvoyData(), 100);
     setTimeout(() => this.ReadSonoffDevices(), 100);
+  }
+
+  public getEnergyPlan(dt: Date): EnergyPlan {
+    for (let p of this.myEnergyPlans) {
+      if (dt >= p.StartDate && dt <= p.EndDate)
+        return this.energyPlans.Plans[p.PlanId];
+    }
+    return this.energyPlans.Plans[this.myEnergyPlans[0].PlanId];
   }
 
   private ProcessEnvoyData(result: ILivePower) {

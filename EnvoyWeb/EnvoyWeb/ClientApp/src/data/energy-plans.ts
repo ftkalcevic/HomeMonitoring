@@ -22,7 +22,7 @@ export class EnergyPlan {
 
 export class EnergyPlans {
   Plans: EnergyPlan[]=[
-    {
+    { /*0*/
       Name: "RACV Plus 45/30 FIT Simply Energy - Time of Use + Controlled Load OP",
       DailySupplyCharge: 0.9462,
       EnergyDiscount: 0.45,
@@ -34,7 +34,7 @@ export class EnergyPlans {
         { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.2088, IsForControlledLoad: false, IsForWeekDayOnly: false }
       ]
     },
-    {
+    {/*1*/
       Name: "RACV Plus 45/30 FIT Simply Energy - Peak + Controlled Load",
       DailySupplyCharge: 0.8729,
       EnergyDiscount: 0.45,
@@ -44,6 +44,39 @@ export class EnergyPlans {
         { Name: "Controlled", StartTime: "0:00", EndTime: "23:59", Rate: 0.2068, IsForControlledLoad: true, IsForWeekDayOnly: false },
         { Name: "Summer Peak", StartTime: "0:00", EndTime: "23:59", StartDate: "1 Nov", EndDate: "31 Mar", Rate: 0.3008, IsForControlledLoad: false, "IsForWeekDayOnly": false },
         { Name: "Non-Summer Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.3008, IsForControlledLoad: false, IsForWeekDayOnly: false }
+      ]
+    },
+    {/*2*/
+      Name: "RACV Plus 45/30 FIT Simply Energy - Dual Rate - Till 31 Dec 2019",
+      DailySupplyCharge: 1.04082,
+      EnergyDiscount: 0.45,
+      FiT: 0.12,
+      PFiT: 0.6,
+      Pricing: [
+        { Name: "Peak", StartTime: "7:00", EndTime: "22:59", Rate: 0.45815, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.2519, IsForControlledLoad: false, IsForWeekDayOnly: false }
+      ]
+    },
+    {/*3*/
+      Name: "RACV Plus 45/30 FIT Simply Energy - Dual Rate - From 1 Jan 2020",
+      DailySupplyCharge: 1.12123,
+      EnergyDiscount: 0.45,
+      FiT: 0.12,
+      PFiT: 0.6,
+      Pricing: [
+        { Name: "Peak", StartTime: "7:00", EndTime: "22:59", Rate: 0.5709, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.31383, IsForControlledLoad: false, IsForWeekDayOnly: false }
+      ]
+    },
+    {/*4*/
+      Name: "Alinta HomeDeal - Dual Rate - From 4 Mar 2020",
+      DailySupplyCharge: .828,
+      EnergyDiscount: 0,
+      FiT: 0.12,
+      PFiT: 0.6,
+      Pricing: [
+        { Name: "Peak", StartTime: "7:00", EndTime: "22:59", Rate: 0.276, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.139, IsForControlledLoad: false, IsForWeekDayOnly: false }
       ]
     },
     {
@@ -154,5 +187,12 @@ export class EnergyPlans {
     }
     return null;
   }
-
 }
+
+
+export class MyEnergyPlan {
+  StartDate: Date;
+  EndDate: Date;
+  PlanId: number;
+}
+

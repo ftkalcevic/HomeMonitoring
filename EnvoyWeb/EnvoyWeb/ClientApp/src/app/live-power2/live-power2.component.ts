@@ -1,7 +1,7 @@
 import { Component, Inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { Router } from "@angular/router";
 import { LiveDataService, ISonoffSensorData, ISonoffSample, CircularBuffer, LivePower } from '../live-data-service/live-data-service';
-import { PriceBreak } from '../../data/energy-plans';
+import { PriceBreak, EnergyPlan } from '../../data/energy-plans';
 import * as common from '../../data/common';
 import {
   MatButtonModule,
@@ -190,15 +190,16 @@ export class LivePower2Component {
   private drawDetailed() {
     let now: Date = new Date();
     let time: number = now.getHours() + now.getMinutes() / 60;
-    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(this.liveDataService.energyPlan, now, time, false);
+    let plan: EnergyPlan = this.liveDataService.getEnergyPlan(now);
+    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(plan, now, time, false);
     let rate: number = 0;
 
     let maxPower: number = this.data.filter(d => d.id === common.CONSUMED_ID)[0].power;
     let minPower: number = this.data.filter(d => d.id === common.GENERATED_ID)[0].power;
     if (maxPower > -minPower)
-      rate = -(maxPower + minPower) / 1000.0 * price.Rate * (1-this.liveDataService.energyPlan.EnergyDiscount)*1.1;
+      rate = -(maxPower + minPower) / 1000.0 * price.Rate * (1-plan.EnergyDiscount)*1.1;
     else
-      rate = -(maxPower + minPower) / 1000.0 * this.liveDataService.energyPlan.FiT;
+      rate = -(maxPower + minPower) / 1000.0 * plan.FiT;
 
     let sumPower: number = this.data.slice(0,this.data.length-1).reduce((ty, d) => ty + (d.id >0?d.power:0), 0);
 
@@ -368,15 +369,16 @@ export class LivePower2Component {
   private drawSimple() {
     let now: Date = new Date();
     let time: number = now.getHours() + now.getMinutes() / 60;
-    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(this.liveDataService.energyPlan, now, time, false);
+    let plan: EnergyPlan = this.liveDataService.getEnergyPlan(now);
+    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(plan, now, time, false);
     let rate: number = 0;
 
     let maxPower: number = this.data.filter(d => d.id === common.CONSUMED_ID)[0].power;
     let minPower: number = this.data.filter(d => d.id === common.GENERATED_ID)[0].power;
     if (maxPower > -minPower)
-      rate = -(maxPower + minPower) / 1000.0 * price.Rate * (1 - this.liveDataService.energyPlan.EnergyDiscount) * 1.1;
+      rate = -(maxPower + minPower) / 1000.0 * price.Rate * (1 - plan.EnergyDiscount) * 1.1;
     else
-      rate = -(maxPower + minPower) / 1000.0 * this.liveDataService.energyPlan.FiT;
+      rate = -(maxPower + minPower) / 1000.0 * plan.FiT;
 
     let maxHistoric: number = 0;
     for (let i: number = 0; i < this.historicData.length; i++) maxHistoric = Math.max(maxHistoric, this.historicData.item(i).max);
@@ -529,15 +531,16 @@ export class LivePower2Component {
   private drawConsumption() {
     let now: Date = new Date();
     let time: number = now.getHours() + now.getMinutes() / 60;
-    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(this.liveDataService.energyPlan, now, time, false);
+    let plan: EnergyPlan = this.liveDataService.getEnergyPlan(now);
+    let price: PriceBreak = this.liveDataService.energyPlans.findTariff(plan, now, time, false);
     let rate: number = 0;
 
     let maxPower: number = this.data.filter(d => d.id === common.CONSUMED_ID)[0].power;
     let minPower: number = this.data.filter(d => d.id === common.GENERATED_ID)[0].power;
     if (maxPower > -minPower)
-      rate = -(maxPower + minPower) / 1000.0 * price.Rate * (1 - this.liveDataService.energyPlan.EnergyDiscount) * 1.1;
+      rate = -(maxPower + minPower) / 1000.0 * price.Rate * (1 - plan.EnergyDiscount) * 1.1;
     else
-      rate = -(maxPower + minPower) / 1000.0 * this.liveDataService.energyPlan.FiT;
+      rate = -(maxPower + minPower) / 1000.0 * plan.FiT;
     minPower = 0;
 
     let sumPower: number = this.data.slice(0, this.data.length - 1).reduce((ty, d) => ty + (d.id > 0 ? d.power : 0), 0);

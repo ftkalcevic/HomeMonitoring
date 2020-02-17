@@ -259,3 +259,4 @@ paket-files/
 __pycache__/
 *.pyc
 EnvoyWeb/EnvoyWeb/ClientApp/src/*/*.map
+/EnvoyWeb/EnvoyWeb/appsettings.Development.json

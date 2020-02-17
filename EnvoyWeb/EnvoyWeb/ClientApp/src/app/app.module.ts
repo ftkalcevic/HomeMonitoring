@@ -20,6 +20,8 @@ import { EnlightenComponent } from './enlighten/enlighten.component';
 import { EnergyEasyComponent } from './energyeasy/energyeasy.component';
 import { SolarHistoryComponent } from './solar-history/solar-history.component';
 
+import { GardenTanksComponent } from './garden-tanks/garden-tanks.component';
+
 import { WeatherRadarComponent } from './weather-radar/weather-radar.component';
 import { WeatherRainComponent } from './weather-rain/weather-rain.component';
 import { WeatherTempComponent } from './weather-temp/weather-temp.component';
@@ -76,6 +78,7 @@ import {
     TitleComponent,
     EnlightenComponent,
     EnergyEasyComponent,
+    GardenTanksComponent,
     WeatherRadarComponent,
     WeatherRainComponent, 
     WeatherTempComponent, 
@@ -112,7 +115,8 @@ import {
       { path: 'live-power-stats', component: LivePowerStatsComponent },
       { path: 'live-power-stats/:deviceId', component: LivePowerStatsComponent },
       { path: 'enlighten', component: EnlightenComponent},
-      { path: 'energyeasy', component: EnergyEasyComponent},
+      { path: 'energyeasy', component: EnergyEasyComponent },
+      { path: 'garden-tanks', component: GardenTanksComponent },
       { path: 'weather-radar', component: WeatherRadarComponent },
       { path: 'weather-rain', component: WeatherRainComponent },
       { path: 'weather-temp', component: WeatherTempComponent },

@@ -1,19 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var PriceBreak = /** @class */ (function () {
-    function PriceBreak() {
-    }
-    return PriceBreak;
-}());
-exports.PriceBreak = PriceBreak;
-var EnergyPlan = /** @class */ (function () {
-    function EnergyPlan() {
-    }
-    return EnergyPlan;
-}());
-exports.EnergyPlan = EnergyPlan;
-var EnergyPlans = /** @class */ (function () {
-    function EnergyPlans() {
+export class PriceBreak {
+}
+export class EnergyPlan {
+}
+export class EnergyPlans {
+    constructor() {
         this.Plans = [
             {
                 Name: "RACV Plus 45/30 FIT Simply Energy - Time of Use + Controlled Load OP",
@@ -37,6 +27,39 @@ var EnergyPlans = /** @class */ (function () {
                     { Name: "Controlled", StartTime: "0:00", EndTime: "23:59", Rate: 0.2068, IsForControlledLoad: true, IsForWeekDayOnly: false },
                     { Name: "Summer Peak", StartTime: "0:00", EndTime: "23:59", StartDate: "1 Nov", EndDate: "31 Mar", Rate: 0.3008, IsForControlledLoad: false, "IsForWeekDayOnly": false },
                     { Name: "Non-Summer Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.3008, IsForControlledLoad: false, IsForWeekDayOnly: false }
+                ]
+            },
+            {
+                Name: "RACV Plus 45/30 FIT Simply Energy - Dual Rate - Till 31 Dec 2019",
+                DailySupplyCharge: 1.04082,
+                EnergyDiscount: 0.45,
+                FiT: 0.12,
+                PFiT: 0.6,
+                Pricing: [
+                    { Name: "Peak", StartTime: "7:00", EndTime: "22:59", Rate: 0.45815, IsForControlledLoad: false, IsForWeekDayOnly: true },
+                    { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.2519, IsForControlledLoad: false, IsForWeekDayOnly: false }
+                ]
+            },
+            {
+                Name: "RACV Plus 45/30 FIT Simply Energy - Dual Rate - From 1 Jan 2020",
+                DailySupplyCharge: 1.12123,
+                EnergyDiscount: 0.45,
+                FiT: 0.12,
+                PFiT: 0.6,
+                Pricing: [
+                    { Name: "Peak", StartTime: "7:00", EndTime: "22:59", Rate: 0.5709, IsForControlledLoad: false, IsForWeekDayOnly: true },
+                    { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.31383, IsForControlledLoad: false, IsForWeekDayOnly: false }
+                ]
+            },
+            {
+                Name: "Alinta HomeDeal - Dual Rate - From 4 Mar 2020",
+                DailySupplyCharge: .828,
+                EnergyDiscount: 0,
+                FiT: 0.12,
+                PFiT: 0.6,
+                Pricing: [
+                    { Name: "Peak", StartTime: "7:00", EndTime: "22:59", Rate: 0.276, IsForControlledLoad: false, IsForWeekDayOnly: true },
+                    { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.139, IsForControlledLoad: false, IsForWeekDayOnly: false }
                 ]
             },
             {
@@ -80,12 +103,12 @@ var EnergyPlans = /** @class */ (function () {
             }
         ];
     }
-    EnergyPlans.prototype.dateMatch = function (pricing, month, day) {
+    dateMatch(pricing, month, day) {
         if (pricing.StartDate != null) {
-            var s = new Date(pricing.StartDate);
-            var sm = s.getMonth();
-            var e = new Date(pricing.EndDate);
-            var em = e.getMonth();
+            let s = new Date(pricing.StartDate);
+            let sm = s.getMonth();
+            let e = new Date(pricing.EndDate);
+            let em = e.getMonth();
             if ((sm <= em && (sm <= month && month <= em)) ||
                 (sm > em && (sm <= month || month <= em)))
                 return true;
@@ -94,8 +117,8 @@ var EnergyPlans = /** @class */ (function () {
         }
         else
             return true;
-    };
-    EnergyPlans.prototype.dowMatch = function (pricing, dow) {
+    }
+    dowMatch(pricing, dow) {
         if (pricing.IsForWeekDayOnly != null && pricing.IsForWeekDayOnly) {
             if (dow > 0 && dow < 6)
                 return true;
@@ -105,11 +128,11 @@ var EnergyPlans = /** @class */ (function () {
         else {
             return true;
         }
-    };
-    EnergyPlans.prototype.timeMatch = function (pricing, hour, minute) {
+    }
+    timeMatch(pricing, hour, minute) {
         if (pricing.StartTime != null) {
-            var s = parseInt(pricing.StartTime.split(/:/)[0]);
-            var e = parseInt(pricing.EndTime.split(/:/)[0]);
+            let s = parseInt(pricing.StartTime.split(/:/)[0]);
+            let e = parseInt(pricing.EndTime.split(/:/)[0]);
             if (s <= hour && hour <= e)
                 return true;
             else
@@ -118,19 +141,19 @@ var EnergyPlans = /** @class */ (function () {
         else {
             return true;
         }
-    };
-    EnergyPlans.prototype.controlledLoadMatch = function (pricing, c) {
-        var planValue = (pricing.IsForControlledLoad != null) ? pricing.IsForControlledLoad : false;
+    }
+    controlledLoadMatch(pricing, c) {
+        let planValue = (pricing.IsForControlledLoad != null) ? pricing.IsForControlledLoad : false;
         return planValue === c;
-    };
-    EnergyPlans.prototype.findTariff = function (plan, date, time, controlledLoad) {
-        var month = date.getMonth();
-        var day = date.getDate();
-        var dow = date.getDay();
-        var hour = Math.floor(time);
-        var minute = 60 * (time % 1);
-        for (var p = 0; p < plan.Pricing.length; p++) {
-            var pricing = plan.Pricing[p];
+    }
+    findTariff(plan, date, time, controlledLoad) {
+        let month = date.getMonth();
+        let day = date.getDate();
+        let dow = date.getDay();
+        let hour = Math.floor(time);
+        let minute = 60 * (time % 1);
+        for (let p = 0; p < plan.Pricing.length; p++) {
+            let pricing = plan.Pricing[p];
             if (this.controlledLoadMatch(pricing, controlledLoad) &&
                 this.dateMatch(pricing, month, day) &&
                 this.dowMatch(pricing, dow) &&
@@ -139,8 +162,8 @@ var EnergyPlans = /** @class */ (function () {
             }
         }
         return null;
-    };
-    return EnergyPlans;
-}());
-exports.EnergyPlans = EnergyPlans;
+    }
+}
+export class MyEnergyPlan {
+}
 //# sourceMappingURL=energy-plans.js.map

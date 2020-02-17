@@ -108,5 +108,83 @@ namespace SonoffPowerMonitoringLib
             }
         }
 
+        public void AddAr844SoundReading(string deviceName,
+                                          DateTime timestamp,
+                                          float? avg,
+                                          float? min,
+                                          float? max,
+                                          string weight)
+        {
+            using (var con = new SqlConnection(connectString))
+            {
+                con.Open();
+                using (var cmd = new SqlCommand(@"insert into SoundRecordings
+                                                        ([deviceName],[timestamp],[average],[min],[max],weight) 
+                                                  select @deviceName,@timestamp,@avg,@min,@max,@weight
+                                                  where not exists (select 1 from SoundRecordings where [deviceName]=@deviceName and [timestamp]=@timestamp)", con))
+                {
+                    cmd.Parameters.Add("@deviceName", SqlDbType.VarChar).Value = deviceName;
+                    cmd.Parameters.Add("@timestamp", SqlDbType.DateTime).Value = timestamp;
+                    cmd.Parameters.Add("@avg", SqlDbType.Float).Value = avg;
+                    cmd.Parameters.Add("@min", SqlDbType.Float).Value = min;
+                    cmd.Parameters.Add("@max", SqlDbType.Float).Value = max;
+                    cmd.Parameters.Add("@weight", SqlDbType.VarChar).Value = weight;
+                    cmd.ExecuteNonQuery();
+                }
+                con.Close();
+            }
+        }
+
+        public void AddAntScaleReading(DateTime timestamp, int? userProfile, float? weight, string gender, int age, int height, float? hydrationPercentage, float? bodyFatPercentage, float? activeMetabolicRate, float? basalMetabolicRate, float? muscleMass, float? boneMass)
+        {
+            using (var con = new SqlConnection(connectString))
+            {
+                con.Open();
+                using (var cmd = new SqlCommand(@"
+INSERT INTO [dbo].[Weight]
+           ([timestamp]
+           ,[userProfile]
+           ,[weight]
+           ,[gender]
+           ,[age]
+           ,[height]
+           ,[hydrationPercentage]
+           ,[bodyFatPercentage]
+           ,[activeMetabolicRate]
+           ,[basalMetabolicRate]
+           ,[muscleMass]
+           ,[boneMass])
+     SELECT
+            @timestamp,
+            @userProfile,
+            @weight,
+            @gender,
+            @age,
+            @height,
+            @hydrationPercentage,
+            @bodyFatPercentage,
+            @activeMetabolicRate,
+            @basalMetabolicRate,
+            @muscleMass,
+            @boneMass
+    where not exists (select 1 from [dbo].[Weight] where [userProfile]=@userProfile and [timestamp]=@timestamp)", con))
+                {
+                    cmd.Parameters.Add("@timestamp", SqlDbType.DateTime).Value = timestamp;
+                    cmd.Parameters.Add("@userProfile", SqlDbType.Int).Value = userProfile;
+                    cmd.Parameters.Add("@weight", SqlDbType.Float).Value = weight;
+                    cmd.Parameters.Add("@gender", SqlDbType.VarChar).Value = gender;
+                    cmd.Parameters.Add("@age", SqlDbType.Int).Value = age;
+                    cmd.Parameters.Add("@height", SqlDbType.Int).Value = height;
+                    cmd.Parameters.Add("@hydrationPercentage", SqlDbType.Float).Value = hydrationPercentage;
+                    cmd.Parameters.Add("@bodyFatPercentage", SqlDbType.Float).Value = bodyFatPercentage;
+                    cmd.Parameters.Add("@activeMetabolicRate", SqlDbType.Float).Value = activeMetabolicRate;
+                    cmd.Parameters.Add("@basalMetabolicRate", SqlDbType.Float).Value = basalMetabolicRate;
+                    cmd.Parameters.Add("@muscleMass", SqlDbType.Float).Value = muscleMass;
+                    cmd.Parameters.Add("@boneMass", SqlDbType.Float).Value = boneMass;
+                    cmd.ExecuteNonQuery();
+                }
+                con.Close();
+            }
+        }
     }
 }

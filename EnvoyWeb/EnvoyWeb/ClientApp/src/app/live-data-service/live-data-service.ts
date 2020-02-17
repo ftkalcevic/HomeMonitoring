@@ -1,7 +1,9 @@
 import { Injectable, Inject, EventEmitter, Output } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { EnergyPlans, EnergyPlan, MyEnergyPlan } from '../../data/energy-plans';
+import * as HomeSensorNet from '../../data/home-sensor-net';
 
 export interface IEnergy {
   Total: number;
@@ -146,6 +148,7 @@ export class LiveDataService {
   private http: HttpClient;
   public envoyLive: RealtimeEnvoyData;
   public sonoffDevices: SonoffDevice[];
+  public tanks: HomeSensorNet.Tank[];
   public sonoffLive: CircularBuffer<ISonoffSample>;
   @Output() envoyData: EventEmitter<LivePower> = new EventEmitter<LivePower>(true);
   @Output() sonoffData: EventEmitter<ISonoffSample> = new EventEmitter<ISonoffSample>(true);
@@ -344,6 +347,7 @@ export class LiveDataService {
     this.sonoffDevices = [];
     setTimeout(() => this.ReadEnvoyData(), 100);
     setTimeout(() => this.ReadSonoffDevices(), 100);
+    setTimeout(() => this.ReadTanks(), 100);
   }
 
   public getEnergyPlan(dt: Date): EnergyPlan {
@@ -454,4 +458,32 @@ export class LiveDataService {
   public getEnphaseDayData(systemId:number, day:Date): Observable<IEnphaseData[]> {
     return this.http.get<IEnphaseData[]>(this.baseUrl + 'api/Envoy/EnphaseDayData/'+systemId+'/'+day.toISOString());
   }
+
+  private ProcessTanks(tanks: HomeSensorNet.ITank[]) {
+    this.tanks = [];
+    for (let d of tanks) {
+      this.tanks[this.tanks.length] = new HomeSensorNet.Tank( d.deviceId, d.deviceName );
+    }
+  }
+
+  private ReadTanks() {
+    this.http.get<HomeSensorNet.ITank[]>(this.baseUrl + 'api/HomeSensorNet/GetTanks')
+      .subscribe(
+        result => {
+          this.ProcessTanks(result);
+        },
+        error => {
+          console.error(error);
+          setTimeout(() => this.ReadTanks(), 5000);
+        }
+      );
+  }
+
+  public ReadTankWater(deviceId: string, week: Boolean, day: Date): Observable<HomeSensorNet.ITankWaterer[]> {
+    return this.
+      http.
+      get<HomeSensorNet.ITankWaterer[]>(this.baseUrl + 'api/HomeSensorNet/GetTankWater/' + deviceId + '/' + week + '/' + day.toISOString()).
+      pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d;} )));
+  }
+
 }

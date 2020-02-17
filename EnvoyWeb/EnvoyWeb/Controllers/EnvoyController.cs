@@ -8,6 +8,7 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 
 namespace EnvoyWeb.Controllers
 {
@@ -235,6 +236,7 @@ namespace EnvoyWeb.Controllers
             catch (Exception ex)
             {
                 // Just log and ignore the error.  We'll get data online.
+                Trace.TraceError(ex.ToString());
             }
 
 
@@ -271,7 +273,7 @@ namespace EnvoyWeb.Controllers
                         var content = response.Content;
                         string r = content.ReadAsStringAsync().Result;
 
-                        System.Diagnostics.Debug.WriteLine("stats failed\n" + response.ToString() + "\n" + r);
+                        Trace.TraceWarning("stats failed\n" + response.ToString() + "\n" + r);
                     }
                 }
                 catch (Exception)
@@ -308,7 +310,7 @@ namespace EnvoyWeb.Controllers
                         var content = response.Content;
                         string r = content.ReadAsStringAsync().Result;
 
-                        System.Diagnostics.Debug.WriteLine("consumption_stats failed\n" + response.ToString() + "\n" + r);
+                        Trace.TraceWarning("consumption_stats failed\n" + response.ToString() + "\n" + r);
                     }
                 }
                 catch (Exception)
@@ -395,6 +397,7 @@ namespace EnvoyWeb.Controllers
                     catch (Exception ex)
                     {
                         // Just log and ignore the error.  We'll get again next time.
+                        Trace.TraceError(ex.ToString());
                     }
                 }
             }

@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { EnergyPlans, EnergyPlan, MyEnergyPlan } from '../../data/energy-plans';
 import * as HomeSensorNet from '../../data/home-sensor-net';
 import * as SoundRecordings from '../../data/sound-recordings';
+import * as Weight from '../../data/Weight';
 
 export interface IEnergy {
   Total: number;
@@ -484,16 +485,23 @@ export class LiveDataService {
   }
 
   public ReadTankWater(deviceId: string, week: Boolean, day: Date): Observable<HomeSensorNet.ITankWaterer[]> {
-    return this.
-      http.
-      get<HomeSensorNet.ITankWaterer[]>(this.baseUrl + 'api/HomeSensorNet/GetTankWater/' + deviceId + '/' + week + '/' + day.toISOString()).
-      pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d;} )));
+    return this
+      .http
+      .get<HomeSensorNet.ITankWaterer[]>(this.baseUrl + 'api/HomeSensorNet/GetTankWater/' + deviceId + '/' + week + '/' + day.toISOString())
+      .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d;} )));
   }
 
   public ReadNoiseSamples(deviceId: string, range: number, day: Date): Observable<SoundRecordings.ISoundRecording[]> {
-    return this.
-      http.
-      get<SoundRecordings.ISoundRecording[]>(this.baseUrl + 'api/SoundRecordings/GetNoiseSamples/' + deviceId + '/' + String(range) + '/' + day.toISOString()).
-      pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
+    return this
+      .http
+      .get<SoundRecordings.ISoundRecording[]>(this.baseUrl + 'api/SoundRecordings/GetNoiseSamples/' + deviceId + '/' + String(range) + '/' + day.toISOString())
+      .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
+  }
+
+  public ReadWeight(month: Boolean, day: Date): Observable<Weight.IWeight[]> {
+    return this
+      .http
+      .get<Weight.IWeight[]>(this.baseUrl + 'api/Weight/ReadWeight/' + String(month) + '/' + day.toISOString())
+      .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
   }
 }

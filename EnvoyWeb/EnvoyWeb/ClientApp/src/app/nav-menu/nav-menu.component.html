@@ -163,6 +163,12 @@
               </a>
             </li>
 
+            <li class="nav-item" [routerLinkActive]='["link-active"]' [routerLinkActiveOptions]='{ exact: true }'>
+              <a [routerLink]='["/garden-weight"]' class="nav-link" (click)='isExpanded=false;'>
+                <span class='fas fa-home'></span> Weight
+              </a>
+            </li>
+
           </ul>
         </li>
 

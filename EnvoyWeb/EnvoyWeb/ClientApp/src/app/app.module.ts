@@ -21,6 +21,7 @@ import { EnergyEasyComponent } from './energyeasy/energyeasy.component';
 import { SolarHistoryComponent } from './solar-history/solar-history.component';
 
 import { GardenTanksComponent } from './garden-tanks/garden-tanks.component';
+import { GardenNoiseComponent } from './garden-noise/garden-noise.component';
 
 import { WeatherRadarComponent } from './weather-radar/weather-radar.component';
 import { WeatherRainComponent } from './weather-rain/weather-rain.component';
@@ -79,6 +80,7 @@ import {
     EnlightenComponent,
     EnergyEasyComponent,
     GardenTanksComponent,
+    GardenNoiseComponent,
     WeatherRadarComponent,
     WeatherRainComponent, 
     WeatherTempComponent, 
@@ -117,6 +119,7 @@ import {
       { path: 'enlighten', component: EnlightenComponent},
       { path: 'energyeasy', component: EnergyEasyComponent },
       { path: 'garden-tanks', component: GardenTanksComponent },
+      { path: 'garden-noise', component: GardenNoiseComponent },
       { path: 'weather-radar', component: WeatherRadarComponent },
       { path: 'weather-rain', component: WeatherRainComponent },
       { path: 'weather-temp', component: WeatherTempComponent },

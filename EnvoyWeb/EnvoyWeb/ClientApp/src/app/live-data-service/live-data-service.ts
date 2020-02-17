@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EnergyPlans, EnergyPlan, MyEnergyPlan } from '../../data/energy-plans';
 import * as HomeSensorNet from '../../data/home-sensor-net';
+import * as SoundRecordings from '../../data/sound-recordings';
 
 export interface IEnergy {
   Total: number;
@@ -149,6 +150,7 @@ export class LiveDataService {
   public envoyLive: RealtimeEnvoyData;
   public sonoffDevices: SonoffDevice[];
   public tanks: HomeSensorNet.Tank[];
+  public meters: any[];
   public sonoffLive: CircularBuffer<ISonoffSample>;
   @Output() envoyData: EventEmitter<LivePower> = new EventEmitter<LivePower>(true);
   @Output() sonoffData: EventEmitter<ISonoffSample> = new EventEmitter<ISonoffSample>(true);
@@ -343,6 +345,8 @@ export class LiveDataService {
     this.envoyLive = new RealtimeEnvoyData(this.POINTS);
     //this.energyPlan = this.energyPlans.Plans[2];
     this.sonoffLive = new CircularBuffer<ISonoffSample>(1);
+    this.meters = [];
+    this.meters.push({ deviceId: "ar844", deviceName: "ar844" });
 
     this.sonoffDevices = [];
     setTimeout(() => this.ReadEnvoyData(), 100);
@@ -486,4 +490,10 @@ export class LiveDataService {
       pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d;} )));
   }
 
+  public ReadNoiseSamples(deviceId: string, range: number, day: Date): Observable<SoundRecordings.ISoundRecording[]> {
+    return this.
+      http.
+      get<SoundRecordings.ISoundRecording[]>(this.baseUrl + 'api/SoundRecordings/GetNoiseSamples/' + deviceId + '/' + String(range) + '/' + day.toISOString()).
+      pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
+  }
 }

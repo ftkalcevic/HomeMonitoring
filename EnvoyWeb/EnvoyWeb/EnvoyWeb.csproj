@@ -22,7 +22,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="2.1.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.10" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,6 +43,7 @@
     <None Remove="ClientApp\src\data\home-sensor-net.ts" />
     <None Remove="ClientApp\src\data\live-power.ts" />
     <None Remove="ClientApp\src\data\panel-power.ts" />
+    <None Remove="ClientApp\src\data\sound-recordings.ts" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,6 +53,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="ClientApp\src\data\common.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\energy-plans.ts" />
+    <TypeScriptCompile Include="ClientApp\src\data\sound-recordings.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\home-sensor-net.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\gradient.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\sonoff-device.ts" />

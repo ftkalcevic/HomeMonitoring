@@ -38,7 +38,6 @@
   <ItemGroup>
     <None Remove="ClientApp\src\data\common.ts" />
     <None Remove="ClientApp\src\data\energy-plans.ts" />
-    <None Remove="ClientApp\src\data\file.ts" />
     <None Remove="ClientApp\src\data\gradient.ts" />
     <None Remove="ClientApp\src\data\home-sensor-net.ts" />
     <None Remove="ClientApp\src\data\live-power.ts" />

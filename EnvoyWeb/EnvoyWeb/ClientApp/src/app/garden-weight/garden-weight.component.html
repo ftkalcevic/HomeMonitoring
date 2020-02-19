@@ -28,31 +28,30 @@
       </button>
     </div>
   </div>
-  <div ng-view style="width: 100%; height: 620px;" class="partial-height">
-    <canvas #weightCanvas style="width:100%; height: 620px;" class="partial-height"></canvas>
+  <div ng-view style="width: 100%; height: 580px;" class="partial-height">
+    <app-chart #chart style="width:100%; height: 620px;" class="partial-height"></app-chart>
   </div>
   <div class="radio-btn-group">
-
-    <mat-button-toggle value="month" (change)="plotChanged($event.value)">
+    <mat-button-toggle [checked]="showWeight" (change)="showWeight = $event.source.checked; RequestReadWeight();">
       <label class="radio-btn radio-btn-secondary radio-select-btn" >Weight</label>
     </mat-button-toggle>
-    <mat-button-toggle value="year" (change)="plotChanged($event.value)">
-      <label class="radio-btn radio-btn-secondary radio-select-btn" >Hydration</label>
+    <mat-button-toggle [checked]="showHydration" (change)="showHydration = $event.source.checked; RequestReadWeight();">
+      <label class="radio-btn radio-btn-secondary radio-select-btn">Hydration</label>
     </mat-button-toggle>
-    <mat-button-toggle value="year" (change)="plotChanged($event.value)">
-      <label class="radio-btn radio-btn-secondary radio-select-btn" >Body Fat</label>
+    <mat-button-toggle [checked]="showBodyFat" (change)="showBodyFat = $event.source.checked; RequestReadWeight();">
+      <label class="radio-btn radio-btn-secondary radio-select-btn">Body Fat</label>
     </mat-button-toggle>
-    <mat-button-toggle value="year" (change)="plotChanged($event.value)">
-      <label class="radio-btn radio-btn-secondary radio-select-btn" >Active Metabolic Rate</label>
+    <mat-button-toggle [checked]="showActiveMetabolicRate" (change)="showActiveMetabolicRate = $event.source.checked; RequestReadWeight();">
+      <label class="radio-btn radio-btn-secondary radio-select-btn">Active Metabolic Rate</label>
     </mat-button-toggle>
-    <mat-button-toggle value="year" (change)="plotChanged($event.value)">
-      <label class="radio-btn radio-btn-secondary radio-select-btn" >Basal Metabolic Rate</label>
+    <mat-button-toggle [checked]="showBasalMetabolicRate" (change)="showBasalMetabolicRate = $event.source.checked; RequestReadWeight();">
+      <label class="radio-btn radio-btn-secondary radio-select-btn">Basal Metabolic Rate</label>
     </mat-button-toggle>
-    <mat-button-toggle value="year" (change)="plotChanged($event.value)">
+    <mat-button-toggle [checked]="showMuscleMass" (change)="showMuscleMass = $event.source.checked; RequestReadWeight();">
       <label class="radio-btn radio-btn-secondary radio-select-btn" >Muscle Mass</label>
     </mat-button-toggle>
-    <mat-button-toggle value="year" (change)="plotChanged($event.value)">
-      <label class="radio-btn radio-btn-secondary radio-select-btn" >Bone Mass</label>
+    <mat-button-toggle [checked]="showBoneMass" (change)="showBoneMass = $event.source.checked; RequestReadWeight();">
+      <label class="radio-btn radio-btn-secondary radio-select-btn">Bone Mass</label>
     </mat-button-toggle>
   </div>
 </div>

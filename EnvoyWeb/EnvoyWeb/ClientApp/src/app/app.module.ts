@@ -23,7 +23,7 @@ import { SolarHistoryComponent } from './solar-history/solar-history.component';
 import { GardenTanksComponent } from './garden-tanks/garden-tanks.component';
 import { GardenNoiseComponent } from './garden-noise/garden-noise.component';
 import { GardenWeightComponent } from './garden-weight/garden-weight.component';
-
+import { ChartComponent } from './chart/chart.component';
 import { WeatherRadarComponent } from './weather-radar/weather-radar.component';
 import { WeatherRainComponent } from './weather-rain/weather-rain.component';
 import { WeatherTempComponent } from './weather-temp/weather-temp.component';
@@ -83,6 +83,7 @@ import {
     GardenTanksComponent,
     GardenNoiseComponent,
     GardenWeightComponent,
+    ChartComponent,
     WeatherRadarComponent,
     WeatherRainComponent, 
     WeatherTempComponent, 

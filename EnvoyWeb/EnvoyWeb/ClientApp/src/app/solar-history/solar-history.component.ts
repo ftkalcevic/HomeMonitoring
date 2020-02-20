@@ -241,6 +241,7 @@ export class SolarHistoryComponent implements OnInit {
 
     let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
     ctx.save();
+    //ctx.imageSmoothingEnabled = false;
 
     let width: number = this.canvasRef.nativeElement.width;
     let height: number = this.canvasRef.nativeElement.height;

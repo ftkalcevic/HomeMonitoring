@@ -274,6 +274,37 @@ class StackedColumnDataSeries extends DataSeriesInternal {
 }
 
 
+class AreaDataSeries extends DataSeriesInternal {
+  public constructor(s: DataSeries) {
+    super(s);
+  }
+
+  public draw(ctx: CanvasRenderingContext2D) {
+
+    const columnWidth: number = 50;//width * 0.9 / days;
+
+    ctx.beginPath();
+    ctx.fillStyle = this.userSeries.fillStyle;
+    let first: boolean = true;
+    let pts: number[];
+    for (let f of this.userSeries.series)
+      if (f) {
+        pts = this.makePoint(f.x, f.y);
+
+        if (first) {
+          ctx.moveTo(pts[0], pts[1]);
+          first = false;
+        } else {
+          ctx.lineTo(pts[0], pts[1]);
+        }
+      }
+    pts = this.makePoint(this.userSeries.series[this.userSeries.series.length - 1].x, this.yAxis.min); ctx.lineTo(pts[0], pts[1]);
+    pts = this.makePoint(this.userSeries.series[0].x, this.yAxis.min); ctx.lineTo(pts[0],pts[1]);
+    ctx.fill();
+  }
+}
+
+
 // Chart - type + grouping of series (share same axis)
 //    type - bar, stacked bar, line, area
 //    series[] - data sets
@@ -317,6 +348,7 @@ class StackedColumnDataSeries extends DataSeriesInternal {
 export class ChartComponent implements OnDestroy {
   @ViewChild('chartCanvas') canvasRef: ElementRef;
   private series: DataSeriesInternal[] = [];
+  public backgroundColour: string = "rgb(240,240,240)";
 
   constructor() {
   }
@@ -340,6 +372,9 @@ export class ChartComponent implements OnDestroy {
       case EChartType.stackedColumn:
         newSeries = this.series[this.series.length] = new StackedColumnDataSeries(s);
         break;
+      case EChartType.area:
+        newSeries = this.series[this.series.length] = new AreaDataSeries(s);
+        break;
     }
     newSeries.Init();
   }
@@ -356,7 +391,7 @@ export class ChartComponent implements OnDestroy {
     let width: number = this.canvasRef.nativeElement.width;
     let height: number = this.canvasRef.nativeElement.height;
 
-    ctx.fillStyle = "rgb(240,240,240)";
+    ctx.fillStyle = this.backgroundColour;
     ctx.fillRect(0, 0, width, height);
 
     if (this.series.length == 0) {

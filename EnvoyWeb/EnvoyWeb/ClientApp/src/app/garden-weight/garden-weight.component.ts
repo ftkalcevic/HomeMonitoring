@@ -103,10 +103,6 @@ export class GardenWeightComponent implements OnDestroy {
     }
 
     
-    let PrimaryXAxis: boolean = true;
-    let PrimaryYAxis: boolean = true;
-    let SecondaryYAxis: boolean = true;
-
     // weight, muscle mass, bone mass (kg)
     let minKg: number = 80;
     let maxKg: number = 0;
@@ -154,8 +150,6 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.strokeStyle = "green";
       this.chart.addDataSeries(dataSeries);
       dataSeriesKg[dataSeriesKg.length] = dataSeries;
-      PrimaryXAxis = false;
-      PrimaryYAxis = false;
     }
 
     if (this.showMuscleMass) {
@@ -187,8 +181,6 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.strokeStyle = "blueviolet";
       this.chart.addDataSeries(dataSeries);
       dataSeriesKg[dataSeriesKg.length] = dataSeries;
-      PrimaryXAxis = false;
-      PrimaryYAxis = false;
     }
 
     //showBoneMass
@@ -221,8 +213,6 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.strokeStyle = "cadetblue";
       this.chart.addDataSeries(dataSeries);
       dataSeriesKg[dataSeriesKg.length] = dataSeries;
-      PrimaryXAxis = false;
-      PrimaryYAxis = false;
     }
     if (activeAxisCount > 0) {
       activeAxis++;
@@ -258,8 +248,6 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.strokeStyle = "aqua";
       this.chart.addDataSeries(dataSeries);
       dataSeriesPct[dataSeriesPct.length] = dataSeries;
-      PrimaryXAxis = false;
-      PrimaryYAxis = false;
     }
 
 
@@ -292,8 +280,6 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.strokeStyle = "rosybrown";
       this.chart.addDataSeries(dataSeries);
       dataSeriesPct[dataSeriesPct.length] = dataSeries;
-      PrimaryXAxis = false;
-      PrimaryYAxis = false;
     }
     if (activeAxisCount > 0) {
       activeAxis++;
@@ -329,8 +315,6 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.strokeStyle = "orange";
       this.chart.addDataSeries(dataSeries);
       dataSeriesMeta[dataSeriesMeta.length] = dataSeries;
-      PrimaryXAxis = false;
-      PrimaryYAxis = false;
     }
     //showBasalMetabolicRate
     if (this.showBasalMetabolicRate) {
@@ -361,8 +345,6 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.strokeStyle = "orangered";
       this.chart.addDataSeries(dataSeries);
       dataSeriesMeta[dataSeriesMeta.length] = dataSeries;
-      PrimaryXAxis = false;
-      PrimaryYAxis = false;
     }
 
     // update grouped min/max
@@ -413,82 +395,5 @@ export class GardenWeightComponent implements OnDestroy {
     }
 
     this.chart.draw();
-
-    //dataSet.loadf
-
-    //let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
-    //ctx.save();
-
-    //let width: number = this.canvasRef.nativeElement.width;
-    //let height: number = this.canvasRef.nativeElement.height;
-
-    //ctx.fillStyle = "rgb(240,240,240)";
-    //ctx.fillRect(0, 0, width, height);
-
-    //if (data.length == 0) {
-    //  ctx.restore();
-    //  return;
-    //}
-
-    //let minWeight: number = 80;
-    //let maxWeight: number = 0;
-
-    //// Find min/max
-    //for (let d of data) {
-    //  // find min/max
-    //  if (d.weight < minWeight) minWeight = d.weight;
-    //  if (d.weight > maxWeight) maxWeight = d.weight;
-    //}
-    //// round down/up to nearest 10
-    //minWeight = Math.floor(minWeight / 10) * 10;
-    //maxWeight = Math.ceil(maxWeight / 10) * 10;
-
-    //// Get start/end dates
-    //let dateStart: Date;
-    //let dateEnd: Date;
-    //let days: number;
-    //if (this.displayType == "month") {
-    //  dateStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
-    //  dateEnd = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 1);
-    //  days = new Date(dateEnd.getFullYear(), dateEnd.getMonth(), 0).getDate();
-    //}
-    //else {
-    //  dateStart = new Date(this.date.getFullYear(), 0, 1);
-    //  dateEnd = new Date(this.date.getFullYear()+1, 0 , 1);
-    //  days = (dateEnd.getTime() - dateStart.getTime()) / (24 * 60 * 60 * 1000);   // ms -> days
-    //}
-
-    //// Draw Chart
-    //let scaleX: number = 0.9 * (width / (days));
-    //let scaleY: number = 0.9 * (height / (maxWeight - minWeight));
-    //let offsetX: number = width * 0.1 / 2;
-    //let offsetY: number = height * 0.1 / 2 - minWeight * scaleY;
-
-    //// Draw sound bands
-    //ctx.fillStyle = "rgb(220,220,220)";
-    //for (let range = minWeight; range < maxWeight; range += 20) {
-    //  ctx.fillRect(offsetX, height - offsetY - (range + 10) * scaleY, width - 2 * offsetX, 10 * scaleY);
-    //}
-
-    //// weight
-    //ctx.lineWidth = 2;
-    //ctx.strokeStyle = "black";
-    //ctx.beginPath();
-    //let first: boolean = true;
-    //for (let d of data) {
-    //  let dt: number = (d.timestamp.getTime() - dateStart.getTime()) / (24 * 60 * 60 * 1000); // floating point days since startDate
-    //  let ptX: number = offsetX + dt * scaleX;
-    //  let ptY: number = height - offsetY - d.weight * scaleY;
-    //  if (first) {
-    //    ctx.moveTo(ptX, ptY);
-    //    first = false;
-    //  }
-    //  else
-    //    ctx.lineTo(ptX,ptY);
-    //}
-    //ctx.stroke();
-
-    //ctx.restore();
-
   }
 }

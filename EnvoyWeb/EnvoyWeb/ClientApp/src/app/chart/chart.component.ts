@@ -18,17 +18,18 @@ function getUsersLocale(defaultValue: string): string {
   return lang;
 }
 
-export class DataSet {
-  // Display type - bar, stacked bar, line, area
-  // 
-};
-
 export enum EAxisType {
   none = 0,
   primary=1,
   secondary,
   secondary2,
   primary2
+};
+
+export enum EChartType {
+  line = 1,
+  column = 2,
+  area = 3
 };
 
 export class DataSeries {
@@ -46,6 +47,7 @@ export class DataSeries {
   public xUnits: string;
   public yUnits: string;
   public strokeStyle: string;
+  public chartType: EChartType;
 
   public constructor() {
     this.series = null;
@@ -62,8 +64,10 @@ export class DataSeries {
     this.xUnits = null;
     this.yUnits = null;
     this.strokeStyle = "black";
+    this.chartType = EChartType.line;
   }
 };
+
 
 class Axis {
   public min: number;
@@ -176,7 +180,36 @@ class DataSeriesInternal {
     return [ this.xAxis.offset1 + (x - this.xAxis.min) * this.xAxis.scale, this.yAxis.size - this.yAxis.offset1 - (y-this.yAxis.min)*this.yAxis.scale];
   }
   
+  public draw(ctx: CanvasRenderingContext2D) {
+    throw new Error("pure virtual method.");
+  }
 };
+
+
+class LineDataSeries extends DataSeriesInternal {
+  public constructor(s: DataSeries) {
+    super(s);
+  }
+
+  public draw(ctx: CanvasRenderingContext2D) {
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = this.userSeries.strokeStyle;
+    ctx.beginPath();
+
+    let first: boolean = true;;
+    for (let d of this.userSeries.series) {
+      let pts: number[] = this.makePoint(d.x, d.y);
+      if (first) {
+        ctx.moveTo(pts[0], pts[1]);
+        first = false;
+      }
+      else
+        ctx.lineTo(pts[0], pts[1]);
+    }
+    ctx.stroke();
+  }
+}
+
 
 // Chart - type + grouping of series (share same axis)
 //    type - bar, stacked bar, line, area
@@ -236,7 +269,12 @@ export class ChartComponent implements OnDestroy {
   }
   
   public addDataSeries(s: DataSeries) {
-    let newSeries: DataSeriesInternal = this.series[this.series.length] = new DataSeriesInternal(s);
+    let newSeries: DataSeriesInternal;
+    switch (s.chartType) {
+      case EChartType.line:
+        newSeries = this.series[this.series.length] = new LineDataSeries(s);
+        break;
+    }
     newSeries.Init();
   }
 
@@ -399,23 +437,10 @@ export class ChartComponent implements OnDestroy {
     //}
 
     // draw grid
-    // draw series
-    let first: boolean;
+
+    // draw each series
     for (let s of this.series) {
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = s.userSeries.strokeStyle;
-      ctx.beginPath();
-      first = true;
-      for (let d of s.userSeries.series) {
-        let pts: number[] = s.makePoint(d.x, d.y);
-        if (first) {
-          ctx.moveTo(pts[0],pts[1]);
-          first = false;
-        }
-        else
-          ctx.lineTo(pts[0], pts[1]);
-      }
-      ctx.stroke();
+      s.draw(ctx);
     }
 
     // Draw axis Y primary

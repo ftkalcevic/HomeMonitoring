@@ -7,7 +7,7 @@ import { MY_FORMATS } from '../solar-history/solar-history.component';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import * as Weight from '../../data/Weight';
-import { ChartComponent, DataSeries } from '../chart/chart.component';
+import { ChartComponent, DataSeries, EAxisType } from '../chart/chart.component';
 
 @Component({
   selector: 'app-garden-weight',
@@ -25,7 +25,7 @@ export class GardenWeightComponent implements OnDestroy {
   public date: Date;
   public firstDate: Date = new Date(2020, 0, 27);
   public showWeight: boolean = true;
-  public showHydration: boolean = false;
+  public showHydration: boolean = true;
   public showBodyFat: boolean = false;
   public showActiveMetabolicRate: boolean = false;
   public showBasalMetabolicRate: boolean = false;
@@ -102,15 +102,28 @@ export class GardenWeightComponent implements OnDestroy {
       dayEnd = new Date(this.date.getFullYear() + 1, 0, 1).getTime() / (24 * 60 * 60 * 1000);   // ms -> days
     }
 
+    
+    let PrimaryXAxis: boolean = true;
+    let PrimaryYAxis: boolean = true;
+    let SecondaryYAxis: boolean = true;
+
     // weight, muscle mass, bone mass (kg)
     let minKg: number = 80;
     let maxKg: number = 0;
     let dataSeriesKg: DataSeries [] = [];
-    let PrimaryXAxis: boolean = true;
-    let PrimaryYAxis: boolean = true;
 
     // hydration, body fat (%)
+    let minPct: number = 100;
+    let maxPct: number = 0;
+    let dataSeriesPct: DataSeries[] = [];
+
     // active metabolic rate, basal metabolic rate (kcal)
+    let minMeta: number = 1000;
+    let maxMeta: number = 0;
+    let dataSeriesMeta: DataSeries[] = [];
+
+    let activeAxis: EAxisType = EAxisType.primary;
+    let activeAxisCount: number = 0;
     if (this.showWeight) {
 
       // Make data series for weigh
@@ -132,11 +145,13 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.ymin = minKg;
       dataSeries.xmin = dayStart;
       dataSeries.xmax = dayEnd;
-      dataSeries.isPrimaryXAxis = PrimaryXAxis;
-      dataSeries.xType = "date";
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
       dataSeries.xTickFormat = this.displayType == "month" ? "dMMMyy" : "MMMyy";
-      dataSeries.isPrimaryYAxis = PrimaryYAxis;
-      dataSeries.yType = "number";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(kg)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "green";
       this.chart.addDataSeries(dataSeries);
       dataSeriesKg[dataSeriesKg.length] = dataSeries;
       PrimaryXAxis = false;
@@ -163,11 +178,13 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.ymin = minKg;
       dataSeries.xmin = dayStart;
       dataSeries.xmax = dayEnd;
-      dataSeries.isPrimaryXAxis = PrimaryXAxis;
-      dataSeries.xType = "date";
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
       dataSeries.xTickFormat = this.displayType == "month" ? "dMMMyy" : "MMMyy";
-      dataSeries.isPrimaryYAxis = PrimaryYAxis;
-      dataSeries.yType = "number";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(kg)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "blueviolet";
       this.chart.addDataSeries(dataSeries);
       dataSeriesKg[dataSeriesKg.length] = dataSeries;
       PrimaryXAxis = false;
@@ -195,20 +212,158 @@ export class GardenWeightComponent implements OnDestroy {
       dataSeries.ymin = minKg;
       dataSeries.xmin = dayStart;
       dataSeries.xmax = dayEnd;
-      dataSeries.isPrimaryXAxis = PrimaryXAxis;
-      dataSeries.xType = "date";
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
       dataSeries.xTickFormat = this.displayType == "month" ? "dMMMyy" : "MMMyy";
-      dataSeries.isPrimaryYAxis = PrimaryYAxis;
-      dataSeries.yType = "number";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(kg)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "cadetblue";
       this.chart.addDataSeries(dataSeries);
       dataSeriesKg[dataSeriesKg.length] = dataSeries;
       PrimaryXAxis = false;
       PrimaryYAxis = false;
     }
+    if (activeAxisCount > 0) {
+      activeAxis++;
+      activeAxisCount = 0;
+    }
+
     //showHydration
+    if (this.showHydration) {
+      // Find min/max
+      let series: any[] = [];
+      for (let d of data) {
+        // find min/max
+        if (d.hydrationPercentage < minPct) minPct = d.hydrationPercentage;
+        if (d.hydrationPercentage > maxPct) maxPct = d.hydrationPercentage;
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.hydrationPercentage };
+      }
+      // round down/up to nearest 10
+      minPct = Math.floor(minPct / 10) * 10;
+      maxPct = Math.ceil(maxPct / 10) * 10;
+
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = series;
+      dataSeries.ymax = maxPct;
+      dataSeries.ymin = minPct;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "month" ? "dMMMyy" : "MMMyy";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(%)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "aqua";
+      this.chart.addDataSeries(dataSeries);
+      dataSeriesPct[dataSeriesPct.length] = dataSeries;
+      PrimaryXAxis = false;
+      PrimaryYAxis = false;
+    }
+
+
     //showBodyFat
+    if (this.showBodyFat) {
+      // Find min/max
+      let series: any[] = [];
+      for (let d of data) {
+        // find min/max
+        if (d.bodyFatPercentage < minPct) minPct = d.bodyFatPercentage;
+        if (d.bodyFatPercentage > maxPct) maxPct = d.bodyFatPercentage;
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.bodyFatPercentage };
+      }
+      // round down/up to nearest 10
+      minPct = Math.floor(minPct / 10) * 10;
+      maxPct = Math.ceil(maxPct / 10) * 10;
+
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = series;
+      dataSeries.ymax = maxPct;
+      dataSeries.ymin = minPct;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "month" ? "dMMMyy" : "MMMyy";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(%)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "rosybrown";
+      this.chart.addDataSeries(dataSeries);
+      dataSeriesPct[dataSeriesPct.length] = dataSeries;
+      PrimaryXAxis = false;
+      PrimaryYAxis = false;
+    }
+    if (activeAxisCount > 0) {
+      activeAxis++;
+      activeAxisCount = 0;
+    }
+
     //showActiveMetabolicRate
+    if (this.showActiveMetabolicRate) {
+      // Find min/max
+      let series: any[] = [];
+      for (let d of data) {
+        // find min/max
+        if (d.activeMetabolicRate < minMeta) minMeta = d.activeMetabolicRate;
+        if (d.activeMetabolicRate > maxMeta) maxMeta = d.activeMetabolicRate;
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.activeMetabolicRate };
+      }
+      // round down/up to nearest 10
+      minMeta = Math.floor(minMeta / 10) * 10;
+      maxMeta = Math.ceil(maxMeta / 10) * 10;
+
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = series;
+      dataSeries.ymax = maxMeta;
+      dataSeries.ymin = minMeta;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "month" ? "dMMMyy" : "MMMyy";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(kcal)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "orange";
+      this.chart.addDataSeries(dataSeries);
+      dataSeriesMeta[dataSeriesMeta.length] = dataSeries;
+      PrimaryXAxis = false;
+      PrimaryYAxis = false;
+    }
     //showBasalMetabolicRate
+    if (this.showBasalMetabolicRate) {
+      // Find min/max
+      let series: any[] = [];
+      for (let d of data) {
+        // find min/max
+        if (d.basalMetabolicRate < minMeta) minMeta = d.basalMetabolicRate;
+        if (d.basalMetabolicRate > maxMeta) maxMeta = d.basalMetabolicRate;
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.basalMetabolicRate };
+      }
+      // round down/up to nearest 10
+      minMeta = Math.floor(minMeta / 10) * 10;
+      maxMeta = Math.ceil(maxMeta / 10) * 10;
+
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = series;
+      dataSeries.ymax = maxMeta;
+      dataSeries.ymin = minMeta;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "month" ? "dMMMyy" : "MMMyy";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(kcal)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "orangered";
+      this.chart.addDataSeries(dataSeries);
+      dataSeriesMeta[dataSeriesMeta.length] = dataSeries;
+      PrimaryXAxis = false;
+      PrimaryYAxis = false;
+    }
 
     // update grouped min/max
     let first: boolean = true;
@@ -225,6 +380,36 @@ export class GardenWeightComponent implements OnDestroy {
     for (let s of dataSeriesKg) {
       s.ymin = minKg;
       s.ymax = maxKg;
+    }
+
+    for (let s of dataSeriesPct) {
+      if (first) {
+        minPct = s.ymin;
+        maxPct = s.ymax;
+        first = false;
+      } else {
+        if (s.ymin < minPct) minPct = s.ymin;
+        if (s.ymax < maxPct) maxPct = s.ymax;
+      }
+    }
+    for (let s of dataSeriesPct) {
+      s.ymin = minPct;
+      s.ymax = maxPct;
+    }
+
+    for (let s of dataSeriesMeta) {
+      if (first) {
+        minMeta = s.ymin;
+        maxMeta = s.ymax;
+        first = false;
+      } else {
+        if (s.ymin < minMeta) minMeta = s.ymin;
+        if (s.ymax < maxMeta) maxMeta = s.ymax;
+      }
+    }
+    for (let s of dataSeriesMeta) {
+      s.ymin = minMeta;
+      s.ymax = maxMeta;
     }
 
     this.chart.draw();

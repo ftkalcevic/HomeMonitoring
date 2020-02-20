@@ -2,15 +2,15 @@
   <!--<div class="row" style="height:80px;"></div>-->
   <div class="row  top-row">
     <div class="col-sm-3"></div>
-    <div class="select-btn-group">
+    <div >
 
       <mat-button-toggle-group #group="matButtonToggleGroup" [value]="displayType">
 
         <mat-button-toggle value="month" (change)="displayTypeChanged($event.value)">
-          <label class="btn btn-secondary select-btn" style="font-size:25px;">Month</label>
+          <label style="font-size:25px;">Month</label>
         </mat-button-toggle>
         <mat-button-toggle value="year" (change)="displayTypeChanged($event.value)">
-          <label class="btn btn-secondary select-btn" style="font-size:25px;">Year</label>
+          <label style="font-size:25px;">Year</label>
         </mat-button-toggle>
 
       </mat-button-toggle-group>
@@ -32,26 +32,33 @@
     <app-chart #chart style="width:100%; height: 620px;" class="partial-height"></app-chart>
   </div>
   <div class="radio-btn-group">
-    <mat-button-toggle [checked]="showWeight" (change)="showWeight = $event.source.checked; RequestReadWeight();">
-      <label class="radio-btn radio-btn-secondary radio-select-btn" >Weight</label>
+    <mat-button-toggle style="height: 42px;" [checked]="showWeight" (change)="showWeight = $event.source.checked; RequestReadWeight();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Weight (kg)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:green;" />
     </mat-button-toggle>
-    <mat-button-toggle [checked]="showHydration" (change)="showHydration = $event.source.checked; RequestReadWeight();">
-      <label class="radio-btn radio-btn-secondary radio-select-btn">Hydration</label>
+    <mat-button-toggle style="height: 42px;" [checked]="showMuscleMass" (change)="showMuscleMass = $event.source.checked; RequestReadWeight();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Muscle Mass (kg)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:blueviolet;" />
     </mat-button-toggle>
-    <mat-button-toggle [checked]="showBodyFat" (change)="showBodyFat = $event.source.checked; RequestReadWeight();">
-      <label class="radio-btn radio-btn-secondary radio-select-btn">Body Fat</label>
+    <mat-button-toggle style="height: 42px;" [checked]="showBoneMass" (change)="showBoneMass = $event.source.checked; RequestReadWeight();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Bone Mass (kg)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:cadetblue;" />
     </mat-button-toggle>
-    <mat-button-toggle [checked]="showActiveMetabolicRate" (change)="showActiveMetabolicRate = $event.source.checked; RequestReadWeight();">
-      <label class="radio-btn radio-btn-secondary radio-select-btn">Active Metabolic Rate</label>
+    <mat-button-toggle style="height: 42px;" [checked]="showHydration" (change)="showHydration = $event.source.checked; RequestReadWeight();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Hydration (%)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:aqua;" />
     </mat-button-toggle>
-    <mat-button-toggle [checked]="showBasalMetabolicRate" (change)="showBasalMetabolicRate = $event.source.checked; RequestReadWeight();">
-      <label class="radio-btn radio-btn-secondary radio-select-btn">Basal Metabolic Rate</label>
+    <mat-button-toggle style="height: 42px;" [checked]="showBodyFat" (change)="showBodyFat = $event.source.checked; RequestReadWeight();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Body Fat (%)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:rosybrown;" />
     </mat-button-toggle>
-    <mat-button-toggle [checked]="showMuscleMass" (change)="showMuscleMass = $event.source.checked; RequestReadWeight();">
-      <label class="radio-btn radio-btn-secondary radio-select-btn" >Muscle Mass</label>
+    <mat-button-toggle style="height: 42px;" [checked]="showActiveMetabolicRate" (change)="showActiveMetabolicRate = $event.source.checked; RequestReadWeight();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Active Metabolic Rate (kcal)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:orange;" />
     </mat-button-toggle>
-    <mat-button-toggle [checked]="showBoneMass" (change)="showBoneMass = $event.source.checked; RequestReadWeight();">
-      <label class="radio-btn radio-btn-secondary radio-select-btn">Bone Mass</label>
+    <mat-button-toggle style="height: 42px;" [checked]="showBasalMetabolicRate" (change)="showBasalMetabolicRate = $event.source.checked; RequestReadWeight();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Basal Metabolic Rate (kcal)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:orangered;" />
     </mat-button-toggle>
   </div>
 </div>

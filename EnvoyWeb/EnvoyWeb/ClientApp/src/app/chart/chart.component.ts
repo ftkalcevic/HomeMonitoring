@@ -23,18 +23,29 @@ export class DataSet {
   // 
 };
 
+export enum EAxisType {
+  none = 0,
+  primary=1,
+  secondary,
+  secondary2,
+  primary2
+};
+
 export class DataSeries {
   public series: any[];
   public xmin: number;
   public xmax: number;
   public ymin: number;
   public ymax: number;
-  public isPrimaryXAxis: boolean;
-  public isPrimaryYAxis: boolean;
-  public xType: string;
-  public yType: string;
+  public xAxisType: EAxisType;
+  public yAxisType: EAxisType;
+  public xDataType: string;
+  public yDataType: string;
   public xTickFormat: string;
   public yTickFormat: string;
+  public xUnits: string;
+  public yUnits: string;
+  public strokeStyle: string;
 
   public constructor() {
     this.series = null;
@@ -42,93 +53,129 @@ export class DataSeries {
     this.xmax = null;
     this.ymin = null;
     this.ymax = null;
-    this.isPrimaryXAxis = false;
-    this.isPrimaryYAxis = false;
-    this.xType = "number";
-    this.yType = "number";
+    this.xAxisType = EAxisType.none;
+    this.yAxisType = EAxisType.none;
+    this.xDataType = "number";
+    this.yDataType = "number";
     this.xTickFormat = null;
     this.yTickFormat = null;
+    this.xUnits = null;
+    this.yUnits = null;
+    this.strokeStyle = "black";
   }
 };
 
-//class Axis {
-//  public min: number;
-//  public max: number;
-//  public scale: number;
-//  public offset: number;
-//  public size: number;
-//  public tickSpacing: number;
-//  public isPrimaryAxis: boolean;
-//  public Type: string;
-//  public tickFormat: string;
-//};
+class Axis {
+  public min: number;
+  public max: number;
+  public scale: number;
+  public offset1: number;
+  public offset2: number;
+  public size: number;
+  public tickSpacing: number;
+  public axisType: EAxisType;
+  public dataType: string;
+  public tickFormat: string;
+  public units: string;
+
+  public CalcTickSpacing(): number {
+
+    if (this.dataType == "date") {  // date is "days"
+      // date type, either day, week, month, year
+      if (this.max - this.min > 40)             // year
+        return (this.max - this.min) / 5.99;
+      else if (this.max - this.min > 20)        // month
+        return 7;
+      else if (this.max - this.min > 6)         // week
+        return 1;
+      else                                      // day
+        return 1.0/6.0;
+    }
+    else {
+      const divisors: number[] = [1, 2, 2.5, 3, 5];
+      let power: number = Math.floor(Math.log10(this.max - this.min));
+
+      let leastWorst: number = null;
+      for (let p = -1; p < 2; p++) {
+        for (let n of divisors) {
+          let ticks: number = (this.max - this.min) / (n * Math.pow(10, power + p));
+          if (ticks < 10)
+            if (ticks == Math.floor(ticks))
+              return (this.max - this.min) / ticks;
+            else if (leastWorst == null)
+              leastWorst = (this.max - this.min) / ticks;
+        }
+      }
+      return leastWorst != null ? leastWorst : (this.max / this.min) / 5;
+    }
+  }
+
+  public TickLabel(n: number): string {
+    switch (this.dataType) {
+      case "number": return n.toString();
+      case "date":
+        let dt: Date = new Date(n * (24 * 60 * 60 * 1000));
+        return new DatePipe(getUsersLocale("en-US")).transform(dt, this.tickFormat);
+    }
+  }
+};
 
 class DataSeriesInternal {
   public userSeries: DataSeries;
-  public xmin: number;
-  public xmax: number;
-  public ymin: number;
-  public ymax: number;
-  public scaleX: number;
-  public scaleY: number;
-  public offsetX: number;
-  public offsetY: number;
-  public height: number;
-  public width: number;
-  public yTickSpacing: number;
-  public xTickSpacing: number;
+  public xAxis: Axis;
+  public yAxis: Axis;
 
   public constructor(s: DataSeries) {
     this.userSeries = s;
+    this.xAxis = new Axis;
+    this.yAxis = new Axis;
+  }
+
+  public Init() {
+    this.xAxis.dataType = this.userSeries.xDataType;
+    this.yAxis.dataType = this.userSeries.yDataType;
+    this.xAxis.tickFormat = this.userSeries.xTickFormat;
+    this.yAxis.tickFormat = this.userSeries.yTickFormat;
+    this.xAxis.axisType = this.userSeries.xAxisType;
+    this.yAxis.axisType = this.userSeries.yAxisType;
+    this.xAxis.units = this.userSeries.xUnits;
+    this.yAxis.units = this.userSeries.yUnits;
   }
 
   public calcMinMax() {
-    this.xmin = this.userSeries.xmin;
-    this.xmax = this.userSeries.xmax;
-    this.ymin = this.userSeries.ymin;
-    this.ymax = this.userSeries.ymax;
-    if (this.userSeries.series.length > 0 && (this.xmin == null || this.xmax == null || this.ymin == null || this.ymax == null)) {
+    this.xAxis.min = this.userSeries.xmin;
+    this.xAxis.max = this.userSeries.xmax;
+    this.yAxis.min = this.userSeries.ymin;
+    this.yAxis.max = this.userSeries.ymax;
+
+    if (this.userSeries.series.length > 0 && (this.xAxis.min == null || this.xAxis.max == null || this.yAxis.min == null || this.yAxis.max == null)) {
       let ymin: number = this.userSeries.series[0].y;
       let ymax: number = this.userSeries.series[0].y;
       for (let s of this.userSeries.series) {
         if (s.y < ymin) ymin = s.y;
         if (s.y > ymax) ymax = s.y;
       }
-      if (this.ymin == null) this.ymin = ymin;
-      if (this.ymax == null) this.ymax = ymax;
-      if (this.xmin == null) this.xmin = this.userSeries.series[0].x;
-      if (this.xmax == null) this.xmax = this.userSeries.series[this.userSeries.series.length-1].x;
+      if (this.yAxis.min == null) this.yAxis.min = ymin;
+      if (this.yAxis.max == null) this.yAxis.max = ymax;
+      if (this.xAxis.min == null) this.xAxis.min = this.userSeries.series[0].x;
+      if (this.xAxis.max == null) this.xAxis.max = this.userSeries.series[this.userSeries.series.length-1].x;
     }
   }
-  public calcScale(width: number, height: number, xoffset: number, yoffset: number) {
-    this.offsetX = xoffset;
-    this.offsetY = yoffset;
-    this.height = height;
-    this.width = width;
-    this.scaleX = ((width - this.offsetX*2) / (this.xmax - this.xmin));   // currently we use twice the offset - need left/right offsets, or offset + plot width
-    this.scaleY = ((height - this.offsetY*2) / (this.ymax - this.ymin));
+  public calcScale(width: number, height: number, xoffset1: number, xoffset2: number, yoffset1: number, yoffset2: number) {
+    this.xAxis.offset1 = xoffset1;
+    this.xAxis.offset2 = xoffset2;
+    this.yAxis.offset1 = yoffset1;
+    this.yAxis.offset2 = yoffset2;
+    this.yAxis.size = height;
+    this.xAxis.size = width;
+    this.xAxis.scale = (((width-this.xAxis.offset2) - this.xAxis.offset1) / (this.xAxis.max - this.xAxis.min));
+    this.yAxis.scale = (((height-this.yAxis.offset2) - this.yAxis.offset1) / (this.yAxis.max - this.yAxis.min));
   }
 
   public makePoint(x: number, y: number): number [] {
-    return [ this.offsetX + (x - this.xmin) * this.scaleX, this.height - this.offsetY - (y-this.ymin)*this.scaleY];
+    return [ this.xAxis.offset1 + (x - this.xAxis.min) * this.xAxis.scale, this.yAxis.size - this.yAxis.offset1 - (y-this.yAxis.min)*this.yAxis.scale];
   }
   
-  private tickLabel(t: string, n: number, format?: string): string {
-    switch (t) {
-      case "number": return n.toString();
-      case "date":
-        let dt: Date = new Date(n * (24 * 60 * 60 * 1000));
-        return new DatePipe(getUsersLocale("en-US")).transform(dt, format);
-    }
-  }
-
-  public yTickLabel(n: number, format?: string): string {
-    return this.tickLabel(this.userSeries.yType, n, this.userSeries.yTickFormat);
-  }
-
-  public xTickLabel(n: number, format?: string): string {
-    return this.tickLabel(this.userSeries.xType, n, this.userSeries.xTickFormat);
-  }
 };
 
 // Chart - type + grouping of series (share same axis)
@@ -189,7 +236,8 @@ export class ChartComponent implements OnDestroy {
   }
   
   public addDataSeries(s: DataSeries) {
-    this.series[this.series.length] = new DataSeriesInternal(s);
+    let newSeries: DataSeriesInternal = this.series[this.series.length] = new DataSeriesInternal(s);
+    newSeries.Init();
   }
 
   public clearDataSeries() {
@@ -212,8 +260,10 @@ export class ChartComponent implements OnDestroy {
       return;
     }
 
-    let offsetX: number = 0;
-    let offsetY: number = 0;
+    let offsetX1: number = 0;   // left
+    let offsetX2: number = 0;   // right
+    let offsetY1: number = 0;   // bottom
+    let offsetY2: number = 0;   // top
 
     // Compute...
     // for each series, calculate min/max
@@ -227,52 +277,118 @@ export class ChartComponent implements OnDestroy {
     ctx.fillStyle = "black";
     ctx.textBaseline = "middle";
     for (let s of this.series)
-      if (s.userSeries.isPrimaryYAxis) {
-        // Primary axis are the first ones we come across
+      if (s.yAxis.axisType == EAxisType.primary) {
+        // We only use the first series we find.
         // the number of major ticks will be dependent on the height of the chart, font height, after removing space for y-axis and legend
-        s.yTickSpacing = this.CalcTickSpacing(s.ymin, s.ymax);
+        s.yAxis.tickSpacing = s.yAxis.CalcTickSpacing();
 
         // Find widest text
         let textWidth: number = 0;
         let textHeight: number = 0;
-        for (let i: number = s.ymin; i <= s.ymax; i += s.yTickSpacing) {
-          let metrics: TextMetrics = ctx.measureText(s.yTickLabel(i));
+        for (let i: number = s.yAxis.min; i <= s.yAxis.max; i += s.yAxis.tickSpacing) {
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.TickLabel(i));
+          if (metrics.width > textWidth)
+            textWidth = metrics.width;
+          if (metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent > textHeight)
+            textHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+        }
+        if (s.yAxis.units != null) {
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.units);
           if (metrics.width > textWidth)
             textWidth = metrics.width;
           if (metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent > textHeight)
             textHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
         }
 
-        offsetX = Math.max(offsetX, textWidth + majorTickWidth + majorTickGap);
-        offsetY = Math.max(offsetY, textHeight );
+        offsetX1 = Math.max(offsetX1, textWidth + majorTickWidth + majorTickGap);
+        offsetY1 = Math.max(offsetY1, textHeight / 2 + 1);
+        offsetY2 = Math.max(offsetY1, textHeight / 2 + 1);
+        if (s.yAxis.units != null)
+          offsetY2 = Math.max(offsetY2, textHeight + textHeight / 2 + 1);
         break;
       }
     // space for x axis 1, x axis 2, x secondary axis 1, x secondary axis 2 (and labels)
     for (let s of this.series)
-      if (s.userSeries.isPrimaryXAxis) {
-        // Primary axis are the first ones we come across
+      if (s.xAxis.axisType == EAxisType.primary) {
+        // We only use the first series we find.
         // the number of major ticks will be dependent on the height of the chart, font height, after removing space for y-axis and legend
-        s.xTickSpacing = this.CalcTickSpacing(s.xmin, s.xmax);
+        s.xAxis.tickSpacing = s.xAxis.CalcTickSpacing();
 
         // Find widest text
         let textWidth: number = 0;
         let textHeight: number = 0;
-        for (let i: number = s.xmin; i <= s.xmax; i += s.xTickSpacing) {
-          let metrics: TextMetrics = ctx.measureText(s.xTickLabel(i));
+        for (let i: number = s.xAxis.min; i <= s.xAxis.max; i += s.xAxis.tickSpacing) {
+          let metrics: TextMetrics = ctx.measureText(s.xAxis.TickLabel(i));
           if (metrics.width > textWidth)
             textWidth = metrics.width;
           if (metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent > textHeight)
             textHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
         }
 
-        offsetX = Math.max(offsetX, textWidth/2);
-        offsetY = Math.max(offsetY, textHeight + majorTickWidth + 2*majorTickGap);
+        offsetX1 = Math.max(offsetX1, textWidth / 2);
+        offsetX2 = Math.max(offsetX2, textWidth / 2);
+        offsetY1 = Math.max(offsetY1, textHeight + majorTickWidth + 2*majorTickGap);
+        break;
+      }
+
+    for (let s of this.series)
+      if (s.yAxis.axisType == EAxisType.secondary) {
+        // We only use the first series we find.
+        // the number of major ticks will be dependent on the height of the chart, font height, after removing space for y-axis and legend
+        s.yAxis.tickSpacing = s.yAxis.CalcTickSpacing();
+
+        // Find widest text
+        let textWidth: number = 0;
+        let textHeight: number = 0;
+        for (let i: number = s.yAxis.min; i <= s.yAxis.max; i += s.yAxis.tickSpacing) {
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.TickLabel(i));
+          if (metrics.width > textWidth)
+            textWidth = metrics.width;
+          if (metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent > textHeight)
+            textHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+        }
+        if (s.yAxis.units != null) {
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.units);
+          if (metrics.width > textWidth)
+            textWidth = metrics.width;
+          if (metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent > textHeight)
+            textHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+        }
+
+        offsetX2 = Math.max(offsetX2, textWidth + majorTickWidth + majorTickGap);
+        offsetY1 = Math.max(offsetY1, textHeight / 2 + 1);
+        offsetY2 = Math.max(offsetY1, textHeight / 2 + 1);
+        if (s.yAxis.units != null)
+          offsetY2 = Math.max(offsetY2, textHeight + textHeight / 2 + 1);
+        break;
+      }
+
+    for (let s of this.series)
+      if (s.yAxis.axisType == EAxisType.primary2) {
+        s.yAxis.tickSpacing = s.yAxis.CalcTickSpacing();
+
+        if (s.yAxis.units != null) {
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.units);
+          let textHeight: number = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+          offsetY2 = Math.max(offsetY2, textHeight + textHeight / 2 + 1);
+        }
+        break;
+      }
+    for (let s of this.series)
+      if (s.yAxis.axisType == EAxisType.secondary2) {
+        // secondary 2 is inside the chart area so we don't need to calculate offsets.
+        s.yAxis.tickSpacing = s.yAxis.CalcTickSpacing();
+        if (s.yAxis.units != null) {
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.units);
+          let textHeight: number = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+          offsetY2 = Math.max(offsetY2, textHeight + textHeight / 2 + 1);
+        }
         break;
       }
 
     // for each series, calculate min/max, scale, offset, etc
     for (let s of this.series) {
-      s.calcScale(width,height,offsetX,offsetY);
+      s.calcScale(width, height, offsetX1, offsetX2, offsetY1, offsetY2);
     }
 
     // draw background
@@ -287,7 +403,7 @@ export class ChartComponent implements OnDestroy {
     let first: boolean;
     for (let s of this.series) {
       ctx.lineWidth = 2;
-      ctx.strokeStyle = "black";
+      ctx.strokeStyle = s.userSeries.strokeStyle;
       ctx.beginPath();
       first = true;
       for (let d of s.userSeries.series) {
@@ -302,50 +418,150 @@ export class ChartComponent implements OnDestroy {
       ctx.stroke();
     }
 
-    // Draw axis Y1
+    // Draw axis Y primary
     let pts: any;
     ctx.textBaseline = "middle";
+    ctx.strokeStyle = "black";
     for (let s of this.series)
-      if (s.userSeries.isPrimaryYAxis) {
+      if (s.yAxis.axisType == EAxisType.primary) {
 
         ctx.beginPath();
-        pts = s.makePoint(s.xmin, s.ymin);
+        pts = s.makePoint(s.xAxis.min, s.yAxis.min);
         ctx.moveTo(pts[0], pts[1]);
-        pts = s.makePoint(s.xmin, s.ymax);
+        pts = s.makePoint(s.xAxis.min, s.yAxis.max);
         ctx.lineTo(pts[0], pts[1]);
         ctx.stroke();
 
-        for (let y: number = s.ymin; y <= s.ymax; y += s.yTickSpacing) {
-          let pts: any = s.makePoint(0, y);
+        for (let y: number = s.yAxis.min; y <= s.yAxis.max; y += s.yAxis.tickSpacing) {
+          let pts: any = s.makePoint(s.xAxis.min, y);
           ctx.beginPath();
-          ctx.moveTo(s.offsetX - majorTickWidth, pts[1]);
-          ctx.lineTo(s.offsetX, pts[1]);
+          ctx.moveTo(pts[0] - majorTickWidth, pts[1]);
+          ctx.lineTo(pts[0], pts[1]);
           ctx.stroke();
-          let metrics: TextMetrics = ctx.measureText(s.yTickLabel(y));
-          ctx.fillText(y.toString(), s.offsetX - majorTickWidth - majorTickGap - metrics.width, pts[1]);
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.TickLabel(y));
+          ctx.fillText(y.toString(), pts[0] - majorTickWidth - majorTickGap - metrics.width, pts[1]);
+        }
+        if (s.yAxis.units) {
+          let pts: any = s.makePoint(s.xAxis.min, s.yAxis.max);
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.units);
+          let textHeight: number = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+          ctx.textBaseline = "bottom";
+          ctx.fillText(s.yAxis.units, pts[0] - majorTickWidth - majorTickGap - metrics.width, pts[1] - textHeight/2);
         }
         break;
       }
+    // Draw axis Y secondary
+    ctx.textBaseline = "middle";
+    for (let s of this.series)
+      if (s.yAxis.axisType == EAxisType.secondary) {
+
+        ctx.beginPath();
+        pts = s.makePoint(s.xAxis.max, s.yAxis.min);
+        ctx.moveTo(pts[0], pts[1]);
+        pts = s.makePoint(s.xAxis.max, s.yAxis.max);
+        ctx.lineTo(pts[0], pts[1]);
+        ctx.stroke();
+
+        for (let y: number = s.yAxis.min; y <= s.yAxis.max; y += s.yAxis.tickSpacing) {
+          let pts: any = s.makePoint(s.xAxis.max, y);
+          ctx.beginPath();
+          ctx.moveTo(pts[0] + majorTickWidth, pts[1]);
+          ctx.lineTo(pts[0], pts[1]);
+          ctx.stroke();
+          ctx.fillText(y.toString(), pts[0] + majorTickWidth + majorTickGap, pts[1]);
+        }
+        if (s.yAxis.units) {
+          let pts: any = s.makePoint(s.xAxis.max, s.yAxis.max);
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.units);
+          let textHeight: number = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+          ctx.textBaseline = "bottom";
+          ctx.fillText(s.yAxis.units, pts[0] + majorTickWidth + majorTickGap, pts[1] - textHeight / 2);
+        }
+
+        break;
+      }
+
+    // Draw axis Y primary2
+    ctx.textBaseline = "middle";
+    for (let s of this.series)
+      if (s.yAxis.axisType == EAxisType.primary2) {
+
+        ctx.beginPath();
+        pts = s.makePoint(s.xAxis.min, s.yAxis.min);
+        ctx.moveTo(pts[0], pts[1]);
+        pts = s.makePoint(s.xAxis.min, s.yAxis.max);
+        ctx.lineTo(pts[0], pts[1]);
+        ctx.stroke();
+
+        for (let y: number = s.yAxis.min; y <= s.yAxis.max; y += s.yAxis.tickSpacing) {
+          let pts: any = s.makePoint(s.xAxis.min, y);
+          ctx.beginPath();
+          ctx.moveTo(pts[0] + majorTickWidth, pts[1]);
+          ctx.lineTo(pts[0], pts[1]);
+          ctx.stroke();
+          ctx.fillText(y.toString(), pts[0] + majorTickWidth + majorTickGap, pts[1]);
+        }
+
+        if (s.yAxis.units) {
+          let pts: any = s.makePoint(s.xAxis.min, s.yAxis.max);
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.units);
+          let textHeight: number = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+          ctx.textBaseline = "bottom";
+          ctx.fillText(s.yAxis.units, pts[0] + majorTickWidth + majorTickGap, pts[1] - textHeight / 2);
+        }
+        break;
+      }
+    // Draw axis Y secondary2
+    ctx.textBaseline = "middle";
+    for (let s of this.series)
+      if (s.yAxis.axisType == EAxisType.secondary2) {
+
+        ctx.beginPath();
+        pts = s.makePoint(s.xAxis.max, s.yAxis.min);
+        ctx.moveTo(pts[0], pts[1]);
+        pts = s.makePoint(s.xAxis.max, s.yAxis.max);
+        ctx.lineTo(pts[0], pts[1]);
+        ctx.stroke();
+
+        for (let y: number = s.yAxis.min; y <= s.yAxis.max; y += s.yAxis.tickSpacing) {
+          let pts: any = s.makePoint(s.xAxis.max, y);
+          ctx.beginPath();
+          ctx.moveTo(pts[0] - majorTickWidth, pts[1]);
+          ctx.lineTo(pts[0], pts[1]);
+          ctx.stroke();
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.TickLabel(y));
+          ctx.fillText(y.toString(), pts[0] - majorTickWidth - majorTickGap - metrics.width, pts[1]);
+        }
+        if (s.yAxis.units) {
+          let pts: any = s.makePoint(s.xAxis.max, s.yAxis.max);
+          let metrics: TextMetrics = ctx.measureText(s.yAxis.units);
+          let textHeight: number = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+          ctx.textBaseline = "bottom";
+          ctx.fillText(s.yAxis.units, pts[0] - majorTickWidth - majorTickGap - metrics.width, pts[1] - textHeight / 2);
+        }
+        break;
+      }
+
     // Draw axis X1
     ctx.textBaseline = "top";
     ctx.textAlign = "center";
     for (let s of this.series)
-      if (s.userSeries.isPrimaryXAxis) {
+      if (s.xAxis.axisType == EAxisType.primary) {
 
         ctx.beginPath();
-        pts = s.makePoint(s.xmin, s.ymin);
+        pts = s.makePoint(s.xAxis.min, s.yAxis.min);
         ctx.moveTo(pts[0], pts[1]);
-        pts = s.makePoint(s.xmax, s.ymin);
+        pts = s.makePoint(s.xAxis.max, s.yAxis.min);
         ctx.lineTo(pts[0], pts[1]);
         ctx.stroke();
 
-        for (let x: number = s.xmin; x <= s.xmax; x += s.xTickSpacing) {
+        for (let x: number = s.xAxis.min; x <= s.xAxis.max; x += s.xAxis.tickSpacing) {
           ctx.beginPath();
-          let pts: any = s.makePoint(x, s.ymin);
+          let pts: any = s.makePoint(x, s.yAxis.min);
           ctx.moveTo(pts[0], pts[1]);
           ctx.lineTo(pts[0], pts[1] + majorTickWidth);
           ctx.stroke();
-          let text: string = s.xTickLabel(x);
+          let text: string = s.xAxis.TickLabel(x);
           let metrics: TextMetrics = ctx.measureText(text);
           ctx.fillText(text, pts[0], pts[1] + majorTickWidth + majorTickGap);
         }
@@ -356,21 +572,4 @@ export class ChartComponent implements OnDestroy {
 
   }
 
-  private CalcTickSpacing(min: number, max: number): number {
-    const divisors: number[] = [1, 2, 2.5, 3, 5 ];
-    let power: number = Math.floor(Math.log10(max - min));
-
-    let leastWorst: number = null;
-    for (let p = -1; p < 2; p++) {
-      for (let n of divisors) {
-        let ticks: number = (max - min) / (n * Math.pow(10, power + p));
-        if (ticks < 10)
-          if (ticks == Math.floor(ticks))
-            return (max - min) / ticks;
-          else if (leastWorst == null)
-            leastWorst = (max - min) / ticks;
-      }
-    }
-    return leastWorst != null ? leastWorst : (max / min) / 5;
-  }
 }

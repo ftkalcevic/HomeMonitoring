@@ -7,6 +7,7 @@ import { MY_FORMATS } from '../solar-history/solar-history.component';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import * as HomeSensorNet from '../../data/home-sensor-net';
+import { ChartComponent, DataSeries, EAxisType, EChartType } from '../chart/chart.component';
 
 @Component({
   selector: 'app-garden-tanks',
@@ -17,7 +18,7 @@ import * as HomeSensorNet from '../../data/home-sensor-net';
   ]
 })
 export class GardenTanksComponent implements OnDestroy {
-  @ViewChild('tankWatererCanvas') canvasRef: ElementRef;
+  @ViewChild('chart') chart: ChartComponent;
 
   subs: any[] = [];
   public tanks: HomeSensorNet.Tank[];
@@ -25,7 +26,10 @@ export class GardenTanksComponent implements OnDestroy {
   public selectedTank: string;
   public date: Date;
   public firstDate: Date = new Date(2020, 1, 13);
-
+  public showFlow: boolean = true;
+  public showVolume: boolean = true;
+  public showMoisture: boolean = true;
+  public showTemperature: boolean = true;
 
   constructor(private liveDataService: LiveDataService, private route: ActivatedRoute) {
     this.tanks = liveDataService.tanks;
@@ -39,11 +43,6 @@ export class GardenTanksComponent implements OnDestroy {
   ngOnDestroy() {
     for (let s of this.subs)
       s.unsubscribe();
-  }
-
-  ngAfterViewInit() {
-    this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
-    this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
   }
 
   RequestReadTankWaterer() {
@@ -87,189 +86,158 @@ export class GardenTanksComponent implements OnDestroy {
 
   draw(data: HomeSensorNet.ITankWaterer[]) {
 
-    let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
-    ctx.save();
-
-    let width: number = this.canvasRef.nativeElement.width;
-    let height: number = this.canvasRef.nativeElement.height;
-
-    ctx.fillStyle = "rgb(240,240,240)";
-    ctx.fillRect(0, 0, width, height);
-
-    if (data.length == 0) {
-      ctx.restore();
-      return;
-    }
-
-    let minMoisture: number, maxMoisture: number;
-    let minVolume: number, maxVolume: number;
-    let minTemperature: number, maxTemperature: number;
-    let minLitres: number, maxLitres: number;
-    let flowData: any[] = [];
-
-    minMoisture = Math.min(data[0].moisture1, data[0].moisture2);
-    maxMoisture = Math.max(data[0].moisture1, data[0].moisture2);
-    minVolume = 0; maxVolume = 100;
-    minTemperature = 0; maxTemperature = 50;
-    minLitres = 0; maxLitres = 500;
-
-    // Collect data.
-    // Bar charts for water dispensed each day, manual + overflow, date
-    // Raw data for moisture 1, moisture 2, tank volume, temperature, timestamp - this is just what the query gives us.
-    let lastDay: number = data[0].timestamp.getDate();
-    let flow: number = data[0].tankFlow;
-    let overflow: number = data[0].tankOverflow;
-    let lastFlow: number = flow;
-    let lastOverflow = overflow;
-    for (let d of data) {
-      // find min/max
-      if (d.moisture1 < minMoisture) minMoisture = d.moisture1;
-      if (d.moisture2 < minMoisture) minMoisture = d.moisture2;
-      if (d.moisture1 > maxMoisture) maxMoisture = d.moisture1;
-      if (d.moisture2 > maxMoisture) maxMoisture = d.moisture2;
-      if (d.tankVolume < minVolume) minVolume = d.tankVolume;
-      if (d.tankVolume > maxVolume) maxVolume = d.tankVolume;
-      if (d.temperature < minTemperature) minTemperature = d.temperature;
-      if (d.temperature > maxTemperature) maxTemperature = d.temperature;
-
-      // Sum the flow for the day. (endtime.flow - starttime.flow)
-      if (lastDay != d.timestamp.getDate()) {
-        let dayFlow: number = lastFlow - flow;
-        let dayOverflow: number = lastOverflow - overflow;
-        flowData[lastDay] = { flow: dayFlow, overflow: dayOverflow };
-        lastDay = d.timestamp.getDate();
-        flow = d.tankFlow;
-        overflow = d.tankOverflow;
-        if ((dayFlow + dayOverflow) > maxLitres) maxLitres = (dayFlow + dayOverflow);
-      }
-      lastFlow = d.tankFlow;
-      lastOverflow = d.tankOverflow;
-    }
-    let dayFlow: number = lastFlow - flow;
-    let dayOverflow: number = lastOverflow - overflow;
-    flowData[lastDay] = { flow: dayFlow, overflow: dayOverflow };
-    if ((dayFlow + dayOverflow) > maxLitres) maxLitres = (dayFlow + dayOverflow);
-    
-
     // Get start/end dates
-    let dateStart: Date;
-    let dateEnd: Date;
-    let days: number;
+    let dayStart: number;
+    let dayEnd: number;
     if (this.displayType == "week") {
 
       // Sunday will be the start of the week
       let offset: number = this.date.getDay();
-      dateStart = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate() - offset);
-      dateEnd = new Date(dateStart.getFullYear(), dateStart.getMonth(), dateStart.getDate() + 7);
-      days = 7;
+      dayStart = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate() - offset).getTime()/(24*60*60*1000);
+      dayEnd = dayStart + 7;
     }
     else {
-      dateStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
-      dateEnd = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 1);
-      days = new Date(dateEnd.getFullYear(), dateEnd.getMonth(), 0).getDate();
+      dayStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1).getTime() / (24 * 60 * 60 * 1000);
+      dayEnd = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 1).getTime() / (24 * 60 * 60 * 1000);
     }
 
-    // Draw Chart
-    let scaleX: number = 0.9 * (width / (days));
-    let scaleFlowY: number = 0.9 * (height / (maxLitres));
-    let scaleMoistureY: number = 0.9 * (height / (maxMoisture));
-    let scaleVolumeY: number = 0.9 * (height / (maxVolume));
-    let scaleTemperatureY: number = 0.9 * (height / (maxTemperature));
-    let offsetX: number = width * 0.1 / 2;
-    let offsetY: number = height * 0.1 / 2;
+    this.chart.clearDataSeries();
 
+    let activeAxis: EAxisType = EAxisType.primary;
+    let activeAxisCount: number = 0;
+    if (this.showFlow) {
 
-    // Flow bar charts
-    const flowColour: string = "CornflowerBlue";
-    const overflowColour: string = "CadetBlue";
-    const columnWidth: number = width * 0.9 / days;
-    for (let i in flowData) {
-      let day: number = Number(i) - dateStart.getDate();
-      let f: any = flowData[Number(i)];
-      if (f.flow > 0) {
-        ctx.fillStyle = flowColour;
-        ctx.fillRect(offsetX + day * columnWidth, -offsetY + height - f.flow * scaleFlowY, columnWidth, f.flow*scaleFlowY);
+      // Collect data.
+      // Bar charts for water dispensed each day, manual + overflow, date
+      // Raw data for moisture 1, moisture 2, tank volume, temperature, timestamp - this is just what the query gives us.
+      let flowData: any[] = [];
+      let lastDay: number = data[0].timestamp.getDate();
+      let lastDate: Date = data[0].timestamp;
+      let flow: number = data[0].tankFlow;
+      let overflow: number = data[0].tankOverflow;
+      let lastFlow: number = flow;
+      let lastOverflow = overflow;
+      for (let d of data) {
+
+        // Sum the flow for the day. (endtime.flow - starttime.flow)
+        if (lastDay != d.timestamp.getDate()) {
+          let dayFlow: number = lastFlow - flow;
+          let dayOverflow: number = lastOverflow - overflow;
+          flowData[lastDay] = { x: lastDate.getTime()/(24*60*60*1000), y: [dayFlow, dayOverflow] };
+          lastDay = d.timestamp.getDate();
+          lastDate = d.timestamp;
+          flow = d.tankFlow;
+          overflow = d.tankOverflow;
+        }
+        lastFlow = d.tankFlow;
+        lastOverflow = d.tankOverflow;
       }
-      if (f.overflow > 0) {
-        ctx.fillStyle = overflowColour;
-        ctx.fillRect(offsetX + day * columnWidth, -offsetY + height - (f.overflow + f.flow) * scaleFlowY, columnWidth, f.overflow * scaleFlowY);
-      }
+      let dayFlow: number = lastFlow - flow;
+      let dayOverflow: number = lastOverflow - overflow;
+      flowData[lastDay] = { x: lastDate.getTime() / (24 * 60 * 60 * 1000), y: [dayFlow, dayOverflow] };
+
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = flowData;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.ymin = 0;
+      dataSeries.ymax = 500;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "week" ? "E d MMM" : "dMMMyy";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(l)";
+      dataSeries.yDataType = "number";
+      dataSeries.chartType = EChartType.stackedColumn;
+      dataSeries.fillStyle = [ "CornflowerBlue", "CadetBlue"];
+      dataSeries.strokeStyle = "green";
+      this.chart.addDataSeries(dataSeries);
     }
 
-    // moisture1
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "green";
-    ctx.beginPath();
-    let first: boolean = true;
-    for (let d of data) {
-      let dt: number = (d.timestamp.getTime() - dateStart.getTime()) / (24 * 60 * 60 * 1000); // floating point days since startDate
-      let ptX: number = offsetX + dt * scaleX;
-      let ptY: number = height - offsetY - d.moisture1 * scaleMoistureY;
-      if (first) {
-        ctx.moveTo(ptX, ptY);
-        first = false;
+    if (this.showVolume) {
+
+      // Make data series for weigh
+      let series: any[] = [];
+      for (let d of data) {
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.tankVolume };
       }
-      else
-        ctx.lineTo(ptX,ptY);
-    }
-    ctx.stroke();
 
-    // moisture2
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "YellowGreen";
-    ctx.beginPath();
-    first = true;
-    for (let d of data) {
-      let dt: number = (d.timestamp.getTime() - dateStart.getTime()) / (24 * 60 * 60 * 1000); // floating point days since startDate
-      let ptX: number = offsetX + dt * scaleX;
-      let ptY: number = height - offsetY - d.moisture2 * scaleMoistureY;
-      if (first) {
-        ctx.moveTo(ptX, ptY);
-        first = false;
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = series;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.ymin = 0;
+      dataSeries.ymax = 500;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "week" ? "E d MMM" : "dMMMyy";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(l)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "Aqua";
+      this.chart.addDataSeries(dataSeries);
+    }
+    if (activeAxisCount > 0) {
+      activeAxis++;
+      activeAxisCount = 0;
+    }
+
+
+
+    if (this.showMoisture) {
+
+      // Make data series for weigh
+      let series: any[] = [];
+      for (let d of data) {
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.moisture2 };
       }
-      else
-        ctx.lineTo(ptX, ptY);
-    }
-    ctx.stroke();
 
-    // tank volume
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "Aqua";
-    ctx.beginPath();
-    first = true;
-    for (let d of data) {
-      let dt: number = (d.timestamp.getTime() - dateStart.getTime()) / (24 * 60 * 60 * 1000); // floating point days since startDate
-      let ptX: number = offsetX + dt * scaleX;
-      let ptY: number = height - offsetY - d.tankVolume * scaleVolumeY;
-      if (first) {
-        ctx.moveTo(ptX, ptY);
-        first = false;
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = series;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.ymin = 0;
+      dataSeries.ymax = 1024;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "week" ? "E d MMM" : "dMMMyy";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "YellowGreen";
+      this.chart.addDataSeries(dataSeries);
+    }
+    if (activeAxisCount > 0) {
+      activeAxis++;
+      activeAxisCount = 0;
+    }
+
+
+    if (this.showTemperature) {
+
+      // Make data series for weigh
+      let series: any[] = [];
+      for (let d of data) {
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.temperature };
       }
-      else
-        ctx.lineTo(ptX, ptY);
+
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = series;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.ymin = 0;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "week" ? "E d MMM" : "dMMMyy";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(\xB0C)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "GoldenRod";
+      this.chart.addDataSeries(dataSeries);
     }
-    ctx.stroke();
-
-    // temperature
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "GoldenRod";
-    ctx.beginPath();
-    first = true;
-    for (let d of data) {
-      let dt: number = (d.timestamp.getTime() - dateStart.getTime()) / (24 * 60 * 60 * 1000); // floating point days since startDate
-      let ptX: number = offsetX + dt * scaleX;
-      let ptY: number = height - offsetY - d.temperature * scaleTemperatureY;
-      if (first) {
-        ctx.moveTo(ptX, ptY);
-        first = false;
-      }
-      else
-        ctx.lineTo(ptX, ptY);
+    if (activeAxisCount > 0) {
+      activeAxis++;
+      activeAxisCount = 0;
     }
-    ctx.stroke();
 
-
-    ctx.restore();
-
+    this.chart.draw();
   }
 }

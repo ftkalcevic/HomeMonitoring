@@ -27,9 +27,10 @@ export enum EAxisType {
 };
 
 export enum EChartType {
-  line = 1,
-  column = 2,
-  area = 3
+  line,
+  column,
+  stackedColumn,
+  area
 };
 
 export class DataSeries {
@@ -48,6 +49,7 @@ export class DataSeries {
   public yUnits: string;
   public strokeStyle: string;
   public chartType: EChartType;
+  public fillStyle: any;
 
   public constructor() {
     this.series = null;
@@ -211,6 +213,67 @@ class LineDataSeries extends DataSeriesInternal {
 }
 
 
+class StackedColumnDataSeries extends DataSeriesInternal {
+  public constructor(s: DataSeries) {
+    super(s);
+  }
+
+  public calcMinMax() {
+    this.xAxis.min = this.userSeries.xmin;
+    this.xAxis.max = this.userSeries.xmax;
+    this.yAxis.min = this.userSeries.ymin;
+    this.yAxis.max = this.userSeries.ymax;
+
+    if (this.userSeries.series.length > 0 && (this.xAxis.min == null || this.xAxis.max == null || this.yAxis.min == null || this.yAxis.max == null)) {
+      let ymin: number;
+      let ymax: number;
+      let first: boolean = true;
+      for (let s of this.userSeries.series) {
+        if (s) {
+          let sum: number = 0;
+          for (let y of s.y)  // sum stacked y's
+            sum += y;
+          if (first) {
+            ymin = sum;
+            ymax = sum;
+            first = false;
+          }
+          else {
+            if (sum < ymin) ymin = sum;
+            if (sum > ymax) ymax = sum;
+          }
+        }
+      }
+      if (this.yAxis.min == null) this.yAxis.min = ymin;
+      if (this.yAxis.max == null) this.yAxis.max = ymax;
+      if (this.xAxis.min == null) this.xAxis.min = this.userSeries.series[0].x;
+      if (this.xAxis.max == null) this.xAxis.max = this.userSeries.series[this.userSeries.series.length - 1].x;
+    }
+  }
+
+  public draw(ctx: CanvasRenderingContext2D) {
+
+    const columnWidth: number = 50;//width * 0.9 / days;
+    for (let f of this.userSeries.series)
+      if ( f ) {
+        let x: number = f.x;
+
+        let sum: number = 0;
+        for (let i in f.y) {
+          let y: number = f.y[i];
+          if (y > 0) {
+            ctx.fillStyle = this.userSeries.fillStyle[i];
+            let pts1: number[] = this.makePoint(x, sum);
+            sum += y;
+            let pts2: number[] = this.makePoint(x + 1, sum);
+            ctx.fillRect(pts1[0], pts1[1], pts2[0] - pts1[0], pts2[1] - pts1[1]);
+          }
+        }
+      }
+  }
+}
+
+
 // Chart - type + grouping of series (share same axis)
 //    type - bar, stacked bar, line, area
 //    series[] - data sets
@@ -273,6 +336,9 @@ export class ChartComponent implements OnDestroy {
     switch (s.chartType) {
       case EChartType.line:
         newSeries = this.series[this.series.length] = new LineDataSeries(s);
+        break;
+      case EChartType.stackedColumn:
+        newSeries = this.series[this.series.length] = new StackedColumnDataSeries(s);
         break;
     }
     newSeries.Init();
@@ -442,6 +508,7 @@ export class ChartComponent implements OnDestroy {
     for (let s of this.series) {
       s.draw(ctx);
     }
+    ctx.fillStyle = "black";
 
     // Draw axis Y primary
     let pts: any;

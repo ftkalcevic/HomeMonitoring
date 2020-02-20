@@ -292,14 +292,14 @@ class AreaDataSeries extends DataSeriesInternal {
         pts = this.makePoint(f.x, f.y);
 
         if (first) {
-          ctx.moveTo(pts[0], pts[1]);
+          ctx.moveTo(Math.round(pts[0]), Math.round(pts[1]));
           first = false;
         } else {
-          ctx.lineTo(pts[0], pts[1]);
+          ctx.lineTo(Math.round(pts[0]), Math.round(pts[1]));
         }
       }
-    pts = this.makePoint(this.userSeries.series[this.userSeries.series.length - 1].x, this.yAxis.min); ctx.lineTo(pts[0], pts[1]);
-    pts = this.makePoint(this.userSeries.series[0].x, this.yAxis.min); ctx.lineTo(pts[0],pts[1]);
+    pts = this.makePoint(this.userSeries.series[this.userSeries.series.length - 1].x, this.yAxis.min); ctx.lineTo(Math.round(pts[0]), Math.round(pts[1]));
+    pts = this.makePoint(this.userSeries.series[0].x, this.yAxis.min); ctx.lineTo(Math.round(pts[0]), Math.round(pts[1]));
     ctx.fill();
   }
 }

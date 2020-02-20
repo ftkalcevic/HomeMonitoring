@@ -22,7 +22,7 @@ export class GardenNoiseComponent implements OnDestroy {
 
   subs: any[] = [];
   public meters: any[];
-  public displayType: number = 0;
+  public displayType: string = "0";
   public selectedMeter: string;
   public date: Date;
   public firstDate: Date = new Date(2019, 11, 28);
@@ -43,7 +43,7 @@ export class GardenNoiseComponent implements OnDestroy {
   }
 
   RequestReadNoiseSamples() {
-      this.subs.push(this.liveDataService.ReadNoiseSamples(this.selectedMeter, this.displayType, this.date).subscribe(result => { this.draw(result); }));
+      this.subs.push(this.liveDataService.ReadNoiseSamples(this.selectedMeter, Number(this.displayType), this.date).subscribe(result => { this.draw(result); }));
   }
 
   dateChange(evt: Date) {
@@ -54,9 +54,9 @@ export class GardenNoiseComponent implements OnDestroy {
 
   public incrementDate() {
     let d: Date;
-    if (this.displayType == 0)  // Day
+    if (this.displayType == "0")  // Day
       d = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate() + 1);
-    else if (this.displayType == 1)  // Week
+    else if (this.displayType == "1")  // Week
       d = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate() + 7);
     else
       d = new Date(this.date.getFullYear(), this.date.getMonth()+1, 1 );
@@ -68,9 +68,9 @@ export class GardenNoiseComponent implements OnDestroy {
 
   public decrementDate() {
     let d: Date;
-    if (this.displayType == 0)  // Day
+    if (this.displayType == "0")  // Day
       d = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate() - 1);
-    else if (this.displayType == 1) //week
+    else if (this.displayType == "1") //week
       d = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate() - 7);
     else
       d = new Date(this.date.getFullYear(), this.date.getMonth() - 1, 1);
@@ -81,7 +81,7 @@ export class GardenNoiseComponent implements OnDestroy {
   }
 
   public displayTypeChanged(newType: string) {
-    this.displayType = Number(newType);
+    this.displayType = newType;
     this.RequestReadNoiseSamples();
     }
 
@@ -106,11 +106,11 @@ export class GardenNoiseComponent implements OnDestroy {
     // Get start/end dates
     let dayStart: number;
     let dayEnd: number;
-    if (this.displayType == 0) {
+    if (this.displayType == "0") {
       dayStart = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate()).getTime()/(24*60*60*1000);
       dayEnd = dayStart + 1;
     }
-    else if (this.displayType == 1) { // week
+    else if (this.displayType == "1") { // week
 
       // Sunday will be the start of the week
       let offset: number = this.date.getDay();
@@ -156,9 +156,9 @@ export class GardenNoiseComponent implements OnDestroy {
       dataSeries.ymax = maxNoise;
       dataSeries.xAxisType = EAxisType.primary;
       dataSeries.xDataType = "date";
-      if (this.displayType == 0)
-        dataSeries.xTickFormat = "HH:MM"; //day
-      else if (this.displayType == 1)
+      if (this.displayType == "0")
+        dataSeries.xTickFormat = "HH:mm"; //day
+      else if (this.displayType == "1")
         dataSeries.xTickFormat = "E d MMM"; //week
       else
         dataSeries.xTickFormat = "dMMMyy"; //month

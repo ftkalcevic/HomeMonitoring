@@ -104,11 +104,13 @@ export class GardenNoiseComponent implements OnDestroy {
     maxNoise = Math.ceil(maxNoise / 10) * 10;
 
     // Get start/end dates
+    let windowSize: number;
     let dayStart: number;
     let dayEnd: number;
     if (this.displayType == "0") {
       dayStart = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate()).getTime()/(24*60*60*1000);
       dayEnd = dayStart + 1;
+      windowSize = 10;
     }
     else if (this.displayType == "1") { // week
 
@@ -116,10 +118,12 @@ export class GardenNoiseComponent implements OnDestroy {
       let offset: number = this.date.getDay();
       dayStart = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate() - offset).getTime() / (24 * 60 * 60 * 1000);
       dayEnd = dayStart + 7;
+      windowSize = 50;
     }
     else {  // month
       dayStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1).getTime() / (24 * 60 * 60 * 1000);
       dayEnd = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 1).getTime() / (24 * 60 * 60 * 1000);
+      windowSize = 250;
     }
 
     // Max area
@@ -186,8 +190,20 @@ export class GardenNoiseComponent implements OnDestroy {
       this.chart.addDataSeries(dataSeries);
 
       // Average
+      // Convert raw average to running average
+      let smooth: any[] = [seriesAvg.length];
+      for (let i: number = 0; i < seriesAvg.length;i++) {
+        let sum: number = 0;
+        let start: number = i - windowSize < 0 ? 0 : i - windowSize;
+        let end: number = i + windowSize >= seriesAvg.length ? seriesAvg.length - 1 : i + windowSize;
+        for (let j: number = start; j < end; j++) {
+          sum += seriesAvg[j].y;
+        }
+        smooth[i] = { x: seriesAvg[i].x, y: sum / (end - start) };
+      }
+
       dataSeries = new DataSeries();
-      dataSeries.series = seriesAvg;
+      dataSeries.series = smooth; //seriesAvg;
       dataSeries.xmin = dayStart;
       dataSeries.xmax = dayEnd;
       dataSeries.ymin = minNoise;

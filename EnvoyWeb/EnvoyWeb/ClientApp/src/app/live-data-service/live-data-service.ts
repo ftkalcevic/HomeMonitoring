@@ -159,8 +159,8 @@ export class LiveDataService {
   public myEnergyPlans: MyEnergyPlan[] =
     [
       { StartDate: new Date('1 Oct 2018'), EndDate: new Date('31 Dec 2019'), PlanId: 2 },
-      { StartDate: new Date('1 Jan 2020'), EndDate: new Date('3 Mar 2020'), PlanId: 3 },
-      { StartDate: new Date('4 Mar 2020'), EndDate: new Date('31 Dec 3020'), PlanId: 4 },
+      { StartDate: new Date('1 Jan 2020'), EndDate: new Date('22 Feb 2020'), PlanId: 3 },
+      { StartDate: new Date('23 Feb 2020'), EndDate: new Date('31 Dec 3020'), PlanId: 4 },
     ];
   //private energyPlan: EnergyPlan;
   readonly POINTS: number = 2000;

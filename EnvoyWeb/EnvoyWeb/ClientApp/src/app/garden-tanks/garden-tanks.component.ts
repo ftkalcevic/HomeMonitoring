@@ -149,7 +149,7 @@ export class GardenTanksComponent implements OnDestroy {
       dataSeries.yUnits = "(l)";
       dataSeries.yDataType = "number";
       dataSeries.chartType = EChartType.stackedColumn;
-      dataSeries.fillStyle = [ "CornflowerBlue", "CadetBlue"];
+      dataSeries.fillStyle = [ "Blue", "DeepSkyBlue"];
       dataSeries.strokeStyle = "green";
       this.chart.addDataSeries(dataSeries);
     }
@@ -189,7 +189,7 @@ export class GardenTanksComponent implements OnDestroy {
       // Make data series for weigh
       let series: any[] = [];
       for (let d of data) {
-        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.moisture2 };
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.moisture1 };
       }
 
       let dataSeries: DataSeries = new DataSeries();

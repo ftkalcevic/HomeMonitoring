@@ -1,0 +1,55 @@
+<div style="width:100%;" class="full-height">
+  <!--<div class="row" style="height:80px;"></div>-->
+  <div class="row  top-row">
+    <div class="col-sm-3"></div>
+    <div >
+
+      <mat-button-toggle-group #group="matButtonToggleGroup" [value]="displayType">
+
+        <mat-button-toggle value="week" (change)="displayTypeChanged($event.value)">
+          <label style="font-size:25px;">Week</label>
+        </mat-button-toggle>
+        <mat-button-toggle value="month" (change)="displayTypeChanged($event.value)">
+          <label style="font-size:25px;">Month</label>
+        </mat-button-toggle>
+        <mat-button-toggle value="year" (change)="displayTypeChanged($event.value)">
+          <label style="font-size:25px;">Year</label>
+        </mat-button-toggle>
+
+      </mat-button-toggle-group>
+    </div>
+    <div>
+      <mat-datepicker-toggle matSuffix [for]="picker" style="height: 60px;"></mat-datepicker-toggle>
+      <mat-datepicker touchUi #picker></mat-datepicker>
+      &nbsp;
+      <button type="button" (click)="decrementDate();">
+        <i class="fa fa-caret-square-o-left" style="font-size:20px;"></i>
+      </button>
+      <input matInput [matDatepicker]="picker" placeholder="Choose a date" [value]="date" (dateChange)="dateChange($event.value)">
+      <button type="button" (click)="incrementDate();">
+        <i class="fa fa-caret-square-o-right" style="font-size:20px;"></i>
+      </button>
+    </div>
+  </div>
+  <div ng-view style="width: 100%; height: 580px;" class="partial-height">
+    <app-chart #chart style="width:100%; height: 620px;" class="partial-height"></app-chart>
+  </div>
+  <div class="radio-btn-group">
+    <mat-button-toggle style="height: 42px;" [checked]="showMoisture" (change)="showMoisture = $event.source.checked; RequestReadPotPlants();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Moisture</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:aqua;" />
+    </mat-button-toggle>
+    <mat-button-toggle style="height: 42px;" [checked]="showExternalTemp" (change)="showExternalTemp = $event.source.checked; RequestReadPotPlants();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">External Temp (&deg;C)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:GoldenRod;" />
+    </mat-button-toggle>
+    <mat-button-toggle style="height: 42px;" [checked]="showInternalTemp" (change)="showInternalTemp = $event.source.checked; RequestReadPotPlants();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">Internal Temp (&deg;C)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:IndianRed;" />
+    </mat-button-toggle>
+    <mat-button-toggle style="height: 42px;" [checked]="showVBat" (change)="showVBat = $event.source.checked; RequestReadPotPlants();">
+      <label style="border: 0; margin: 0; margin-bottom: -2px; margin-top: -7px; padding: 0; height: 12px; vertical-align: top;" class="radio-btn radio-btn-secondary radio-select-btn">VBat (V)</label>
+      <hr style="width: 100px; height: 5px; border: 0; margin-bottom: 0; margin-top: -20px; overflow: hidden; background-color:red;" />
+    </mat-button-toggle>
+  </div>
+</div>

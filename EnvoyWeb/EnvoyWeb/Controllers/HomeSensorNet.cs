@@ -129,8 +129,100 @@ namespace EnvoyWeb
 
             return water;
         }
+
+        // GET: api/HomeSensorNet/GetPotPlantStats
+        [HttpGet("[action]/{deviceId}/{period}/{date}")]
+        public IEnumerable<IPotPlantStats> GetPotPlantStats(string deviceId, int period, DateTime date)
+        {
+            List<IPotPlantStats> pp = new List<IPotPlantStats>();
+
+            try
+            {
+                DateTime dateStart, dateEnd;
+
+                if (period == 0) // week
+                {
+                    // Sunday will be the start of the week
+                    int offset = (int)date.DayOfWeek;
+                    dateStart = new DateTime(date.Year, date.Month, date.Day);
+                    dateStart = dateStart.AddDays(-offset);
+                    dateEnd = dateStart.AddDays(7);
+                }
+                else if ( period == 1 ) // month
+                {
+                    dateStart = new DateTime(date.Year, date.Month, 1);
+                    dateEnd = dateStart.AddMonths(1);
+                }
+                else // year
+                {
+                    dateStart = new DateTime(date.Year, 1, 1);
+                    dateEnd = new DateTime(date.Year+1, 1, 1);
+                }
+
+                using (var con = new SqlConnection(connectString))
+                {
+                    con.Open();
+                    using (var cmd = new SqlCommand(@"
+select timestamp,InternalTemperature,ExternalTemperature,VBat,Moisture 
+from PotPlants 
+where timestamp >= @startDate and timestamp < @endDate order by timestamp", con))
+                    {
+                        //cmd.Parameters.Add("deviceId", SqlDbType.VarChar).Value = deviceId;
+                        cmd.Parameters.Add("startDate", SqlDbType.Date).Value = dateStart;
+                        cmd.Parameters.Add("endDate", SqlDbType.Date).Value = dateEnd;
+
+                        using (var rdr = cmd.ExecuteReader())
+                        {
+                            while (rdr.Read())
+                            {
+                                DateTime timestamp = rdr.GetDateTime(0);
+                                float InternalTemperature = (float)rdr.GetDouble(1);
+                                float ExternalTemperature = (float)rdr.GetDouble(2);
+                                float VBat = (float)rdr.GetDouble(3);
+                                int Moisture = rdr.GetInt32(4);
+
+                                pp.Add(new IPotPlantStats()
+                                {
+                                    Timestamp = timestamp,
+                                    Moisture = Moisture,
+                                    InternalTemperature = InternalTemperature,
+                                    ExternalTemperature = ExternalTemperature,
+                                    VBat = VBat
+                                });
+
+                            }
+                            rdr.Close();
+                        }
+                    }
+                    con.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
+
+            return pp;
+        }
     }
 
+    public class IPotPlantStats
+    {
+        public int Moisture;
+        public float InternalTemperature;
+        public float ExternalTemperature;
+        public float VBat;
+        public DateTime Timestamp;
+
+        public IPotPlantStats()
+        {
+            Moisture = 0;
+            InternalTemperature = 0;
+            ExternalTemperature = 0;
+            VBat = 0;
+            //Timestamp;
+        }
+    }
     public class ITankWaterer
     {
         public int Moisture1;

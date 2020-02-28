@@ -40,3 +40,11 @@ export class TankWaterer implements ITankWaterer {
     Object.assign(this, init);
   }
 }
+
+export interface IPotPlantStats {
+  moisture: number;
+  internalTemperature: number;
+  externalTemperature: number;
+  vBat: number;
+  timestamp: Date;
+}

@@ -118,7 +118,7 @@ class Axis {
 
   public TickLabel(n: number): string {
     switch (this.dataType) {
-      case "number": return n.toString();
+      case "number": return this.tickFormat == "" ? n.toString() : n.toFixed(Number(this.tickFormat));
       case "date":
         let dt: Date = new Date(n * (24 * 60 * 60 * 1000));
         return new DatePipe(getUsersLocale("en-US")).transform(dt, this.tickFormat);
@@ -566,7 +566,7 @@ export class ChartComponent implements OnDestroy {
           ctx.lineTo(pts[0], pts[1]);
           ctx.stroke();
           let metrics: TextMetrics = ctx.measureText(s.yAxis.TickLabel(y));
-          ctx.fillText(y.toString(), pts[0] - majorTickWidth - majorTickGap - metrics.width, pts[1]);
+          ctx.fillText(s.yAxis.TickLabel(y), pts[0] - majorTickWidth - majorTickGap - metrics.width, pts[1]);
         }
         if (s.yAxis.units) {
           let pts: any = s.makePoint(s.xAxis.min, s.yAxis.max);
@@ -595,7 +595,7 @@ export class ChartComponent implements OnDestroy {
           ctx.moveTo(pts[0] + majorTickWidth, pts[1]);
           ctx.lineTo(pts[0], pts[1]);
           ctx.stroke();
-          ctx.fillText(y.toString(), pts[0] + majorTickWidth + majorTickGap, pts[1]);
+          ctx.fillText(s.yAxis.TickLabel(y), pts[0] + majorTickWidth + majorTickGap, pts[1]);
         }
         if (s.yAxis.units) {
           let pts: any = s.makePoint(s.xAxis.max, s.yAxis.max);
@@ -626,7 +626,7 @@ export class ChartComponent implements OnDestroy {
           ctx.moveTo(pts[0] + majorTickWidth, pts[1]);
           ctx.lineTo(pts[0], pts[1]);
           ctx.stroke();
-          ctx.fillText(y.toString(), pts[0] + majorTickWidth + majorTickGap, pts[1]);
+          ctx.fillText(s.yAxis.TickLabel(y), pts[0] + majorTickWidth + majorTickGap, pts[1]);
         }
 
         if (s.yAxis.units) {
@@ -657,7 +657,7 @@ export class ChartComponent implements OnDestroy {
           ctx.lineTo(pts[0], pts[1]);
           ctx.stroke();
           let metrics: TextMetrics = ctx.measureText(s.yAxis.TickLabel(y));
-          ctx.fillText(y.toString(), pts[0] - majorTickWidth - majorTickGap - metrics.width, pts[1]);
+          ctx.fillText(s.yAxis.TickLabel(y), pts[0] - majorTickWidth - majorTickGap - metrics.width, pts[1]);
         }
         if (s.yAxis.units) {
           let pts: any = s.makePoint(s.xAxis.max, s.yAxis.max);

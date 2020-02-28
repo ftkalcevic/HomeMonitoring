@@ -504,4 +504,12 @@ export class LiveDataService {
       .get<Weight.IWeight[]>(this.baseUrl + 'api/Weight/ReadWeight/' + String(month) + '/' + day.toISOString())
       .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
   }
+
+  public ReadPotPlantStats(deviceId: string, period: number, day: Date): Observable<HomeSensorNet.IPotPlantStats[]> {
+    return this
+      .http
+      .get<HomeSensorNet.IPotPlantStats[]>(this.baseUrl + 'api/HomeSensorNet/GetPotPlantStats/' + deviceId + '/' + period + '/' + day.toISOString())
+      .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
+  }
+
 }

@@ -27,7 +27,7 @@ export function prettyFloat(x, nbDec) {
         d = 0;
         e++;
     }
-    var signStr = (x < 0) ? "-" : " ";
+    var signStr = (x < 0) ? "-" : "";
     var decStr = d.toString();
     var tmp = 10;
     while (tmp < nbDec && d * tmp < nbDec) {

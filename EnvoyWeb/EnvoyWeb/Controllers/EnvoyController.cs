@@ -153,7 +153,7 @@ namespace EnvoyWeb.Controllers
         }
 
         // GET: api/Envoy/EnphaseSummary/#
-        [HttpGet("EnphaseSummary/{systemId}")]
+        [HttpGet("[action]/{systemId}")]
         public ILivePower EnphaseSummary(int systemId)
         {
             ILivePower power = new ILivePower();
@@ -184,7 +184,7 @@ namespace EnvoyWeb.Controllers
         }
 
         // GET: api/Envoy/EnphaseSummary/#
-        [HttpGet("EnphaseDayData/{systemId}/{date}")]
+        [HttpGet("[action]/{systemId}/{date}")]
         public IEnphaseData [] EnphaseDayData(int systemId, DateTime date)
         {
             DateTime dtStart = new DateTime(date.Year, date.Month, date.Day);
@@ -311,6 +311,7 @@ namespace EnvoyWeb.Controllers
                         string r = content.ReadAsStringAsync().Result;
 
                         Trace.TraceWarning("consumption_stats failed\n" + response.ToString() + "\n" + r);
+                        Trace.TraceWarning($"url={url}\n");
                     }
                 }
                 catch (Exception)
@@ -403,6 +404,43 @@ namespace EnvoyWeb.Controllers
             }
 
             return data;
+        }
+
+        // Get: api/Envoy/EnphaseDayDataDelete/#
+        [HttpGet("[action]/{date}")]
+        public bool EnphaseDayDataDelete(DateTime date)
+        {
+            DateTime dtStart = new DateTime(date.Year, date.Month, date.Day);
+            DateTime dtEnd = dtStart.AddDays(1);
+
+            long start = ((DateTimeOffset)dtStart.ToUniversalTime()).ToUnixTimeSeconds();
+            long end = ((DateTimeOffset)dtEnd.ToUniversalTime()).ToUnixTimeSeconds();
+
+            try
+            {
+                using (var con = new SqlConnection(connectString))
+                {
+                    con.Open();
+                    using (var cmd = new SqlCommand(@"delete 
+                                                      from	EnphaseData
+                                                      where   time >= @startTime and time < @endTime
+                                                    ", con))
+                    {
+                        cmd.Parameters.Add("@startTime", SqlDbType.BigInt).SqlValue = start;
+                        cmd.Parameters.Add("@endTime", SqlDbType.BigInt).SqlValue = end;
+
+                        cmd.ExecuteNonQuery();
+                    }
+                    con.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Just log and ignore the error.
+                Trace.TraceError(ex.ToString());
+                return false;
+            }
+            return true;
         }
     }
 

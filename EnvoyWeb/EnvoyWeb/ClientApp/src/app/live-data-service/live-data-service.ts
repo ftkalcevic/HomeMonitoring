@@ -464,6 +464,10 @@ export class LiveDataService {
     return this.http.get<IEnphaseData[]>(this.baseUrl + 'api/Envoy/EnphaseDayData/'+systemId+'/'+day.toISOString());
   }
 
+  public ClearDay(date: Date): Observable<boolean> {
+    return this.http.get<boolean>(this.baseUrl + 'api/Envoy/EnphaseDayDataDelete/' + date.toISOString());
+  }
+
   private ProcessTanks(tanks: HomeSensorNet.ITank[]) {
     this.tanks = [];
     for (let d of tanks) {

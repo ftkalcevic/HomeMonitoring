@@ -25,7 +25,7 @@ export function prettyFloat(x, nbDec) {
   var a = Math.abs(x);
   var e = Math.floor(a);
   var d = Math.round((a - e) * nbDec); if (d == nbDec) { d = 0; e++; }
-  var signStr = (x < 0) ? "-" : " ";
+  var signStr = (x < 0) ? "-" : "";
   var decStr = d.toString(); var tmp = 10; while (tmp < nbDec && d * tmp < nbDec) { decStr = "0" + decStr; tmp *= 10; }
   var eStr = e.toString();
   return signStr + eStr + "." + decStr;

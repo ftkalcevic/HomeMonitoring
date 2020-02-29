@@ -47,9 +47,13 @@ export class DataSeries {
   public yTickFormat: string;
   public xUnits: string;
   public yUnits: string;
-  public strokeStyle: string;
+  public xAxisAtZero: boolean;
+  public yAxisAtZero: boolean;
   public chartType: EChartType;
   public fillStyle: any;
+  public strokeStyle: string;
+  public lineWidth: number;
+  public lineDash: number[];
 
   public constructor() {
     this.series = null;
@@ -65,8 +69,12 @@ export class DataSeries {
     this.yTickFormat = null;
     this.xUnits = null;
     this.yUnits = null;
-    this.strokeStyle = "black";
+    this.xAxisAtZero = false;
+    this.yAxisAtZero = false;
     this.chartType = EChartType.line;
+    this.strokeStyle = "black";
+    this.lineWidth = null;
+    this.lineDash = null;
   }
 };
 
@@ -83,6 +91,7 @@ class Axis {
   public dataType: string;
   public tickFormat: string;
   public units: string;
+  public atZero: boolean;
 
   public CalcTickSpacing(): number {
 
@@ -98,21 +107,29 @@ class Axis {
         return 1.0/6.0;
     }
     else {
+      let maxTicks: number = 10;
+      let min: number = this.min;
+      let max: number = this.max;
+      if (min < 0) {
+        max = Math.max(Math.abs(min), Math.abs(max));
+        min = 0;
+        maxTicks = 5;
+      }
       const divisors: number[] = [1, 2, 2.5, 3, 5];
-      let power: number = Math.floor(Math.log10(this.max - this.min));
+      let power: number = Math.floor(Math.log10(max - min));
 
       let leastWorst: number = null;
       for (let p = -1; p < 2; p++) {
         for (let n of divisors) {
-          let ticks: number = (this.max - this.min) / (n * Math.pow(10, power + p));
-          if (ticks < 10)
+          let ticks: number = (max - min) / (n * Math.pow(10, power + p));
+          if (ticks < maxTicks)
             if (ticks == Math.floor(ticks))
-              return (this.max - this.min) / ticks;
+              return (max - min) / ticks;
             else if (leastWorst == null)
-              leastWorst = (this.max - this.min) / ticks;
+              leastWorst = (max - min) / ticks;
         }
       }
-      return leastWorst != null ? leastWorst : (this.max / this.min) / 5;
+      return leastWorst != null ? leastWorst : (max / min) / 5;
     }
   }
 
@@ -126,7 +143,7 @@ class Axis {
   }
 };
 
-class DataSeriesInternal {
+export class DataSeriesInternal {
   public userSeries: DataSeries;
   public xAxis: Axis;
   public yAxis: Axis;
@@ -146,6 +163,8 @@ class DataSeriesInternal {
     this.yAxis.axisType = this.userSeries.yAxisType;
     this.xAxis.units = this.userSeries.xUnits;
     this.yAxis.units = this.userSeries.yUnits;
+    this.xAxis.atZero = this.userSeries.xAxisAtZero;
+    this.yAxis.atZero = this.userSeries.yAxisAtZero;
   }
 
   public calcMinMax() {
@@ -194,21 +213,49 @@ class LineDataSeries extends DataSeriesInternal {
   }
 
   public draw(ctx: CanvasRenderingContext2D) {
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = this.userSeries.strokeStyle;
+    if (this.userSeries.lineWidth != null) ctx.lineWidth = this.userSeries.lineWidth;
+    if (this.userSeries.lineDash != null) ctx.setLineDash( this.userSeries.lineDash );
+    if (this.userSeries.strokeStyle != null) ctx.strokeStyle = this.userSeries.strokeStyle;
     ctx.beginPath();
 
+    let hasNotes: boolean = false;
     let first: boolean = true;;
-    for (let d of this.userSeries.series) {
-      let pts: number[] = this.makePoint(d.x, d.y);
-      if (first) {
-        ctx.moveTo(pts[0], pts[1]);
-        first = false;
+    for (let d of this.userSeries.series)
+      if (d != null) {
+        hasNotes = hasNotes || (d.note != null);
+        let pts: number[] = this.makePoint(d.x, d.y);
+        if (first) {
+          ctx.moveTo(pts[0], pts[1]);
+          first = false;
+        }
+        else
+          ctx.lineTo(pts[0], pts[1]);
       }
-      else
-        ctx.lineTo(pts[0], pts[1]);
-    }
     ctx.stroke();
+
+    if (hasNotes) {
+      for (let d of this.userSeries.series)
+        if (d != null && d.note) {
+          let pts: number[] = this.makePoint(d.x, d.y);
+
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = "black";
+          ctx.beginPath();
+          ctx.ellipse(pts[0], pts[1], 5, 5, 0, 0, 2 * Math.PI, false);
+          ctx.stroke();
+          ctx.font = "24px san serif";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = "black";
+          let metrics: TextMetrics = ctx.measureText(d.note);
+          if (pts[0] + 7 + metrics.width < this.xAxis.size) {
+            ctx.textAlign = "left";
+            ctx.fillText(d.note, pts[0] + 7, pts[1]);
+          } else {
+            ctx.textAlign = "right";
+            ctx.fillText(d.note, pts[0] - 7, pts[1]);
+          }
+        }
+    }
   }
 }
 
@@ -253,7 +300,6 @@ class StackedColumnDataSeries extends DataSeriesInternal {
 
   public draw(ctx: CanvasRenderingContext2D) {
 
-    const columnWidth: number = 50;//width * 0.9 / days;
     for (let f of this.userSeries.series)
       if ( f ) {
         let x: number = f.x;
@@ -274,14 +320,35 @@ class StackedColumnDataSeries extends DataSeriesInternal {
 }
 
 
+class ColumnDataSeries extends DataSeriesInternal {
+  public constructor(s: DataSeries) {
+    super(s);
+  }
+
+
+  public draw(ctx: CanvasRenderingContext2D) {
+
+    const columnWidth: number = (this.xAxis.size - this.xAxis.offset1 - this.xAxis.offset2) / this.userSeries.series.length;
+
+    for (let f of this.userSeries.series)
+      if (f) {
+        let x: number = f.x;
+        let y: number = f.y;
+        ctx.fillStyle = this.userSeries.fillStyle;
+        let pts1: number[] = this.makePoint(x, y);
+        let pts2: number[] = this.makePoint(x, 0);
+        ctx.fillRect(pts1[0], pts1[1], columnWidth, pts2[1] - pts1[1]);
+      }
+  }
+}
+
+
 class AreaDataSeries extends DataSeriesInternal {
   public constructor(s: DataSeries) {
     super(s);
   }
 
   public draw(ctx: CanvasRenderingContext2D) {
-
-    const columnWidth: number = 50;//width * 0.9 / days;
 
     ctx.beginPath();
     ctx.fillStyle = this.userSeries.fillStyle;
@@ -347,8 +414,10 @@ class AreaDataSeries extends DataSeriesInternal {
 })
 export class ChartComponent implements OnDestroy {
   @ViewChild('chartCanvas') canvasRef: ElementRef;
-  private series: DataSeriesInternal[] = [];
+  protected series: DataSeriesInternal[] = [];
   public backgroundColour: string = "rgb(240,240,240)";
+  public width: number;
+  public height: number;
 
   constructor() {
   }
@@ -372,6 +441,9 @@ export class ChartComponent implements OnDestroy {
       case EChartType.stackedColumn:
         newSeries = this.series[this.series.length] = new StackedColumnDataSeries(s);
         break;
+      case EChartType.column:
+        newSeries = this.series[this.series.length] = new ColumnDataSeries(s);
+        break;
       case EChartType.area:
         newSeries = this.series[this.series.length] = new AreaDataSeries(s);
         break;
@@ -383,16 +455,18 @@ export class ChartComponent implements OnDestroy {
     this.series = [];
   }
 
+  public drawBackground(ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = this.backgroundColour;
+    ctx.fillRect(0, 0, this.width, this.height);
+  }
+
   public draw() {
 
     let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
     ctx.save();
 
-    let width: number = this.canvasRef.nativeElement.width;
-    let height: number = this.canvasRef.nativeElement.height;
-
-    ctx.fillStyle = this.backgroundColour;
-    ctx.fillRect(0, 0, width, height);
+    this.width = this.canvasRef.nativeElement.width;
+    this.height = this.canvasRef.nativeElement.height;
 
     if (this.series.length == 0) {
       ctx.restore();
@@ -436,39 +510,38 @@ export class ChartComponent implements OnDestroy {
           if (metrics.width > textWidth)
             textWidth = metrics.width;
           if (metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent > textHeight)
-            textHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+            textHeight = 3*(metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent)/2;
         }
 
         offsetX1 = Math.max(offsetX1, textWidth + majorTickWidth + majorTickGap);
-        offsetY1 = Math.max(offsetY1, textHeight / 2 + 1);
-        offsetY2 = Math.max(offsetY1, textHeight / 2 + 1);
-        if (s.yAxis.units != null)
-          offsetY2 = Math.max(offsetY2, textHeight + textHeight / 2 + 1);
+        offsetY1 = Math.max(offsetY1, textHeight + 1);
+        offsetY2 = Math.max(offsetY1, textHeight + 1);
         break;
       }
     // space for x axis 1, x axis 2, x secondary axis 1, x secondary axis 2 (and labels)
     for (let s of this.series)
-      if (s.xAxis.axisType == EAxisType.primary) {
-        // We only use the first series we find.
-        // the number of major ticks will be dependent on the height of the chart, font height, after removing space for y-axis and legend
-        s.xAxis.tickSpacing = s.xAxis.CalcTickSpacing();
+      if (s.xAxis.axisType == EAxisType.primary)
+        if (!(s.xAxis.tickFormat != null && s.xAxis.tickFormat == "none" )) {
+          // We only use the first series we find.
+          // the number of major ticks will be dependent on the height of the chart, font height, after removing space for y-axis and legend
+          s.xAxis.tickSpacing = s.xAxis.CalcTickSpacing();
 
-        // Find widest text
-        let textWidth: number = 0;
-        let textHeight: number = 0;
-        for (let i: number = s.xAxis.min; i <= s.xAxis.max; i += s.xAxis.tickSpacing) {
-          let metrics: TextMetrics = ctx.measureText(s.xAxis.TickLabel(i));
-          if (metrics.width > textWidth)
-            textWidth = metrics.width;
-          if (metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent > textHeight)
-            textHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+          // Find widest text
+          let textWidth: number = 0;
+          let textHeight: number = 0;
+          for (let i: number = s.xAxis.min; i <= s.xAxis.max; i += s.xAxis.tickSpacing) {
+            let metrics: TextMetrics = ctx.measureText(s.xAxis.TickLabel(i));
+            if (metrics.width > textWidth)
+              textWidth = metrics.width;
+            if (metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent > textHeight)
+              textHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+          }
+
+          offsetX1 = Math.max(offsetX1, textWidth / 2);
+          offsetX2 = Math.max(offsetX2, textWidth / 2);
+          offsetY1 = Math.max(offsetY1, textHeight + majorTickWidth + 2*majorTickGap);
+          break;
         }
-
-        offsetX1 = Math.max(offsetX1, textWidth / 2);
-        offsetX2 = Math.max(offsetX2, textWidth / 2);
-        offsetY1 = Math.max(offsetY1, textHeight + majorTickWidth + 2*majorTickGap);
-        break;
-      }
 
     for (let s of this.series)
       if (s.yAxis.axisType == EAxisType.secondary) {
@@ -527,10 +600,12 @@ export class ChartComponent implements OnDestroy {
 
     // for each series, calculate min/max, scale, offset, etc
     for (let s of this.series) {
-      s.calcScale(width, height, offsetX1, offsetX2, offsetY1, offsetY2);
+      s.calcScale(this.width, this.height, offsetX1, offsetX2, offsetY1, offsetY2);
     }
 
     // draw background
+    this.drawBackground(ctx);
+
     // draw bands
     //ctx.fillStyle = "rgb(220,220,220)";
     //for (let range = minNoise; range < maxNoise; range += 20) {
@@ -541,7 +616,9 @@ export class ChartComponent implements OnDestroy {
 
     // draw each series
     for (let s of this.series) {
+      ctx.save();
       s.draw(ctx);
+      ctx.restore();
     }
     ctx.fillStyle = "black";
 
@@ -675,28 +752,34 @@ export class ChartComponent implements OnDestroy {
     for (let s of this.series)
       if (s.xAxis.axisType == EAxisType.primary) {
 
+        let y: number;
+        if (s.xAxis.atZero)
+          y = 0;
+        else
+          y = s.yAxis.min;
         ctx.beginPath();
-        pts = s.makePoint(s.xAxis.min, s.yAxis.min);
+        pts = s.makePoint(s.xAxis.min, y);
         ctx.moveTo(pts[0], pts[1]);
-        pts = s.makePoint(s.xAxis.max, s.yAxis.min);
+        pts = s.makePoint(s.xAxis.max, y);
         ctx.lineTo(pts[0], pts[1]);
         ctx.stroke();
 
-        for (let x: number = s.xAxis.min; x <= s.xAxis.max; x += s.xAxis.tickSpacing) {
-          ctx.beginPath();
-          let pts: any = s.makePoint(x, s.yAxis.min);
-          ctx.moveTo(pts[0], pts[1]);
-          ctx.lineTo(pts[0], pts[1] + majorTickWidth);
-          ctx.stroke();
-          let text: string = s.xAxis.TickLabel(x);
-          let metrics: TextMetrics = ctx.measureText(text);
-          ctx.fillText(text, pts[0], pts[1] + majorTickWidth + majorTickGap);
+        if (!(s.xAxis.tickFormat != null && s.xAxis.tickFormat == "none")) {
+          for (let x: number = s.xAxis.min; x <= s.xAxis.max; x += s.xAxis.tickSpacing) {
+            ctx.beginPath();
+            let pts: any = s.makePoint(x, s.yAxis.min);
+            ctx.moveTo(pts[0], pts[1]);
+            ctx.lineTo(pts[0], pts[1] + majorTickWidth);
+            ctx.stroke();
+            let text: string = s.xAxis.TickLabel(x);
+            let metrics: TextMetrics = ctx.measureText(text);
+            ctx.fillText(text, pts[0], pts[1] + majorTickWidth + majorTickGap);
+          }
         }
         break;
       }
 
     ctx.restore();
-
   }
 
 }

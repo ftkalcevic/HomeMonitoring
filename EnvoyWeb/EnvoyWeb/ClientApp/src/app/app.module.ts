@@ -19,12 +19,13 @@ import { LivePowerStatsComponent } from './live-power-stats/live-power-stats.com
 import { EnlightenComponent } from './enlighten/enlighten.component';
 import { EnergyEasyComponent } from './energyeasy/energyeasy.component';
 import { SolarHistoryComponent } from './solar-history/solar-history.component';
+import { ChartComponent } from './chart/chart.component';
+import { HistoryChartComoponent } from './solar-history/solar-history.component';
 
 import { GardenTanksComponent } from './garden-tanks/garden-tanks.component';
 import { GardenNoiseComponent } from './garden-noise/garden-noise.component';
 import { GardenWeightComponent } from './garden-weight/garden-weight.component';
 import { GardenPotPlantsComponent } from './garden-potplants/garden-potplants.component';
-import { ChartComponent } from './chart/chart.component';
 import { WeatherRadarComponent } from './weather-radar/weather-radar.component';
 import { WeatherRainComponent } from './weather-rain/weather-rain.component';
 import { WeatherTempComponent } from './weather-temp/weather-temp.component';
@@ -86,6 +87,7 @@ import {
     GardenWeightComponent,
     GardenPotPlantsComponent,
     ChartComponent,
+    HistoryChartComoponent,
     WeatherRadarComponent,
     WeatherRainComponent, 
     WeatherTempComponent, 

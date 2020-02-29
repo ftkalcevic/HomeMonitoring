@@ -12,6 +12,8 @@ import { Observable } from 'rxjs';
 import { timer } from 'rxjs';
 import { MomentDateAdapter } from '@angular/material-moment-adapter';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { ChartComponent, DataSeries, EAxisType, EChartType, DataSeriesInternal } from '../chart/chart.component';
+import { request } from 'http';
 
 
 export const MY_FORMATS = {
@@ -27,6 +29,42 @@ export const MY_FORMATS = {
 };
 
 @Component({
+  selector: 'app-history-chart',
+  template: `<canvas #chartCanvas style="width:100%; height:100%;"></canvas>`
+})
+export class HistoryChartComoponent extends ChartComponent {
+  public prices: any[];
+  public rates: any[];
+
+  public drawBackground(ctx: CanvasRenderingContext2D) {
+    ctx.save();
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    const colours = ["240, 240, 240",    // off peak
+                     "255, 255, 240",   // shoulder
+                     "255, 240, 240",  // peak
+                     ];
+
+    for (let p of this.prices) {
+      let startTime: any = p.StartTime.split(':');
+      let endTime: any = p.EndTime.split(':');
+
+      let start: number = startTime[0] * 4 + startTime[1] / 15;
+      let end: number = endTime[0] * 4 + endTime[1] / 15;
+
+      ctx.fillStyle = "rgb(" + colours[this.rates[p.Rate]] + ")";
+      let pts1: any[] = this.series[0].makePoint(start, this.series[0].yAxis.min);
+      let pts2: any[] = this.series[0].makePoint(end, this.series[0].yAxis.max);
+      ctx.fillRect(pts1[0], pts2[1], pts2[0] - pts1[0], pts1[1] - pts2[1]);
+    }
+
+    ctx.restore();
+  }
+
+};
+
+@Component({
   selector: 'app-solar-history',
   templateUrl: './solar-history.component.html',
   providers: [
@@ -35,7 +73,7 @@ export const MY_FORMATS = {
   ],
 })
 export class SolarHistoryComponent implements OnInit {
-  @ViewChild('chartCanvas') canvasRef: ElementRef;
+  @ViewChild('chart') chart: HistoryChartComoponent;
   @ViewChild('barCanvas') barCanvasRef: ElementRef;
   longitude: number = 145.000516 - 360;
   latitude: number = -37.886778;
@@ -69,8 +107,13 @@ export class SolarHistoryComponent implements OnInit {
   ResetMaximums() {
     this.maxConsumuption = 0;
     this.maxProduction = 0;
-    this.maxPower = common.maxProduction * 1.1;
+    this.maxPower = common.maxProduction;
   }
+
+  RecalcData() {
+    this.liveDataService.ClearDay(this.date).subscribe(success => { if (success) this.requestDayData(); });
+  }
+
 
   requestDayData() {
     if (!this.fullUpdate) {
@@ -98,9 +141,6 @@ export class SolarHistoryComponent implements OnInit {
   }
 
   ngAfterViewInit() {
-    this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.offsetWidth;
-    this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.offsetHeight;
-
     this.barCanvasRef.nativeElement.width = this.barCanvasRef.nativeElement.offsetWidth;
     this.barCanvasRef.nativeElement.height = this.barCanvasRef.nativeElement.offsetHeight;
   }
@@ -232,28 +272,27 @@ export class SolarHistoryComponent implements OnInit {
 
   redrawChart(): void {
 
+    this.chart.clearDataSeries();
+
     let predictedSolar: any = this.CalculatePredictedSolar(0);
     let predictedLimitedSolar: any = this.CalculatePredictedSolar(270);
 
     let dailyCost: any = this.CalculateTodaysCost();
     let dailyCostMin: number = dailyCost.reduce(function (a, b) { return Math.min(a, b); });
     let dailyCostMax: number = dailyCost.reduce(function (a, b) { return Math.max(a, b); });
+    let maxCost: number = Math.max(Math.abs(dailyCostMin), Math.abs(dailyCostMax));
+    maxCost = (Math.floor(maxCost / 0.25) + 1) * 0.25;
 
-    let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');
-    ctx.save();
-    //ctx.imageSmoothingEnabled = false;
+    let max:number = 0;
+    this.enphaseData.reduce(function (acc, cur) { if (cur != null) { max = Math.max(max, cur.whConsumed * 4, cur.whProduced * 4); } return acc });
+    max = Math.max(max, this.maxConsumuption, this.maxPower, this.maxProduction);
+    max = (Math.floor(max / 500) + 1)* 500;
+    let min = -max;
 
-    let width: number = this.canvasRef.nativeElement.width;
-    let height: number = this.canvasRef.nativeElement.height;
+    const dayStart = 0;
+    const dayEnd = 24*4;  // 15 minute intervals
 
-    let scaleX: number = 0.9 * (width / (24 * 4));
-    let scaleY: number = 0.9 * (height / (common.maxProduction / 4 * 2));
-    let scaleDailyY: number = 0.9 * (height / 2 / (Math.max(Math.abs(dailyCostMin), Math.abs(dailyCostMax))));
-
-    ctx.clearRect(0, 0, width, height);
-    ctx.translate(0, height / 2);
-
-    // Shade background to match pricing
+    // Find rate bands
     let month: number = this.date.getMonth();
     let day: number = this.date.getDate();
     let dow: number = this.date.getDay();
@@ -265,7 +304,7 @@ export class SolarHistoryComponent implements OnInit {
     let rates: any = {};
     for (let ip: number = plan.Pricing.length - 1; ip >= 0; ip--) {
       let pr: any = plan.Pricing[ip];
-      if ( //this.liveDataService.energyPlans.controlledLoadMatch(pricing, controlledLoad) &&
+      if ( 
         this.liveDataService.energyPlans.dateMatch(pr, month, day) &&
         this.liveDataService.energyPlans.dowMatch(pr, dow)) {
         prices.push(pr);
@@ -282,119 +321,163 @@ export class SolarHistoryComponent implements OnInit {
     for (let r of ratesSorted)
       rates[r] = idx++;
 
-    const colours = [ "240, 240, 240",    // off peak
-      "255, 255, 240",   // shoulder
-      "255, 240, 240",  // peak
-      ];
-       
-
-    for (let p of prices) {
-      let startTime: any = p.StartTime.split(':');
-      let endTime: any = p.EndTime.split(':');
-
-      let start: number = startTime[0] * 4 + startTime[1] / 15;
-      let end: number = endTime[0] * 4 + endTime[1] / 15;
-
-      //ctx.strokeStyle = "rgba(41, 155, 251, 0.3)";
-      ctx.fillStyle = "rgb(" + colours[rates[p.Rate]] + ")";
-      ctx.fillRect(start * scaleX, -height/2, end * scaleX - start * scaleX, height);
-    }
+    this.chart.prices = prices;
+    this.chart.rates = rates;
 
     let t: number;
-    // white bar background
-    ctx.strokeStyle = "rgb(255, 255, 255)";
-    ctx.fillStyle = "rgb(255, 255, 255)";
-    for (t = 0; t < 24 * 4; t++)
+    let series: any[] = [24*4];
+    for (t = 0; t < 24 * 4; t++) {
       if (this.enphaseData[t] != null) {
-        ctx.fillRect(t * scaleX, 0, 1 * scaleX, -this.enphaseData[t].whProduced * scaleY);
-        ctx.fillRect(t * scaleX, 0, 1 * scaleX, this.enphaseData[t].whConsumed * scaleY);
+        series[t] = { x: t, y: this.enphaseData[t].whProduced * 4 };
+      } else {
+        series[t] = null;
       }
+    }
 
-  
-    ctx.strokeStyle = "rgba(41, 155, 251, 0.3)";
-    ctx.fillStyle = "rgba(41, 155, 251, 0.3)";
-    for (t = 0; t < 24 * 4; t++)
+    let dataSeries: DataSeries = new DataSeries();
+    dataSeries.chartType = EChartType.column;
+    dataSeries.series = series;
+    dataSeries.ymax = max;
+    dataSeries.ymin = min;
+    dataSeries.xmin = dayStart;
+    dataSeries.xmax = dayEnd;
+    dataSeries.yAxisType = EAxisType.secondary;
+    dataSeries.yDataType = "number";
+    dataSeries.yUnits = "W";
+    dataSeries.xAxisType = EAxisType.primary;
+    dataSeries.xTickFormat = "none";
+    dataSeries.xAxisAtZero = true;
+    dataSeries.strokeStyle = "rgb(190,225,254)";
+    dataSeries.fillStyle = "rgb(190,225,254)";
+    this.chart.addDataSeries(dataSeries);
+
+    series = [24 * 4];
+    for (t = 0; t < 24 * 4; t++) {
+      series[t] = null;
       if (this.enphaseData[t] != null) {
-        ctx.fillRect(t * scaleX, 0, 1 * scaleX, -this.enphaseData[t].whProduced * scaleY);
+        let net: number = this.enphaseData[t].whProduced - this.enphaseData[t].whConsumed;
+        if (net > 0) {
+          series[t] = { x: t, y: net * 4 };
+        }
       }
-    ctx.strokeStyle = "rgba(244,115,32,0.3)";
-    ctx.fillStyle = "rgba(244,115,32,0.3)";
-    for (t = 0; t < 24 * 4; t++)
+    }
+
+    dataSeries = new DataSeries();
+    dataSeries.chartType = EChartType.column;
+    dataSeries.series = series;
+    dataSeries.ymax = max;
+    dataSeries.ymin = min;
+    dataSeries.xmin = dayStart;
+    dataSeries.xmax = dayEnd;
+    dataSeries.strokeStyle = "rgb(71,169,252)";
+    dataSeries.fillStyle = "rgb(71,169,252)";
+    this.chart.addDataSeries(dataSeries);
+
+
+    series = [24 * 4];
+    for (t = 0; t < 24 * 4; t++) {
       if (this.enphaseData[t] != null) {
-        ctx.fillRect(t * scaleX, 0, 1 * scaleX, this.enphaseData[t].whConsumed * scaleY);
+        series[t] = { x: t, y: -this.enphaseData[t].whConsumed * 4 };
+      } else {
+        series[t] = null;
       }
-    for (t = 0; t < 24 * 4; t++)
-      if ( this.enphaseData[t] != null ) {
+    }
+
+    dataSeries = new DataSeries();
+    dataSeries.chartType = EChartType.column;
+    dataSeries.series = series;
+    dataSeries.ymax = max;
+    dataSeries.ymin = min;
+    dataSeries.xmin = dayStart;
+    dataSeries.xmax = dayEnd;
+    dataSeries.strokeStyle = "rgb(252,213,188)";
+    dataSeries.fillStyle = "rgb(252,213,188)";
+    this.chart.addDataSeries(dataSeries);
+
+    series = [24 * 4];
+    for (t = 0; t < 24 * 4; t++) {
+      series[t] = null;
+      if (this.enphaseData[t] != null) {
         let net: number = this.enphaseData[t].whProduced - this.enphaseData[t].whConsumed;
         if (net < 0) {
-          ctx.strokeStyle = "rgba(244,115,32,0.8)";
-          ctx.fillStyle = "rgba(244,115,32,0.8)";
+          series[t] = { x: t, y: net * 4 };
         }
-        else {
-          ctx.strokeStyle = "rgba(41, 155, 251, 0.8)";
-          ctx.fillStyle = "rgba(41, 155, 251, 0.8)";
-        }
-
-      ctx.fillRect(t * scaleX, 0, 1 * scaleX, -net * scaleY);
+      }
     }
 
-    ctx.save(); // save context to restore line dash style
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "orange";
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.moveTo(scaleX * (predictedLimitedSolar[0].time) * 4, -scaleY * predictedLimitedSolar[0].power / 4);
-    for (let i: number = 1; i < predictedLimitedSolar.length; i++) {
-      ctx.lineTo(scaleX * (predictedLimitedSolar[i].time) * 4, -scaleY * predictedLimitedSolar[i].power / 4);
-    }
-    ctx.stroke();
-    ctx.restore();
+    dataSeries = new DataSeries();
+    dataSeries.chartType = EChartType.column;
+    dataSeries.series = series;
+    dataSeries.ymax = max;
+    dataSeries.ymin = min;
+    dataSeries.xmin = dayStart;
+    dataSeries.xmax = dayEnd;
+    dataSeries.strokeStyle = "rgb(245,135,64)";
+    dataSeries.fillStyle = "rgb(245,135,64)";
+    dataSeries.lineWidth = 2;
+    this.chart.addDataSeries(dataSeries);
 
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "red";
-    ctx.beginPath();
-    ctx.moveTo(scaleX * (predictedSolar[0].time) * 4, -scaleY * predictedSolar[0].power / 4);
-    for (let i: number = 1; i < predictedSolar.length; i++) {
-      ctx.lineTo(scaleX * (predictedSolar[i].time) * 4, -scaleY * predictedSolar[i].power / 4);
-    }
-    ctx.stroke();
 
-   
-    // Cost
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "green"; 
-    ctx.beginPath();
-    ctx.moveTo(0, -dailyCost[0] * scaleDailyY);
+    series = [];
+    for (t = 0; t < predictedLimitedSolar.length; t++)
+      series[series.length] = { x: predictedLimitedSolar[t].time * 4, y: predictedLimitedSolar[t].power };
+
+    dataSeries = new DataSeries();
+    dataSeries.chartType = EChartType.line;
+    dataSeries.series = series;
+    dataSeries.ymax = max;
+    dataSeries.ymin = min;
+    dataSeries.xmin = dayStart;
+    dataSeries.xmax = dayEnd;
+    dataSeries.strokeStyle = "orange";
+    dataSeries.lineWidth = 2;
+    dataSeries.lineDash = [5, 5];
+    this.chart.addDataSeries(dataSeries);
+
+    series = [];
+    for (t = 0; t < predictedSolar.length; t++)
+      series[series.length] = { x: predictedSolar[t].time * 4, y: predictedSolar[t].power };
+
+    dataSeries = new DataSeries();
+    dataSeries.chartType = EChartType.line;
+    dataSeries.series = series;
+    dataSeries.ymax = max;
+    dataSeries.ymin = min;
+    dataSeries.xmin = dayStart;
+    dataSeries.xmax = dayEnd;
+    dataSeries.strokeStyle = "red";
+    this.chart.addDataSeries(dataSeries);
+
+
     let lastT: number = 0;
-    for (t = 1; t < 24 * 4; t++)
+    series = [24*4];
+    for (t = 0; t < 24 * 4; t++) {
+      series[t] = null;
       if (dailyCost[t] != null) {
-        ctx.lineTo(t * scaleX, -dailyCost[t] * scaleDailyY);
+        series[t] = { x: t, y: dailyCost[t] };
         lastT = t;
       }
-    ctx.stroke();
+    }
+    series[lastT] = { x: lastT, y: dailyCost[lastT], note: "$" + common.prettyFloat(-dailyCost[lastT], 100) };
+    
 
-    // Cost $
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "black"; 
-    ctx.beginPath();
-    ctx.ellipse(lastT * scaleX, -dailyCost[lastT] * scaleDailyY, 5, 5, 0, 0, 2*Math.PI, false);
-    ctx.stroke();
-    ctx.font = "24px san serif";
-    ctx.textAlign = "left";
-    ctx.fillStyle = "black";
-    ctx.fillText("$" + common.prettyFloat(-dailyCost[lastT],100), lastT * scaleX + 7, -dailyCost[lastT] * scaleDailyY + 10);
+    dataSeries = new DataSeries();
+    dataSeries.chartType = EChartType.line;
+    dataSeries.yAxisType = EAxisType.primary;
+    dataSeries.yDataType = "number";
+    dataSeries.yTickFormat = "2";
+    dataSeries.yUnits = "$";
+    dataSeries.series = series;
+    dataSeries.ymax = maxCost;
+    dataSeries.ymin = -maxCost;
+    dataSeries.xmin = dayStart;
+    dataSeries.xmax = dayEnd;
+    dataSeries.lineWidth = 2;
+    dataSeries.strokeStyle = "green";
+    this.chart.addDataSeries(dataSeries);
 
-    this.fullUpdate = lastT == 24 * 4 - 1;
-    this.lastUpdate = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(), Math.floor((lastT+1) / 4), ((lastT+1) % 4) * 15);
 
-    // X Axis 
-    ctx.strokeStyle = "black"
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(1200, 0);
-    ctx.stroke();
-
-    ctx.restore();
+    this.chart.draw();
   }
   
   MakePlusMinus180(n: number): number {
@@ -429,6 +512,7 @@ export class SolarHistoryComponent implements OnInit {
       this.maxPower = Math.abs(power.wattsConsumed);
     if (Math.abs(power.wattsProduced) > this.maxPower)
       this.maxPower = Math.abs(power.wattsProduced);
+    let max: number = (Math.floor(this.maxPower / 500) + 1) * 500;
 
     if (Math.abs(power.wattsConsumed) > this.maxConsumuption)
       this.maxConsumuption = Math.abs(power.wattsConsumed);
@@ -466,7 +550,7 @@ export class SolarHistoryComponent implements OnInit {
 
     let a: number;
     // Production
-    a = - (height/2) * power.wattsProduced / this.maxPower;
+    a = - (height / 2) * power.wattsProduced / max;
     ctx.strokeStyle = "rgba(41, 155, 251, 0.3)";
     ctx.fillStyle = "rgba(41, 155, 251, 0.3)";
     ctx.beginPath();
@@ -474,7 +558,7 @@ export class SolarHistoryComponent implements OnInit {
     ctx.fill();
 
     // Consumption
-    a = (height / 2) * power.wattsConsumed / this.maxPower;
+    a = (height / 2) * power.wattsConsumed / max;
     ctx.strokeStyle = "rgba(244,115,32,0.3)";
     ctx.fillStyle = "rgba(244,115,32,0.3)";
     ctx.beginPath();
@@ -482,7 +566,7 @@ export class SolarHistoryComponent implements OnInit {
     ctx.fill();
 
     // Net
-    let net = (height / 2) * power.wattsNet / this.maxPower;
+    let net = (height / 2) * power.wattsNet / max;
     if (power.wattsNet < 0) {  // production
       ctx.strokeStyle = "rgba(41, 155, 251, 0.8)";
       ctx.fillStyle = "rgba(41, 155, 251, 0.8)";
@@ -497,7 +581,7 @@ export class SolarHistoryComponent implements OnInit {
     ctx.save();
 
     // Max possible production
-    a = -(height / 2) * common.maxProduction / this.maxPower;
+    a = -(height / 2) * common.maxProduction / max;
     ctx.strokeStyle = "red";
     ctx.setLineDash([15, 20]);
     ctx.beginPath();
@@ -507,7 +591,7 @@ export class SolarHistoryComponent implements OnInit {
     ctx.stroke();
 
     // Max production
-    a = -(height / 2) * this.maxProduction / this.maxPower;
+    a = -(height / 2) * this.maxProduction / max;
     ctx.strokeStyle = "black";
     ctx.setLineDash([15, 20]);
     ctx.beginPath();
@@ -517,7 +601,7 @@ export class SolarHistoryComponent implements OnInit {
     ctx.stroke();
 
     // Max consumption
-    a = (height / 2) * this.maxConsumuption / this.maxPower;
+    a = (height / 2) * this.maxConsumuption / max;
     ctx.strokeStyle = "black";
     ctx.setLineDash([15, 20]);
     ctx.beginPath();
@@ -530,8 +614,8 @@ export class SolarHistoryComponent implements OnInit {
 
     // Graph ticks
     ctx.strokeStyle = "black";
-    for (let i: number = 0; i < this.maxPower; i += 500) {
-      let y: number = (height / 2) * i / this.maxPower;
+    for (let i: number = 0; i < max; i += 500) {
+      let y: number = (height / 2) * i / max;
       if ((i % 1000) == 0 && i != 0)
         ctx.lineWidth = 2;
       else

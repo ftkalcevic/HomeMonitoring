@@ -102,7 +102,7 @@ export class GardenTanksComponent implements OnDestroy {
     }
 
     this.chart.clearDataSeries();
-
+    let flowMax: number = 500;
     let activeAxis: EAxisType = EAxisType.primary;
     let activeAxisCount: number = 0;
     if (this.showFlow) {
@@ -123,7 +123,8 @@ export class GardenTanksComponent implements OnDestroy {
         if (lastDay != d.timestamp.getDate()) {
           let dayFlow: number = lastFlow - flow;
           let dayOverflow: number = lastOverflow - overflow;
-          flowData[lastDay] = { x: lastDate.getTime()/(24*60*60*1000), y: [dayFlow, dayOverflow] };
+          flowData[lastDay] = { x: lastDate.getTime() / (24 * 60 * 60 * 1000), y: [dayFlow, dayOverflow] };
+          if (dayFlow + dayOverflow > flowMax) flowMax = dayFlow + dayOverflow;
           lastDay = d.timestamp.getDate();
           lastDate = d.timestamp;
           flow = d.tankFlow;
@@ -135,13 +136,14 @@ export class GardenTanksComponent implements OnDestroy {
       let dayFlow: number = lastFlow - flow;
       let dayOverflow: number = lastOverflow - overflow;
       flowData[lastDay] = { x: lastDate.getTime() / (24 * 60 * 60 * 1000), y: [dayFlow, dayOverflow] };
+      if (dayFlow + dayOverflow > flowMax) flowMax = dayFlow + dayOverflow;
 
       let dataSeries: DataSeries = new DataSeries();
       dataSeries.series = flowData;
       dataSeries.xmin = dayStart;
       dataSeries.xmax = dayEnd;
       dataSeries.ymin = 0;
-      dataSeries.ymax = 500;
+      dataSeries.ymax = flowMax;
       dataSeries.xAxisType = EAxisType.primary;
       dataSeries.xDataType = "date";
       dataSeries.xTickFormat = this.displayType == "week" ? "E d MMM" : "dMMMyy";
@@ -167,7 +169,7 @@ export class GardenTanksComponent implements OnDestroy {
       dataSeries.xmin = dayStart;
       dataSeries.xmax = dayEnd;
       dataSeries.ymin = 0;
-      dataSeries.ymax = 500;
+      dataSeries.ymax = flowMax;
       dataSeries.xAxisType = EAxisType.primary;
       dataSeries.xDataType = "date";
       dataSeries.xTickFormat = this.displayType == "week" ? "E d MMM" : "dMMMyy";

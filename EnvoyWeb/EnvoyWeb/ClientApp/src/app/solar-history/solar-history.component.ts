@@ -36,6 +36,7 @@ export class HistoryChartComoponent extends ChartComponent {
   public prices: any[];
   public rates: any[];
 
+  // override drawBackground so we can display time-of-day pricing
   public drawBackground(ctx: CanvasRenderingContext2D) {
     ctx.save();
     ctx.fillStyle = "white";
@@ -61,6 +62,16 @@ export class HistoryChartComoponent extends ChartComponent {
 
     ctx.restore();
   }
+
+  //public getScaleAndOffset(): any {
+  //  // return the scale and offset of the secondary y axis so we can use the same dimensions for the live power bar chart
+  //  return {
+  //    scale: this.series[0].yAxis.scale,
+  //    offset1: this.series[0].yAxis.offset1,
+  //    offset2: this.series[0].yAxis.offset2,
+  //    size: this.series[0].yAxis.size
+  //  };
+  //}
 
 };
 
@@ -478,6 +489,10 @@ export class SolarHistoryComponent implements OnInit {
 
 
     this.chart.draw();
+
+    this.fullUpdate = lastT == 24 * 4 - 1;
+    this.lastUpdate = new Date(this.date.getFullYear(), this.date.getMonth(), this.date.getDate(), Math.floor((lastT + 1) / 4), ((lastT + 1) % 4) * 15);
+
   }
   
   MakePlusMinus180(n: number): number {

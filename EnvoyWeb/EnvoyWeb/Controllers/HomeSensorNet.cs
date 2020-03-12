@@ -29,7 +29,7 @@ namespace EnvoyWeb
                 using (var con = new SqlConnection(connectString))
                 {
                     con.Open();
-                    using (var cmd = new SqlCommand(@"select DeviceId,DeviceName from TankWaterer_Tanks", con))
+                    using (var cmd = new SqlCommand(@"select DeviceId,DeviceName from TankWaterer_Tanks order by SortOrder", con))
                     {
                         using (var rdr = cmd.ExecuteReader())
                         {

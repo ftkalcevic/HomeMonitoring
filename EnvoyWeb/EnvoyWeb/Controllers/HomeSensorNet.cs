@@ -148,7 +148,7 @@ namespace EnvoyWeb
                     dateStart = dateStart.AddDays(-offset);
                     dateEnd = dateStart.AddDays(7);
                 }
-                else if ( period == 1 ) // month
+                else if (period == 1) // month
                 {
                     dateStart = new DateTime(date.Year, date.Month, 1);
                     dateEnd = dateStart.AddMonths(1);
@@ -156,7 +156,7 @@ namespace EnvoyWeb
                 else // year
                 {
                     dateStart = new DateTime(date.Year, 1, 1);
-                    dateEnd = new DateTime(date.Year+1, 1, 1);
+                    dateEnd = new DateTime(date.Year + 1, 1, 1);
                 }
 
                 using (var con = new SqlConnection(connectString))
@@ -204,55 +204,156 @@ where timestamp >= @startDate and timestamp < @endDate order by timestamp", con)
 
             return pp;
         }
-    }
 
-    public class IPotPlantStats
-    {
-        public int Moisture;
-        public float InternalTemperature;
-        public float ExternalTemperature;
-        public float VBat;
-        public DateTime Timestamp;
-
-        public IPotPlantStats()
+        // GET: api/HomeSensorNet/GetRainGaugeStats
+        [HttpGet("[action]/{period}/{date}")]
+        public IEnumerable<IRainGaugeStats> GetRainGaugeStats(int period, DateTime date)
         {
-            Moisture = 0;
-            InternalTemperature = 0;
-            ExternalTemperature = 0;
-            VBat = 0;
-            //Timestamp;
+            List<IRainGaugeStats> pp = new List<IRainGaugeStats>();
+
+            try
+            {
+                DateTime dateStart, dateEnd;
+
+                if (period == 0) // day
+                {
+                    dateStart = new DateTime(date.Year, date.Month, date.Day);
+                    dateEnd = dateStart.AddDays(1);
+                }
+                else if (period == 1) // week
+                {
+                    // Sunday will be the start of the week
+                    int offset = (int)date.DayOfWeek;
+                    dateStart = new DateTime(date.Year, date.Month, date.Day);
+                    dateStart = dateStart.AddDays(-offset);
+                    dateEnd = dateStart.AddDays(7);
+                }
+                else if (period == 2) // month
+                {
+                    dateStart = new DateTime(date.Year, date.Month, 1);
+                    dateEnd = dateStart.AddMonths(1);
+                }
+                else // year
+                {
+                    dateStart = new DateTime(date.Year, 1, 1);
+                    dateEnd = new DateTime(date.Year + 1, 1, 1);
+                }
+
+                using (var con = new SqlConnection(connectString))
+                {
+                    con.Open();
+                    using (var cmd = new SqlCommand(@"
+select [timestamp],[millimeters],[temperature],[humidity],[vbat],[vsolar]
+from RainGauge
+where timestamp >= @startDate and timestamp < @endDate order by timestamp", con))
+                    {
+                        cmd.Parameters.Add("startDate", SqlDbType.Date).Value = dateStart;
+                        cmd.Parameters.Add("endDate", SqlDbType.Date).Value = dateEnd;
+
+                        using (var rdr = cmd.ExecuteReader())
+                        {
+                            while (rdr.Read())
+                            {
+                                DateTime timestamp = rdr.GetDateTime(0);
+                                float millimeters = (float)rdr.GetDouble(1);
+                                float temperature = (float)rdr.GetDouble(2);
+                                float humidity = (float)rdr.GetDouble(3);
+                                float vbat = (float)rdr.GetDouble(4);
+                                float vsolar = (float)rdr.GetDouble(5);
+
+                                pp.Add(new IRainGaugeStats()
+                                {
+                                    Timestamp = timestamp,
+                                    millimeters = millimeters,
+                                    temperature = temperature,
+                                    humidity = humidity,
+                                    vbat = vbat,
+                                    vsolar = vsolar
+                                });
+
+                            }
+                            rdr.Close();
+                        }
+                    }
+                    con.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
+
+            return pp;
         }
-    }
-    public class ITankWaterer
-    {
-        public int Moisture1;
-        public int Moisture2;
-        public int TankVolume;
-        public float TankFlow;
-        public float TankOverflow;
-        public float Temperature;
-        public DateTime Timestamp;
 
-        public ITankWaterer()
+
+        public class IRainGaugeStats
         {
-            Moisture1 = 0;
-            Moisture2 = 0;
-            TankVolume = 0;
-            TankFlow = 0;
-            TankOverflow = 0;
-            Temperature = 0;
-            //Timestamp;
+            public float millimeters;
+            public float temperature;
+            public float humidity;
+            public float vbat;
+            public float vsolar;
+            public DateTime Timestamp;
+
+            public IRainGaugeStats()
+            {
+                millimeters = 0;
+                temperature = 0;
+                humidity = 0;
+                vbat = 0;
+                vsolar = 0;
+                //Timestamp;
+            }
         }
-    }
-    public class ITank
-    {
-        public string DeviceId;
-        public string DeviceName;
-
-        public ITank()
+        public class IPotPlantStats
         {
-            DeviceId = "";
-            DeviceName = "";
+            public int Moisture;
+            public float InternalTemperature;
+            public float ExternalTemperature;
+            public float VBat;
+            public DateTime Timestamp;
+
+            public IPotPlantStats()
+            {
+                Moisture = 0;
+                InternalTemperature = 0;
+                ExternalTemperature = 0;
+                VBat = 0;
+                //Timestamp;
+            }
+        }
+        public class ITankWaterer
+        {
+            public int Moisture1;
+            public int Moisture2;
+            public int TankVolume;
+            public float TankFlow;
+            public float TankOverflow;
+            public float Temperature;
+            public DateTime Timestamp;
+
+            public ITankWaterer()
+            {
+                Moisture1 = 0;
+                Moisture2 = 0;
+                TankVolume = 0;
+                TankFlow = 0;
+                TankOverflow = 0;
+                Temperature = 0;
+                //Timestamp;
+            }
+        }
+        public class ITank
+        {
+            public string DeviceId;
+            public string DeviceName;
+
+            public ITank()
+            {
+                DeviceId = "";
+                DeviceName = "";
+            }
         }
     }
 }

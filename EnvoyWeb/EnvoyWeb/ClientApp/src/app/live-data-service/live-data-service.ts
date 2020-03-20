@@ -516,4 +516,11 @@ export class LiveDataService {
       .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
   }
 
+  public ReadRainGaugeStats(period: number, day: Date): Observable<HomeSensorNet.IRainGaugeStats[]> {
+    return this
+      .http
+      .get<HomeSensorNet.IRainGaugeStats[]>(this.baseUrl + 'api/HomeSensorNet/GetRainGaugeStats/' + period + '/' + day.toISOString())
+      .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
+  }
+
 }

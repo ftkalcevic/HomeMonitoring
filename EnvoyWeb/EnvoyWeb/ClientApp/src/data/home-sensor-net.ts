@@ -48,3 +48,12 @@ export interface IPotPlantStats {
   vBat: number;
   timestamp: Date;
 }
+
+export interface IRainGaugeStats {
+  millimeters: number;
+  temperature: number;
+  humidity: number;
+  vbat: number;
+  vsolar: number;
+  timestamp: Date;
+}

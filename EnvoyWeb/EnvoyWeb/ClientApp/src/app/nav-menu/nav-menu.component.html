@@ -158,6 +158,12 @@
             </li>
 
             <li class="nav-item" [routerLinkActive]='["link-active"]' [routerLinkActiveOptions]='{ exact: true }'>
+              <a [routerLink]='["/garden-raingauge"]' class="nav-link" (click)='isExpanded=false;'>
+                <span class='fas fa-home'></span> Rain Gauge
+              </a>
+            </li>
+
+            <li class="nav-item" [routerLinkActive]='["link-active"]' [routerLinkActiveOptions]='{ exact: true }'>
               <a [routerLink]='["/garden-noise"]' class="nav-link" (click)='isExpanded=false;'>
                 <span class='fas fa-home'></span> Noise Monitor
               </a>

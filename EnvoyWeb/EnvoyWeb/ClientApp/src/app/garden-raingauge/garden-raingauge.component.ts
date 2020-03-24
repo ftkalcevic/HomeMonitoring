@@ -23,7 +23,7 @@ export class GardenRainGaugeComponent implements OnDestroy {
   subs: any[] = [];
   public displayType: string = "day";
   public date: Date;
-  public firstDate: Date = new Date(2020, 3, 20);
+  public firstDate: Date = new Date(2020, 2, 23);
   public showMillimeters: boolean = true;
   public showTemperature: boolean = true;
   public showHumidity: boolean = true;
@@ -186,11 +186,12 @@ export class GardenRainGaugeComponent implements OnDestroy {
 
     if (this.showTemperature) {
       let series: any[] = [];
-      for (let d of data) {
-        if (d.temperature < minTemp) minTemp = d.temperature;
-        if (d.temperature > maxTemp) maxTemp = d.temperature;
-        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.temperature };
-      }
+      for (let d of data)
+        if ( !(d.temperature == 0 && d.humidity == 0) ) {
+          if (d.temperature < minTemp) minTemp = d.temperature;
+          if (d.temperature > maxTemp) maxTemp = d.temperature;
+          series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.temperature };
+        }
       // round down/up to nearest 10
       minTemp = Math.floor(minTemp / 10) * 10;
       maxTemp = Math.ceil(maxTemp / 10) * 10;
@@ -219,9 +220,10 @@ export class GardenRainGaugeComponent implements OnDestroy {
     if (this.showHumidity) {
       let minHumidity: number = 0, maxHumidity: number = 100;
       let series: any[] = [];
-      for (let d of data) {
-        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.humidity };
-      }
+      for (let d of data)
+        if (!(d.temperature == 0 && d.humidity == 0)) {
+          series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.humidity };
+        }
 
       let dataSeries: DataSeries = new DataSeries();
       dataSeries.series = series;

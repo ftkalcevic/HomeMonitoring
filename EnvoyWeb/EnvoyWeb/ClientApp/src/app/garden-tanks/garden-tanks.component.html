@@ -31,7 +31,7 @@
     <app-chart #chart style="width:100%; height: 620px;" class="partial-height"></app-chart>
   </div>
   <div>
-    <select [(ngModel)]="selectedTank">
+    <select [(ngModel)]="selectedTank" (click)="tankChanged();">
       <option *ngFor="let t of tanks;" [ngValue]="t.deviceId">
         {{t.deviceName}}
       </option>

@@ -79,6 +79,10 @@ export class GardenTanksComponent implements OnDestroy {
     this.RequestReadTankWaterer();
   }
 
+  public tankChanged() {
+    this.RequestReadTankWaterer();
+  }
+
   public displayTypeChanged(newType: string) {
     this.displayType = newType;
     this.RequestReadTankWaterer();

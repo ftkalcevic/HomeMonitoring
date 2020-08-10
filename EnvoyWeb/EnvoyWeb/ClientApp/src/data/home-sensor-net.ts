@@ -10,6 +10,7 @@ export interface ITankWaterer {
   tankFlow: number;
   tankOverflow: number;
   temperature: number;
+  water24Hours: number;
   timestamp: Date;
 }
 
@@ -34,6 +35,7 @@ export class TankWaterer implements ITankWaterer {
   tankFlow: number;
   tankOverflow: number;
   temperature: number;
+  water24Hours: number;
   timestamp: Date;
 
   public constructor(init?: Partial<ITankWaterer>) {

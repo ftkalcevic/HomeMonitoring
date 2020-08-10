@@ -27,6 +27,7 @@ export class GardenTanksComponent implements OnDestroy {
   public date: Date;
   public firstDate: Date = new Date(2020, 1, 13);
   public showFlow: boolean = true;
+  public show24: boolean = true;
   public showVolume: boolean = true;
   public showMoisture: boolean = true;
   public showTemperature: boolean = true;
@@ -117,28 +118,34 @@ export class GardenTanksComponent implements OnDestroy {
       let flowData: any[] = [];
       let lastDay: number = data[0].timestamp.getDate();
       let lastDate: Date = data[0].timestamp;
-      let flow: number = data[0].tankFlow;
-      let overflow: number = data[0].tankOverflow;
-      let lastFlow: number = flow;
-      let lastOverflow = overflow;
+      let flow: number = 0;
+      let overflow: number = 0;
+      let lastFlow: number = data[0].tankFlow;
+      let lastOverflow = data[0].tankOverflow;
       for (let d of data) {
 
         // Sum the flow for the day. (endtime.flow - starttime.flow)
         if (lastDay != d.timestamp.getDate()) {
-          let dayFlow: number = lastFlow - flow;
-          let dayOverflow: number = lastOverflow - overflow;
+          let dayFlow: number = flow;
+          let dayOverflow: number = overflow;
           flowData[lastDay] = { x: lastDate.getTime() / (24 * 60 * 60 * 1000), y: [dayFlow, dayOverflow] };
           if (dayFlow + dayOverflow > flowMax) flowMax = dayFlow + dayOverflow;
           lastDay = d.timestamp.getDate();
           lastDate = d.timestamp;
-          flow = d.tankFlow;
-          overflow = d.tankOverflow;
+          flow = 0;
+          overflow = 0;
+        }
+        else {
+          if (d.tankFlow > lastFlow )
+            flow += d.tankFlow - lastFlow;
+          if (d.tankOverflow > lastOverflow)
+            overflow += d.tankOverflow - lastOverflow;
         }
         lastFlow = d.tankFlow;
         lastOverflow = d.tankOverflow;
       }
-      let dayFlow: number = lastFlow - flow;
-      let dayOverflow: number = lastOverflow - overflow;
+      let dayFlow: number = flow;
+      let dayOverflow: number = overflow;
       flowData[lastDay] = { x: lastDate.getTime() / (24 * 60 * 60 * 1000), y: [dayFlow, dayOverflow] };
       if (dayFlow + dayOverflow > flowMax) flowMax = dayFlow + dayOverflow;
 
@@ -160,9 +167,33 @@ export class GardenTanksComponent implements OnDestroy {
       this.chart.addDataSeries(dataSeries);
     }
 
+    if (this.show24) {
+
+      // Make data series for 24 hour flow
+      let series: any[] = [];
+      for (let d of data) {
+        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.water24Hours };
+      }
+
+      let dataSeries: DataSeries = new DataSeries();
+      dataSeries.series = series;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.ymin = 0;
+      dataSeries.ymax = flowMax;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = this.displayType == "week" ? "E d MMM" : "dMMMyy";
+      dataSeries.yAxisType = activeAxis; activeAxisCount++;
+      dataSeries.yUnits = "(l)";
+      dataSeries.yDataType = "number";
+      dataSeries.strokeStyle = "orange";
+      dataSeries.lineWidth = 2;
+      this.chart.addDataSeries(dataSeries);
+    }
     if (this.showVolume) {
 
-      // Make data series for weigh
+      // Make data series for Volume
       let series: any[] = [];
       for (let d of data) {
         series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.tankVolume };

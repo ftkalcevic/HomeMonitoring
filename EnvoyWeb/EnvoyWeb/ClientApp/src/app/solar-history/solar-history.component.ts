@@ -118,7 +118,7 @@ export class SolarHistoryComponent implements OnInit {
   ResetMaximums() {
     this.maxConsumuption = 0;
     this.maxProduction = 0;
-    this.maxPower = common.maxProduction;
+    this.maxPower = common.maxProduction * 1.1;
   }
 
   RecalcData() {
@@ -523,16 +523,26 @@ export class SolarHistoryComponent implements OnInit {
   }
 
   public redrawBar(power: LivePower) {
-    if (Math.abs(power.wattsConsumed) > this.maxPower)
+    let newMax: boolean = false;
+
+    if (Math.abs(power.wattsConsumed) > this.maxPower) {
       this.maxPower = Math.abs(power.wattsConsumed);
-    if (Math.abs(power.wattsProduced) > this.maxPower)
+      newMax = true;
+    }
+    if (Math.abs(power.wattsProduced) > this.maxPower) {
       this.maxPower = Math.abs(power.wattsProduced);
+      newMax = true;
+    }
     let max: number = (Math.floor(this.maxPower / 500) + 1) * 500;
 
-    if (Math.abs(power.wattsConsumed) > this.maxConsumuption)
+    if (Math.abs(power.wattsConsumed) > this.maxConsumuption) {
       this.maxConsumuption = Math.abs(power.wattsConsumed);
-    if (Math.abs(power.wattsProduced) > this.maxProduction)
+      newMax = true;
+    }
+    if (Math.abs(power.wattsProduced) > this.maxProduction) {
       this.maxProduction = Math.abs(power.wattsProduced);
+      newMax = true;
+    }
 
 
     let now: Date = new Date(power.timestamp);
@@ -670,6 +680,9 @@ export class SolarHistoryComponent implements OnInit {
     }
 
     ctx.restore();
+
+    if (newMax)
+      this.redrawChart();
   }
 
 }

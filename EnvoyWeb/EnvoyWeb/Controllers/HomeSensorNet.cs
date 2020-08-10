@@ -86,7 +86,7 @@ namespace EnvoyWeb
                 using (var con = new SqlConnection(connectString))
                 {
                     con.Open();
-                    using (var cmd = new SqlCommand(@"select timestamp,Moisture1,Moisture2,TankVolume,TankFlow,TankOverflow,Temperature from TankWaterer where DeviceId=@deviceId and timestamp >= @startDate and timestamp < @endDate order by timestamp", con))
+                    using (var cmd = new SqlCommand(@"select timestamp,Moisture1,Moisture2,TankVolume,TankFlow,TankOverflow,Temperature,Water24Hours from TankWaterer where DeviceId=@deviceId and timestamp >= @startDate and timestamp < @endDate order by timestamp", con))
                     {
                         cmd.Parameters.Add("deviceId", SqlDbType.VarChar).Value = deviceId;
                         cmd.Parameters.Add("startDate", SqlDbType.Date).Value = dateStart;
@@ -103,6 +103,7 @@ namespace EnvoyWeb
                                 float TankFlow = (float)rdr.GetDouble(4);
                                 float TankOverflow = (float)rdr.GetDouble(5);
                                 float Temperature = (float)rdr.GetDouble(6);
+                                float Water24Hours = (float)rdr.GetDouble(7);
 
                                 water.Add(new ITankWaterer()
                                 {
@@ -112,7 +113,8 @@ namespace EnvoyWeb
                                     TankVolume = TankVolume,
                                     TankFlow = TankFlow,
                                     TankOverflow = TankOverflow,
-                                    Temperature = Temperature
+                                    Temperature = Temperature,
+                                    Water24Hours = Water24Hours
                                 });
 
                             }
@@ -332,6 +334,7 @@ where timestamp >= @startDate and timestamp < @endDate order by timestamp", con)
             public float TankOverflow;
             public float Temperature;
             public DateTime Timestamp;
+            public float Water24Hours;
 
             public ITankWaterer()
             {
@@ -341,6 +344,7 @@ where timestamp >= @startDate and timestamp < @endDate order by timestamp", con)
                 TankFlow = 0;
                 TankOverflow = 0;
                 Temperature = 0;
+                Water24Hours = 0;
                 //Timestamp;
             }
         }

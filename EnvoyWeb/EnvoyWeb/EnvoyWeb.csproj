@@ -36,6 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="ClientApp\src\data\AirQuality.ts" />
     <None Remove="ClientApp\src\data\common.ts" />
     <None Remove="ClientApp\src\data\energy-plans.ts" />
     <None Remove="ClientApp\src\data\gradient.ts" />
@@ -59,6 +60,9 @@
     <TypeScriptCompile Include="ClientApp\src\data\sonoff-device.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\panel-power.ts" />
     <TypeScriptCompile Include="ClientApp\src\data\live-power.ts" />
+    <TypeScriptCompile Include="ClientApp\src\data\AirQuality.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="ClientApp\src\data\Weight.ts" />
   </ItemGroup>
 

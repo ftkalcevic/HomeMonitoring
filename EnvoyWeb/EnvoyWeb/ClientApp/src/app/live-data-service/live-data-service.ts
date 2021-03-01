@@ -6,6 +6,7 @@ import { EnergyPlans, EnergyPlan, MyEnergyPlan } from '../../data/energy-plans';
 import * as HomeSensorNet from '../../data/home-sensor-net';
 import * as SoundRecordings from '../../data/sound-recordings';
 import * as Weight from '../../data/Weight';
+import * as AirQuality from '../../data/AirQuality';
 
 export interface IEnergy {
   Total: number;
@@ -160,7 +161,8 @@ export class LiveDataService {
     [
       { StartDate: new Date('1 Oct 2018'), EndDate: new Date('31 Dec 2019'), PlanId: 2 },
       { StartDate: new Date('1 Jan 2020'), EndDate: new Date('22 Feb 2020'), PlanId: 3 },
-      { StartDate: new Date('23 Feb 2020'), EndDate: new Date('31 Dec 3020'), PlanId: 4 },
+      { StartDate: new Date('23 Feb 2020'), EndDate: new Date('27 Sep 2020'), PlanId: 4 },
+      { StartDate: new Date('28 Sep 2020'), EndDate: new Date('31 Dec 3020'), PlanId: 7 },
     ];
   //private energyPlan: EnergyPlan;
   readonly POINTS: number = 2000;
@@ -506,6 +508,13 @@ export class LiveDataService {
     return this
       .http
       .get<Weight.IWeight[]>(this.baseUrl + 'api/Weight/ReadWeight/' + String(month) + '/' + day.toISOString())
+      .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
+  }
+
+  public ReadAirQuality(range: number, day: Date): Observable<AirQuality.IAirQuality[]> {
+    return this
+      .http
+      .get<AirQuality.IAirQuality[]>(this.baseUrl + 'api/AirQuality/Read/' + String(range) + '/' + day.toISOString())
       .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
   }
 

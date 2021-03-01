@@ -100,7 +100,18 @@ export class EnergyPlans {
                     { Name: "Winter Shoulder Weekend", StartTime: "7:00", EndTime: "21:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2968, IsForControlledLoad: false, IsForWeekDayOnly: false },
                     { Name: "Winter Off-Peak", StartTime: "0:00", EndTime: "23:59", StartDate: "1 Apr", EndDate: "30 Sep", Rate: 0.2188, IsForControlledLoad: false, IsForWeekDayOnly: false },
                 ]
-            }
+            },
+            {
+                Name: "Alinta HomeDeal - Dual Rate - From 28 Sep 2020",
+                DailySupplyCharge: .828,
+                EnergyDiscount: 0,
+                FiT: 0.102,
+                PFiT: 0.6,
+                Pricing: [
+                    { Name: "Peak", StartTime: "7:00", EndTime: "22:59", Rate: 0.276, IsForControlledLoad: false, IsForWeekDayOnly: true },
+                    { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.139, IsForControlledLoad: false, IsForWeekDayOnly: false }
+                ]
+            },
         ];
     }
     dateMatch(pricing, month, day) {

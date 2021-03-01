@@ -25,6 +25,7 @@ import { HistoryChartComoponent } from './solar-history/solar-history.component'
 import { GardenTanksComponent } from './garden-tanks/garden-tanks.component';
 import { GardenNoiseComponent } from './garden-noise/garden-noise.component';
 import { GardenWeightComponent } from './garden-weight/garden-weight.component';
+import { GardenAirQualityComponent } from './garden-airquality/garden-airquality.component';
 import { GardenPotPlantsComponent } from './garden-potplants/garden-potplants.component';
 import { GardenRainGaugeComponent } from './garden-raingauge/garden-raingauge.component';
 import { WeatherRadarComponent } from './weather-radar/weather-radar.component';
@@ -86,6 +87,7 @@ import {
     GardenTanksComponent,
     GardenNoiseComponent,
     GardenWeightComponent,
+    GardenAirQualityComponent,
     GardenPotPlantsComponent,
     GardenRainGaugeComponent,
     ChartComponent,
@@ -131,6 +133,7 @@ import {
       { path: 'garden-tanks', component: GardenTanksComponent },
       { path: 'garden-noise', component: GardenNoiseComponent },
       { path: 'garden-weight', component: GardenWeightComponent },
+      { path: 'garden-airquality', component: GardenAirQualityComponent },
       { path: 'garden-potplants', component: GardenPotPlantsComponent },
       { path: 'garden-raingauge', component: GardenRainGaugeComponent },
       { path: 'weather-radar', component: WeatherRadarComponent },

@@ -131,6 +131,17 @@ export class EnergyPlans {
         { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.139, IsForControlledLoad: false, IsForWeekDayOnly: false }
       ]
     },
+    {/*8*/
+      Name: "Alinta HomeDeal - Dual Rate - From 1 Aug 2021",
+      DailySupplyCharge: .828,
+      EnergyDiscount: 0,
+      FiT: 0.067,
+      PFiT: 0.6,
+      Pricing: [
+        { Name: "Peak", StartTime: "7:00", EndTime: "22:59", Rate: 0.276, IsForControlledLoad: false, IsForWeekDayOnly: true },
+        { Name: "Off-Peak", StartTime: "0:00", EndTime: "23:59", Rate: 0.139, IsForControlledLoad: false, IsForWeekDayOnly: false }
+      ]
+    },
 
   ];
 

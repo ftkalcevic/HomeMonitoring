@@ -253,6 +253,9 @@ export class SolarHistoryComponent implements OnInit {
     let now: Date = new Date(this.date);
     let plan: EnergyPlan = this.liveDataService.getEnergyPlan(now);
     let sum: number = -plan.DailySupplyCharge * 1.1;
+    if (this.enphaseData == null || this.enphaseData.length != 24 * 4)
+      return 0.0;
+
     for (t = 0; t < 24 * 4; t++) { 
 
       if (this.enphaseData[t] != null) {

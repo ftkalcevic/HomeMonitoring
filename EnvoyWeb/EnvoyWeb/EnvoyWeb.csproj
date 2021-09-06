@@ -17,6 +17,7 @@
     <Company>Bernardo Lloret-Fuentes</Company>
     <Product>Net Core 2.1 Angular 6 Template</Product>
     <PackageId>NetCore2_1_Angular6</PackageId>
+    <UserSecretsId>43e29d32-3aa4-48e3-b499-6a39355d611f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

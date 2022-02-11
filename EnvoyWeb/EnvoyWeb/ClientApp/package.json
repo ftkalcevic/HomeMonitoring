@@ -27,7 +27,7 @@
     "@angular/platform-server": "^7.1.1",
     "@angular/router": "^7.1.1",
     "@nguniversal/module-map-ngfactory-loader": "^7.0.2",
-    "ajv": "^6.6.1",
+    "ajv": "^6.12.3",
     "aspnet-prerendering": "^3.0.1",
     "bootstrap": "^4.3.1",
     "core-js": "^2.6.0",

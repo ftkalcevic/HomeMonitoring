@@ -33,7 +33,7 @@
     "core-js": "^2.6.0",
     "gl-matrix": "2.8.1",
     "jquery": "^3.4.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "popper.js": "^1.14.6",
     "rxjs": "^6.4.0",
     "suncalc": "1.8.0",

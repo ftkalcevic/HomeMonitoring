@@ -21,9 +21,8 @@ export class EnergyPlan {
 }
 
 export class EnergyPlans {
-  Plans: EnergyPlan
-  []
-  = [
+  Plans: EnergyPlan[] =
+  [
     { /*0*/
       "Name": "RACV Plus 45/30 FIT Simply Energy - Time of Use + Controlled Load OP",
       "DailySupplyCharge": 0.9462,
@@ -144,7 +143,7 @@ export class EnergyPlans {
     },
     { /*4*/
       "Name": "Alinta HomeDeal - Dual Rate - From 4 Mar 2020",
-      "DailySupplyCharge": ".828",
+      "DailySupplyCharge": .828,
       "EnergyDiscount": 0,
       "FiT": 0.12,
       "PFiT": 0.6,
@@ -397,7 +396,7 @@ export class EnergyPlans {
     },
     { /*7*/
       "Name": "Alinta HomeDeal - Dual Rate - From 28 Sep 2020",
-      "DailySupplyCharge": ".828",
+      "DailySupplyCharge": .828,
       "EnergyDiscount": 0,
       "FiT": 0.102,
       "PFiT": 0.6,
@@ -422,7 +421,7 @@ export class EnergyPlans {
     },
     { /*8*/
       "Name": "Alinta HomeDeal - Dual Rate - From 1 Aug 2021",
-      "DailySupplyCharge": ".828",
+      "DailySupplyCharge": .828,
       "EnergyDiscount": 0,
       "FiT": 0.067,
       "PFiT": 0.6,
@@ -447,7 +446,7 @@ export class EnergyPlans {
     },
     { /*9*/
       "Name": "Alinta HomeDeal - Dual Rate - From 1 Aug 2023",
-      "DailySupplyCharge": ".93874",
+      "DailySupplyCharge": .93874,
       "EnergyDiscount": 0,
       "FiT": 0.049,
       "PFiT": 0.6,
@@ -456,7 +455,7 @@ export class EnergyPlans {
           "Name": "Peak",
           "StartTime": "7:00",
           "EndTime": "22:59",
-          "Rate": "0.40238",
+          "Rate": 0.40238,
           "IsForControlledLoad": false,
           "IsForWeekDayOnly": false
         },

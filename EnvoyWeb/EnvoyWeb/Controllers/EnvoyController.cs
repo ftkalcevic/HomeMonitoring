@@ -1,14 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace EnvoyWeb.Controllers
 {
@@ -21,6 +25,7 @@ namespace EnvoyWeb.Controllers
         string userId;
         string apiKey;
         string hostname;
+        string token;
 
         public EnvoyController()
         {
@@ -28,6 +33,7 @@ namespace EnvoyWeb.Controllers
             userId = Startup.Configuration["ApplicationSettings:enphaseUserId"];
             apiKey = Startup.Configuration["ApplicationSettings:enphaseApiKey"];
             hostname = Startup.Configuration["ApplicationSettings:envoyHostname"];
+            token = Startup.Configuration["ApplicationSettings:envoyToken"]; 
         }
 
         private HttpClient GetClient()
@@ -43,13 +49,25 @@ namespace EnvoyWeb.Controllers
         [HttpGet("[action]")]
         public ILivePower LiveData()
         {
-            string url = $@"http://{hostname}/production.json?details=0";
+            string url = $@"https://{hostname}/production.json?details=0";
             ILivePower power = new ILivePower();
 
             try
             {
-                HttpClient c = GetClient();
-                var responseMsg = c.GetAsync(url);
+                var cookies = new CookieContainer();
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
+                    CookieContainer = cookies,
+                    UseCookies = true
+                };
+                var client = new HttpClient(handler);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                // Add a cookie
+                //cookies.Add(new Uri($"https://{hostname}"), new Cookie("sessionId", "rPcxSI1LHk78hmzu7kvA8Rzc0XKTHsHY"));
+
+                var responseMsg = client.GetAsync(url);
                 var response = responseMsg.Result;
                 if (response.IsSuccessStatusCode)
                 {
@@ -64,8 +82,9 @@ namespace EnvoyWeb.Controllers
                     power.wattsNet = data.consumption[1].wNow;
                 }
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                Trace.TraceError(ex.ToString());
                 if (client != null)
                 {
                     client.Dispose();

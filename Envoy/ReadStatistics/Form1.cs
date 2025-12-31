@@ -19,18 +19,23 @@ namespace ReadStatistics
         public Form1()
         {
             InitializeComponent();
-            re = new Envoy("10.0.0.201", "envoy", "056704", @"Persist Security Info=False;Integrated Security=SSPI; database = Electricity; server = Server\SqlExpress");
+            re = new Envoy("10.0.0.216", 
+                            "TOKEN GOES HERE",
+                            @"Persist Security Info=False;Integrated Security=SSPI; database = Electricity; server = Server");
             re.ReadInverters();
 
             t = new Timer();
-            t.Interval = 5 * 60 * 1000;  // 5 minutes
+            t.Interval = 1000;  // 1 sec
             t.Tick += T_Tick;
             t.Start();
         }
 
         private void T_Tick(object sender, EventArgs e)
         {
-            re.ReadInverters();
+            int del = re.ReadPower();
+            if (del < 0)
+                del = 1;
+            t.Interval = del * 1000;
         }
 
         private void button1_Click(object sender, EventArgs e)

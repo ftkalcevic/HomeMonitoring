@@ -149,6 +149,14 @@ namespace ReadEnvoy
                     {
                         double consumed_diff = consumed - last_consumed_daily_sum;
                         double produced_diff = produced - last_produced_daily_sum;
+                        if ( consumed_diff < 0 || produced_diff < 0)
+                        {
+                            // day roll
+                            consumed_diff = consumed;
+                            produced_diff = produced;
+                            last_consumed_daily_sum = 0;
+                            last_produced_daily_sum = 0;
+                        }
                         int numGaps = (int)((time - gapStart) / period) + 1;
                         System.Diagnostics.Debug.WriteLine($"numGaps: {numGaps}");
                         for (long t = gapStart, i = 0; t <= time; t += period, i++)
@@ -166,10 +174,18 @@ namespace ReadEnvoy
                     else
                     {
                         System.Diagnostics.Debug.WriteLine($"No gaps");
+                        double period_consumed = consumed - last_consumed_daily_sum;
+                        double period_produced = produced - last_produced_daily_sum;
+                        if (period_consumed < 0 || period_produced < 0)
+                        {
+                            // day roll
+                            period_consumed = consumed;
+                            period_produced = produced;
+                        }
                         var row = table.NewRow();
                         row["time"] = time;
-                        row["consumed"] = consumed - last_consumed_daily_sum;
-                        row["produced"] = produced - last_produced_daily_sum;
+                        row["consumed"] = period_consumed;
+                        row["produced"] = period_produced;
                         row["consumed_daily_sum"] = consumed;
                         row["produced_daily_sum"] = produced;
                         row["gaps"] = 0;

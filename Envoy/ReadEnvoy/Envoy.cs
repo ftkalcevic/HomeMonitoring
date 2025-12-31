@@ -131,7 +131,7 @@ namespace ReadEnvoy
             {
                 var content = response.Content;
                 string json = content.ReadAsStringAsync().Result;
-                Trace.TraceInformation(json);
+                //Trace.TraceInformation(json);
                 return json;
             }
             return null;

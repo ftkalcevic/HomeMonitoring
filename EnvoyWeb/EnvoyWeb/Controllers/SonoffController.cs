@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace EnvoyWeb.Controllers
 {
@@ -13,10 +14,13 @@ namespace EnvoyWeb.Controllers
     [ApiController]
     public class SonoffController : ControllerBase
     {
+        private readonly HttpClient _http;
+
         string connectString;
-        public SonoffController()
+        public SonoffController(IHttpClientFactory factory)
         {
             connectString = Startup.Configuration["ApplicationSettings:ConnectString"];
+            _http = factory.CreateClient();
         }
 
         // GET: api/Sonoff/GetDevices
@@ -258,6 +262,15 @@ and deviceId = @deviceId
                 con.Close();
             }
             return data;
+        }
+
+
+        [HttpGet("cmd")]
+        public async Task<IActionResult> Command(string host, string cmd)
+        {
+            var url = $"http://{host}/cm?cmnd={Uri.EscapeDataString(cmd)}";
+            var response = await _http.GetStringAsync(url);
+            return Content(response, "application/json");
         }
 
         //// GET: api/Sonoff/5

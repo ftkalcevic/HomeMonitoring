@@ -200,7 +200,7 @@ export class LivePowerComponent {
     sumPower = 0;
     for (let i: number = 0; i < this.data.length-1; i++) {
       let d = this.data[i];
-      ctx.fillStyle = "rgb("+this.colourList[i]+")";
+      ctx.fillStyle = "rgb("+this.colourList[i % (this.colourList.length-1)]+")";
       ctx.fillRect(barX, height - (sumPower + d.power) * scale, barWidth, d.power * scale);
       if (d.power > 0) {
         arrowHead[i] = { X: barX + barWidth, Y1: height - (sumPower + d.power) * scale, Y2: height - (sumPower + d.power) * scale + d.power * scale };
@@ -218,7 +218,7 @@ export class LivePowerComponent {
       for (let i: number = 0; i< hd.data.length-1; i++) {
         let d: LivePowerData = hd.data[i];
 
-        ctx.fillStyle = "rgb(" + this.colourList[i] + a;
+        ctx.fillStyle = "rgb(" + this.colourList[i % (this.colourList.length - 1)] + a;
         ctx.fillRect(x, height - (sumPower + d.power) * scale, 1, d.power * scale);
 
         if (arrowHead[i] === undefined && d.power > 0 ) {
@@ -234,7 +234,7 @@ export class LivePowerComponent {
     for (let i: number = 0; i < this.data.length; i++) {
       let y: number = i;
 
-      ctx.fillStyle = "rgb(" + this.colourList[i] + ")";
+      ctx.fillStyle = "rgb(" + this.colourList[i % (this.colourList.length - 1)] + ")";
       ctx.fillRect(labelX, height - y * (labelHeight + labelSpacing) - labelHeight, labelWidth, labelHeight);
       if ( this.data[i].total )
         ctx.strokeRect(labelX, height - y * (labelHeight + labelSpacing) - labelHeight, labelWidth, labelHeight);
@@ -252,7 +252,7 @@ export class LivePowerComponent {
           ctx.lineTo(labelX, height - y * (labelHeight + labelSpacing) - labelHeight / 2);
           ctx.stroke();
         } else {
-          ctx.fillStyle = "rgba(" + this.colourList[i] + ",0.5)";
+          ctx.fillStyle = "rgba(" + this.colourList[i % (this.colourList.length - 1)] + ",0.5)";
           ctx.beginPath();
           ctx.moveTo(arrowHead[i].X, arrowHead[i].Y1);
           ctx.lineTo(arrowHead[i].X, arrowHead[i].Y2);

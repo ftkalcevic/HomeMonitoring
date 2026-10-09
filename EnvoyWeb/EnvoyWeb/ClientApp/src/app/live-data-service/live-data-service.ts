@@ -415,7 +415,11 @@ export class LiveDataService {
   }
 
   private requestLivePower(d: SonoffDevice) {
-    this.http.get<ISonoffSensorData>('http://' + d.ipAddress + '/cm?cmnd=status 8')
+
+    let cmd: string = 'status 8';
+    let host: string  = d.ipAddress;
+
+    this.http.get<ISonoffSensorData>(`/api/Sonoff/cmd?host=${host}&cmd=${cmd}`)
       .subscribe(
         result => {
           this.ProcessLivePower(d, result);

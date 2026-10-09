@@ -288,6 +288,131 @@ where timestamp >= @startDate and timestamp < @endDate order by timestamp", con)
             return pp;
         }
 
+        // GET: api/HomeSensorNet/GetCoolingFanStats
+        [HttpGet("[action]/{period}/{date}")]
+        public IEnumerable<ICoolingFanStats> GetCoolingFanStats(int period, DateTime date)
+        {
+            List<ICoolingFanStats> pp = new List<ICoolingFanStats>();
+
+            try
+            {
+                DateTime dateStart, dateEnd;
+
+                if (period == 0) // day
+                {
+                    dateStart = new DateTime(date.Year, date.Month, date.Day);
+                    dateEnd = dateStart.AddDays(1);
+                }
+                else if (period == 1) // week
+                {
+                    // Sunday will be the start of the week
+                    int offset = (int)date.DayOfWeek;
+                    dateStart = new DateTime(date.Year, date.Month, date.Day);
+                    dateStart = dateStart.AddDays(-offset);
+                    dateEnd = dateStart.AddDays(7);
+                }
+                else if (period == 2) // month
+                {
+                    dateStart = new DateTime(date.Year, date.Month, 1);
+                    dateEnd = dateStart.AddMonths(1);
+                }
+                else // year
+                {
+                    dateStart = new DateTime(date.Year, 1, 1);
+                    dateEnd = new DateTime(date.Year + 1, 1, 1);
+                }
+
+                using (var con = new SqlConnection(connectString))
+                {
+                    con.Open();
+                    using (var cmd = new SqlCommand(@"
+select [temp]
+      ,[amb]
+      ,[duty]
+      ,[rpm]
+      ,[mode]
+      ,[alarms]
+      ,[silenced]
+      ,[rssi]
+      ,[uptime]
+      ,[DeviceId]
+      ,[timestamp]
+from CoolingFanControl
+where [timestamp] >= @startDate and [timestamp] < @endDate order by [timestamp]", con))
+                    {
+                        cmd.Parameters.Add("startDate", SqlDbType.Date).Value = dateStart;
+                        cmd.Parameters.Add("endDate", SqlDbType.Date).Value = dateEnd;
+
+                        using (var rdr = cmd.ExecuteReader())
+                        {
+                            while (rdr.Read())
+                            {
+                                float temperature = (float)rdr.GetDouble(0);
+                                float ambientTemperature = (float)rdr.GetDouble(1); 
+                                int dutyCycle = rdr.GetInt32(2);
+                                int rpm = rdr.GetInt32(3);
+                                string mode = rdr.GetString(4);
+                                string alarms = rdr.GetString(5);
+                                Boolean silenced = rdr.GetBoolean(6);
+                                int rssi = rdr.GetInt32(7);
+                                int uptime = rdr.GetInt32(8);
+                                string deviceId = rdr.GetString(9);
+                                DateTime Timestamp = rdr.GetDateTime(10);
+
+                                pp.Add(new ICoolingFanStats()
+                                {
+                                    temperature = temperature ,
+                                    ambientTemperature = ambientTemperature ,
+                                    dutyCycle = dutyCycle ,
+                                    rpm = rpm ,
+                                    alarms = alarms ,
+                                    silenced = silenced ,
+                                    rssi = rssi ,
+                                    uptime = uptime ,
+                                    Timestamp = Timestamp,
+                                });
+
+                            }
+                            rdr.Close();
+                        }
+                    }
+                    con.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
+
+            return pp;
+        }
+
+
+        public class ICoolingFanStats
+        {
+            public float temperature;
+            public float ambientTemperature;
+            public int dutyCycle;
+            public int rpm;
+            public string alarms;
+            public Boolean silenced;
+            public int rssi;
+            public int uptime;
+            public DateTime Timestamp;
+
+            public ICoolingFanStats()
+            {
+                temperature = 0;
+                ambientTemperature = 0;
+                dutyCycle = 0;
+                rpm = 0;
+                alarms = "";
+                silenced = false;
+                rssi = 0;
+                uptime = 0;
+                //Timestamp ;
+            }
+        }
 
         public class IRainGaugeStats
         {

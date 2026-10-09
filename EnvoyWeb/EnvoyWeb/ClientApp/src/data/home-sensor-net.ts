@@ -59,3 +59,16 @@ export interface IRainGaugeStats {
   vsolar: number;
   timestamp: Date;
 }
+
+
+export interface ICoolingFanStats {
+  temperature: number;
+  ambientTemperature: number;
+  dutyCycle: number;
+  rpm: number;
+  alarms: string;
+  silenced: Boolean;
+  rssi: number;
+  uptime: number;
+  timestamp: Date;
+}

@@ -460,6 +460,10 @@ export class ChartComponent implements OnDestroy {
     ctx.fillRect(0, 0, this.width, this.height);
   }
 
+  public chartContext(): CanvasRenderingContext2D {
+    return this.canvasRef.nativeElement.getContext('2d');
+  }
+
   public draw() {
 
     let ctx: CanvasRenderingContext2D = this.canvasRef.nativeElement.getContext('2d');

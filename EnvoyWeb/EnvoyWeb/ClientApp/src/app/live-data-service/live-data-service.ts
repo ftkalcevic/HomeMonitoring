@@ -544,4 +544,11 @@ export class LiveDataService {
       .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
   }
 
+  public ReadCoolingFanConfig(): Observable<HomeSensorNet.ICoolingFanConfig> {
+    return this
+      .http
+      .get<HomeSensorNet.ICoolingFanConfig>(this.baseUrl + 'api/HomeSensorNet/GetCoolingFanConfig')
+      .pipe(map(data => { data.timestamp = new Date(data.timestamp); return data; }));
+  }
+
 }

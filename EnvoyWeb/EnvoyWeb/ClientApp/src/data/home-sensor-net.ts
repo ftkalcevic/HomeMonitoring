@@ -72,3 +72,28 @@ export interface ICoolingFanStats {
   uptime: number;
   timestamp: Date;
 }
+
+
+export interface ICoolingFanConfig {
+  manual_duty: number;
+  t_min: number;
+  t_max: number;
+  min_duty: number;
+  idle_duty: number;
+  hysteresis: number;
+  setpoint: number;
+  kp: number;
+  ki: number;
+  ff_ambient: number;
+  ff_gain: number;
+  slew_rate: number;
+  alarm_temp: number;
+  report_interval: number;
+  mode: string;
+  control_source: string;
+  alarm_enabled: Boolean;
+  stall_alarm: Boolean;
+  DeviceId: string;
+  timestamp: Date;
+  uptime: number;
+}

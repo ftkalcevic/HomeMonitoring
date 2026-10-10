@@ -7,6 +7,7 @@ import { MY_FORMATS } from '../solar-history/solar-history.component';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ICoolingFanStats } from '../../data/home-sensor-net';
+import { ICoolingFanConfig } from '../../data/home-sensor-net';
 import { ChartComponent, DataSeries, EAxisType } from '../chart/chart.component';
 
 @Component({
@@ -27,12 +28,16 @@ export class GardenCoolingFanComponent implements OnDestroy {
   public showTemperature: boolean = true;
   public showDuty: boolean = true;
   public showRpm: boolean = true;
+  public coolingFanConfig: ICoolingFanConfig = null;
+
+
 
   constructor(private liveDataService: LiveDataService, private route: ActivatedRoute) {
     let now: Date = new Date();
     this.date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
     //this.date = new Date(2020, 1, 13, 0, 0, 0);
-    this.RequestReadCoolingFan();
+    this.subs.push(this.liveDataService.ReadCoolingFanConfig().subscribe(result => { this.coolingFanConfig = result; this.RequestReadCoolingFan(); }));
+    
   }
 
   ngOnDestroy() {
@@ -98,6 +103,40 @@ export class GardenCoolingFanComponent implements OnDestroy {
     this.displayType = newType;
     this.RequestReadCoolingFan();
     }
+
+  // Format seconds as the largest non-zero unit followed by as many smaller units (y, mo, d, h, m, s) as fit in maxStringLen characters.
+  // A year is 365 days and a month is 30 days.
+  formatUptime(seconds: number, maxStringLen: number): string {
+    const units: { name: string, secs: number }[] = [
+      { name: "y", secs: 365 * 86400 },
+      { name: "mo", secs: 30 * 86400 },
+      { name: "d", secs: 86400 },
+      { name: "h", secs: 3600 },
+      { name: "m", secs: 60 },
+      { name: "s", secs: 1 },
+    ];
+
+    let remaining: number = Math.max(0, Math.floor(seconds));
+    for (let i = 0; i < units.length; i++) {
+      const big: number = Math.floor(remaining / units[i].secs);
+      if (big == 0 && i < units.length - 1)
+        continue;
+
+      // Keep appending the next smaller unit while it still fits
+      let result: string = big + units[i].name;
+      remaining -= big * units[i].secs;
+      for (let j = i + 1; j < units.length; j++) {
+        const next: number = Math.floor(remaining / units[j].secs);
+        const withNext: string = result + " " + next + units[j].name;
+        if (withNext.length > maxStringLen)
+          break;
+        result = withNext;
+        remaining -= next * units[j].secs;
+      }
+      return result;
+    }
+    return "0s";
+  }
 
   draw(data: ICoolingFanStats[]) {
 
@@ -258,5 +297,33 @@ export class GardenCoolingFanComponent implements OnDestroy {
     }
 
     this.chart.draw();
+
+
+    if (this.coolingFanConfig != null && true) {
+      let ctx: CanvasRenderingContext2D = this.chart.chartContext();
+      let x: number = 790;
+      let y: number = 490;
+      const fontHeight: number = 20;
+      const lineSpacing: number = 29;
+
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 4;
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.fillRect(x, y - 20, 250, 70);
+      ctx.strokeRect(x, y - 20, 250, 70);
+
+      ctx.font = fontHeight + "px san serif";
+      ctx.fillStyle = "black";
+      ctx.textAlign = "left";
+      ctx.fillText("Up Time:", x + 10, y + 10 + 0 * lineSpacing);
+      ctx.fillText("Set Point:", x + 10, y + 10 + 1 * lineSpacing);
+
+      ctx.textAlign = "right";
+
+      ctx.fillText(this.formatUptime(this.coolingFanConfig.uptime,14), x + 230, y + 10 + 0 * lineSpacing);
+      ctx.fillText(this.coolingFanConfig.setpoint.toString() + "\xB0C", x + 230, y + 10 + 1 * lineSpacing); 
+    }
+
   }
 }

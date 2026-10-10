@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using static Microsoft.AspNetCore.Razor.Language.TagHelperMetadata;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -387,6 +389,160 @@ where [timestamp] >= @startDate and [timestamp] < @endDate order by [timestamp]"
             return pp;
         }
 
+
+        // GET: api/HomeSensorNet/GetCoolingFanConfig
+        [HttpGet("[action]")]
+        public ICoolingFanConfig GetCoolingFanConfig()
+        {
+            ICoolingFanConfig pp = null;
+
+            try
+            {
+                using (var con = new SqlConnection(connectString))
+                {
+                    con.Open();
+                    using (var cmd = new SqlCommand(@"
+SELECT TOP (1000) [manual_duty]
+      ,[t_min]
+      ,[t_max]
+      ,[min_duty]
+      ,[idle_duty]
+      ,[hysteresis]
+      ,[setpoint]
+      ,[kp]
+      ,[ki]
+      ,[ff_ambient]
+      ,[ff_gain]
+      ,[slew_rate]
+      ,[alarm_temp]
+      ,[report_interval]
+      ,[mode]
+      ,[control_source]
+      ,[alarm_enabled]
+      ,[stall_alarm]
+      ,[DeviceId]
+      ,[timestamp]
+      ,(select uptime from [Electricity].[dbo].[CoolingFanControl] where timestamp = (select MAX(timestamp) from [Electricity].[dbo].[CoolingFanControl])) [uptime]
+  FROM [Electricity].[dbo].[CoolingFanControlConfig]", con))
+                    {
+                        using (var rdr = cmd.ExecuteReader())
+                        {
+                            if (rdr.Read())
+                            {
+                                int manual_duty = rdr.GetInt32(0);
+                                float t_min = (float)rdr.GetDouble(1);
+                                float t_max = (float)rdr.GetDouble(2);
+                                int min_duty = rdr.GetInt32(3);
+                                int idle_duty = rdr.GetInt32(4);
+                                float hysteresis = (float)rdr.GetDouble(5);
+                                float setpoint = (float)rdr.GetDouble(6);
+                                float kp = (float)rdr.GetDouble(7);
+                                float ki = (float)rdr.GetDouble(8);
+                                float ff_ambient = (float)rdr.GetDouble(9);
+                                float ff_gain = (float)rdr.GetDouble(10);
+                                float slew_rate = (float)rdr.GetDouble(11);
+                                float alarm_temp = (float)rdr.GetDouble(12);
+                                int report_interval = rdr.GetInt32(13);
+                                string mode = rdr.GetString(14);
+                                string control_source = rdr.GetString(15);
+                                bool alarm_enabled = rdr.GetBoolean(16);
+                                bool stall_alarm = rdr.GetBoolean(17);
+                                string DeviceId = rdr.GetString(18);
+                                DateTime timestamp = rdr.GetDateTime(19);
+                                int uptime = rdr.GetInt32(20);
+
+                                pp = new ICoolingFanConfig()
+                                {
+                                    manual_duty = manual_duty,
+                                    t_min = t_min,
+                                    t_max = t_max,
+                                    min_duty = min_duty,
+                                    idle_duty = idle_duty,
+                                    hysteresis = hysteresis,
+                                    setpoint = setpoint,
+                                    kp = kp,
+                                    ki = ki,
+                                    ff_ambient = ff_ambient,
+                                    ff_gain = ff_gain,
+                                    slew_rate = slew_rate,
+                                    alarm_temp = alarm_temp,
+                                    report_interval = report_interval,
+                                    mode = mode,
+                                    control_source = control_source,
+                                    alarm_enabled = alarm_enabled,
+                                    stall_alarm = stall_alarm,
+                                    DeviceId = DeviceId,
+                                    timestamp = timestamp,
+                                    uptime = uptime
+                                };
+
+                            }
+                            rdr.Close();
+                        }
+                    }
+                    con.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
+
+            return pp;
+        }
+
+
+        public class ICoolingFanConfig
+        {
+            public int manual_duty;
+            public float t_min;
+            public float t_max;
+            public int min_duty;
+            public int idle_duty;
+            public float hysteresis;
+            public float setpoint;
+            public float kp;
+            public float ki;
+            public float ff_ambient;
+            public float ff_gain;
+            public float slew_rate;
+            public float alarm_temp;
+            public int report_interval;
+            public string mode;
+            public string control_source;
+            public bool alarm_enabled;
+            public bool stall_alarm;
+            public string DeviceId;
+            public DateTime timestamp;
+            public int uptime;
+
+
+            public ICoolingFanConfig()
+            {
+                manual_duty = 0;
+                t_min = 0;
+                t_max = 0;
+                min_duty = 0;
+                idle_duty = 0;
+                hysteresis = 0;
+                setpoint = 0;
+                kp = 0;
+                ki = 0;
+                ff_ambient = 0;
+                ff_gain = 0;
+                slew_rate = 0;
+                alarm_temp = 0;
+                report_interval = 0;
+                mode = "";
+                control_source = "";
+                alarm_enabled = false;
+                stall_alarm = false;
+                DeviceId = "";
+                // timestamp 
+                uptime = 0;
+
+            }
+        }
 
         public class ICoolingFanStats
         {

@@ -130,11 +130,11 @@ export class GardenCoolingFanComponent implements OnDestroy {
       xTickFmt = "MMMyy";
     }
 
+    let dataSeriesTemp: DataSeries[] = [];
     
     // Temperature (C)
-    let minTemp: number = 0;
-    let maxTemp: number = 30;
-    let dataSeriesTemp: DataSeries[] = [];
+    let minTemp: number = 10;
+    let maxTemp: number = 20;
 
     // duty
     let minDuty: number = 0;
@@ -142,28 +142,49 @@ export class GardenCoolingFanComponent implements OnDestroy {
 
     // rpm
     let minRpm: number = 0;
-    let maxRpm: number = 3600;
+    let maxRpm: number = 3000;
 
     let activeAxis: EAxisType = EAxisType.primary;
     let activeAxisCount: number = 0;
     if (this.showTemperature) {
 
       // Find min/max
-      let series: any[] = [];
-      let first: number = Math.max(data[0].temperature, data[0].ambientTemperature);
+      let seriesTemp: any[] = [];
+      let seriesAmbient: any[] = [];
+      let minTemp: number = Math.min(data[0].temperature, data[0].ambientTemperature);
+      let maxTemp: number = Math.max(data[0].temperature, data[0].ambientTemperature);
       for (let d of data) {
         // find min/max
-        let t: number = Math.max(d.temperature, d.ambientTemperature);
-        if (t > maxTemp) maxTemp = t;
-        series[series.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: t };
+        let mn: number = Math.min(d.temperature, d.ambientTemperature);
+        let mx: number = Math.max(d.temperature, d.ambientTemperature);
+        if (mn < minTemp) minTemp = mn;
+        if (mx > maxTemp) maxTemp = mx;
+
+        seriesTemp[seriesTemp.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.temperature };
+        seriesAmbient[seriesAmbient.length] = { x: d.timestamp.getTime() / (24 * 60 * 60 * 1000), y: d.ambientTemperature };
       }
+
       // round down/up to nearest 10
-      if (maxTemp == 0)
-        maxTemp = 10;
+      minTemp = Math.floor(minTemp / 10) * 10;
       maxTemp = Math.ceil(maxTemp / 10) * 10;
 
       let dataSeries: DataSeries = new DataSeries();
-      dataSeries.series = series;
+      dataSeries.series = seriesTemp;
+      dataSeries.ymax = maxTemp;
+      dataSeries.ymin = minTemp;
+      dataSeries.xmin = dayStart;
+      dataSeries.xmax = dayEnd;
+      dataSeries.xAxisType = EAxisType.primary;
+      dataSeries.xDataType = "date";
+      dataSeries.xTickFormat = xTickFmt;
+      dataSeries.yAxisType = activeAxis;
+      dataSeries.yDataType = "number"; 
+      dataSeries.yUnits = "(\xB0C)";
+      dataSeries.strokeStyle = "red";
+      this.chart.addDataSeries(dataSeries);
+
+      dataSeries = new DataSeries();
+      dataSeries.series = seriesAmbient;
       dataSeries.ymax = maxTemp;
       dataSeries.ymin = minTemp;
       dataSeries.xmin = dayStart;
@@ -172,9 +193,9 @@ export class GardenCoolingFanComponent implements OnDestroy {
       dataSeries.xDataType = "date";
       dataSeries.xTickFormat = xTickFmt;
       dataSeries.yAxisType = activeAxis; activeAxisCount++;
-      dataSeries.yDataType = "number"; 
+      dataSeries.yDataType = "number";
       dataSeries.yUnits = "(\xB0C)";
-      dataSeries.strokeStyle = "red";
+      dataSeries.strokeStyle = "IndianRed";
       this.chart.addDataSeries(dataSeries);
     }
     if (activeAxisCount > 0) {

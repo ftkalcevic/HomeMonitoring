@@ -305,6 +305,7 @@ export class GardenCoolingFanComponent implements OnDestroy {
       let y: number = 490;
       const fontHeight: number = 20;
       const lineSpacing: number = 29;
+      ctx.save();
 
       ctx.strokeStyle = "black";
       ctx.lineWidth = 4;
@@ -323,6 +324,7 @@ export class GardenCoolingFanComponent implements OnDestroy {
 
       ctx.fillText(this.formatUptime(this.coolingFanConfig.uptime,14), x + 230, y + 10 + 0 * lineSpacing);
       ctx.fillText(this.coolingFanConfig.setpoint.toString() + "\xB0C", x + 230, y + 10 + 1 * lineSpacing); 
+      ctx.restore();
     }
 
   }

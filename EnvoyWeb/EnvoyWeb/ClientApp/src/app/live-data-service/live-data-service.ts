@@ -415,7 +415,11 @@ export class LiveDataService {
   }
 
   private requestLivePower(d: SonoffDevice) {
-    this.http.get<ISonoffSensorData>('http://' + d.ipAddress + '/cm?cmnd=status 8')
+
+    let cmd: string = 'status 8';
+    let host: string  = d.ipAddress;
+
+    this.http.get<ISonoffSensorData>(`/api/Sonoff/cmd?host=${host}&cmd=${cmd}`)
       .subscribe(
         result => {
           this.ProcessLivePower(d, result);
@@ -531,6 +535,20 @@ export class LiveDataService {
       .http
       .get<HomeSensorNet.IRainGaugeStats[]>(this.baseUrl + 'api/HomeSensorNet/GetRainGaugeStats/' + period + '/' + day.toISOString())
       .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
+  }
+
+  public ReadCoolingFanStats(period: number, day: Date): Observable<HomeSensorNet.ICoolingFanStats[]> {
+    return this
+      .http
+      .get<HomeSensorNet.ICoolingFanStats[]>(this.baseUrl + 'api/HomeSensorNet/GetCoolingFanStats/' + period + '/' + day.toISOString())
+      .pipe(map(data => data.map(d => { d.timestamp = new Date(d.timestamp); return d; })));
+  }
+
+  public ReadCoolingFanConfig(): Observable<HomeSensorNet.ICoolingFanConfig> {
+    return this
+      .http
+      .get<HomeSensorNet.ICoolingFanConfig>(this.baseUrl + 'api/HomeSensorNet/GetCoolingFanConfig')
+      .pipe(map(data => { data.timestamp = new Date(data.timestamp); return data; }));
   }
 
 }

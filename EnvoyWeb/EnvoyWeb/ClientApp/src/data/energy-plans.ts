@@ -468,7 +468,33 @@ export class EnergyPlans {
           "IsForWeekDayOnly": false
         }
       ]
-    }
+      },
+      { /*10*/
+        "Name": "Alinta From 1 Aug 2025",
+        "DailySupplyCharge": .93874,
+        "EnergyDiscount": 0,
+        "FiT": 0.0004,
+        "PFiT": 0.6,
+        "Pricing": [
+          {
+            "Name": "Peak",
+            "StartTime": "15:00",
+            "EndTime": "20:59",
+            "Rate": 0.38874,
+            "IsForControlledLoad": false,
+            "IsForWeekDayOnly": false
+          },
+          {
+            "Name": "Off-Peak",
+            "StartTime": "0:00",
+            "EndTime": "23:59",
+            "Rate": 0.23617,
+            "IsForControlledLoad": false,
+            "IsForWeekDayOnly": false
+          }
+        ]
+      }
+
 
   ];
 

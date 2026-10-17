@@ -1,7 +1,7 @@
 import { Injectable, Inject, EventEmitter, Output } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, TimeoutError } from 'rxjs';
+import { map, timeout } from 'rxjs/operators';
 import { EnergyPlans, EnergyPlan, MyEnergyPlan } from '../../data/energy-plans';
 import * as HomeSensorNet from '../../data/home-sensor-net';
 import * as SoundRecordings from '../../data/sound-recordings';
@@ -421,12 +421,17 @@ export class LiveDataService {
     this.sonoffLive = new CircularBuffer<ISonoffSample>(this.POINTS*this.sonoffDevices.length);
   }
 
-  private requestLivePower(d: SonoffDevice) {
+  private readonly SONOFF_MAX_FAILURES = 5;
+  private readonly SONOFF_TIMEOUT_MS = 30 * 1000;
+  private readonly SONOFF_BACKOFF_MS = 5 * 60 * 1000;
+
+  private requestLivePower(d: SonoffDevice, failures: number = 0) {
 
     let cmd: string = 'status 8';
     let host: string  = d.ipAddress;
 
     this.http.get<ISonoffSensorData>(`/api/Sonoff/cmd?host=${host}&cmd=${cmd}`)
+      .pipe(timeout(this.SONOFF_TIMEOUT_MS))
       .subscribe(
         result => {
           this.ProcessLivePower(d, result);
@@ -434,7 +439,17 @@ export class LiveDataService {
         },
         error => {
           console.error(error);
-          setTimeout(() => this.requestLivePower(d), 5 * 1000);
+          // Timeouts, network errors (status 0) and server errors (5xx) count towards giving up.
+          let isFailure = error instanceof TimeoutError
+            || (error instanceof HttpErrorResponse && (error.status === 0 || error.status >= 500));
+          let count = isFailure ? failures + 1 : failures;
+          let delay = 5 * 1000;
+          if (count >= this.SONOFF_MAX_FAILURES) {
+            if (count === this.SONOFF_MAX_FAILURES)
+              console.error(`Sonoff ${d.name} (${host}): ${count} sequential failures, backing off to every 5 minutes`);
+            delay = this.SONOFF_BACKOFF_MS;
+          }
+          setTimeout(() => this.requestLivePower(d, count), delay);
         }
       )
   }

@@ -80,6 +80,11 @@ export class GardenNoiseComponent implements OnDestroy {
     this.RequestReadNoiseSamples();
   }
 
+  public meterChanged(newMeter: string) {
+    this.selectedMeter = newMeter;
+    this.RequestReadNoiseSamples();
+  }
+
   public displayTypeChanged(newType: string) {
     this.displayType = newType;
     this.RequestReadNoiseSamples();

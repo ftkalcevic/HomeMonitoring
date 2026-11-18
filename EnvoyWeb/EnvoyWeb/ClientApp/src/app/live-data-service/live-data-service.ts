@@ -352,7 +352,7 @@ export class LiveDataService {
     //this.energyPlan = this.energyPlans.Plans[2];
     this.sonoffLive = new CircularBuffer<ISonoffSample>(1);
     this.meters = [];
-    this.meters.push({ deviceId: "ar844", deviceName: "ar844" });
+    this.meters.push({ deviceId: "ar844", deviceName: "ar844" }, { deviceId: "ar844-2", deviceName: "ar844-2" });
 
     this.sonoffDevices = [];
     setTimeout(() => this.ReadEnvoyData(), 100);

@@ -31,7 +31,7 @@
       <button type="button" (click)="incrementDate();">
         <i class="fa fa-caret-square-o-right" style="font-size:20px;"></i>
       </button>
-      <select [(ngModel)]="selectedMeter">
+      <select [ngModel]="selectedMeter" (ngModelChange)="meterChanged($event)">
         <option *ngFor="let t of meters;" [ngValue]="t.deviceId">
           {{t.deviceName}}
         </option>
